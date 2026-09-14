@@ -1,0 +1,10 @@
+# Secrets and local config: environment variables are set on the Vercel project.
+.env*
+!.env.example
+
+# Local tooling output
+graphify-out
+.graphify_*
+.impeccable
+.next
+node_modules
