@@ -179,8 +179,9 @@ export function DeviceStage({
       cleanups.push(() => document.removeEventListener("visibilitychange", onVis));
 
       // Only render while the stage is on screen.
-      const io = new IntersectionObserver(([e]) => {
-        visible = e.isIntersecting;
+      // Entries can arrive batched: only the newest says where the stage is now.
+      const io = new IntersectionObserver((entries) => {
+        visible = entries[entries.length - 1].isIntersecting;
         if (visible && !raf) {
           prev = performance.now();
           raf = requestAnimationFrame(loop);

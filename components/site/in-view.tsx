@@ -27,8 +27,9 @@ export function InView({
     if (el.getBoundingClientRect().top < window.innerHeight * 0.85) return;
     el.dataset.reveal = "armed";
     const io = new IntersectionObserver(
-      ([e]) => {
-        if (!e.isIntersecting) return;
+      (entries) => {
+        // Batched entries: reveal if any of them saw the block on screen.
+        if (!entries.some((e) => e.isIntersecting)) return;
         el.dataset.reveal = "in";
         io.disconnect();
       },

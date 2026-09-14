@@ -157,13 +157,13 @@ export default function Home() {
               <h2 className="type-h2">One stroke, taken apart.</h2>
               <p className="type-lead mt-5 text-muted-foreground">
                 Every stroke is cut out of the signal and measured on the node itself, from 80 readings a second. Pick a
-                measure to see where it comes from.
+                measure to see where it comes from, or row a stroke yourself and watch the node&rsquo;s own detector
+                take it apart.
               </p>
             </div>
             <div className="mt-12">
               <CurveExplorer />
             </div>
-            <p className="mt-8 text-sm text-muted-foreground">Example data.</p>
           </div>
         </section>
 
