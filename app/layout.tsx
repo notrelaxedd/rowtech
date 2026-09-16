@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Archivo, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Attribution } from "@/components/site/attribution";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -50,6 +52,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <Attribution />
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
