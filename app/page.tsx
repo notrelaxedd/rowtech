@@ -6,9 +6,12 @@ import { Hero } from "@/components/site/hero";
 import { InView } from "@/components/site/in-view";
 import { ScopeStrip } from "@/components/site/scope-strip";
 import { CrewLanes } from "@/components/site/crew-lanes";
-import { CurveExplorer } from "@/components/site/curve-explorer";
-import { ScreenTour } from "@/components/site/screen-tour";
-import { CoxBoxDiagram } from "@/components/site/cox-box-diagram";
+import { CoxBoxIsland, CurveExplorerIsland, ScreenTourIsland } from "@/components/site/islands";
+import { CurveExplorerView } from "@/components/site/curve-explorer-view";
+import { ScreenTourView } from "@/components/site/screen-tour-view";
+import { CoxBoxView } from "@/components/site/cox-box-view";
+import { Reveals } from "@/components/site/reveals";
+import { emptySummary } from "@/components/site/stroke-live-types";
 import { SessionFiles } from "@/components/site/session-files";
 import { ClosingTrace } from "@/components/site/closing-trace";
 import { cn } from "@/lib/utils";
@@ -86,7 +89,7 @@ export default function Home() {
         <ScopeStrip />
 
         {/* ------------------------------------------------------- crew view */}
-        <section id="crew" className="py-24 sm:py-32">
+        <section id="crew" className="below-fold py-24 sm:py-32">
           <div className={cn(wrap, "grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-16")}>
             <div>
               <Coming>Coming with the RowTech cox box</Coming>
@@ -106,7 +109,7 @@ export default function Home() {
         </section>
 
         {/* ---------------------------------------------------- how it works */}
-        <section id="how" className="border-t border-line bg-[#0a0d10] py-24 sm:py-28">
+        <section id="how" className="below-fold border-t border-line bg-[#0a0d10] py-24 sm:py-28">
           <div className={wrap}>
             <div className="max-w-2xl">
               <h2 className="type-h2">Fit it. Row. Review.</h2>
@@ -151,7 +154,7 @@ export default function Home() {
         </section>
 
         {/* ------------------------------------------------------ one stroke */}
-        <section id="stroke" className="py-24 sm:py-32">
+        <section id="stroke" className="below-fold py-24 sm:py-32">
           <div className={wrap}>
             <div className="max-w-3xl">
               <h2 className="type-h2">One stroke, taken apart.</h2>
@@ -162,13 +165,15 @@ export default function Home() {
               </p>
             </div>
             <div className="mt-12">
-              <CurveExplorer />
+              <CurveExplorerIsland
+                fallback={<CurveExplorerView active="catch" mode="example" switched={false} live={emptySummary()} held="none" session={0} />}
+              />
             </div>
           </div>
         </section>
 
         {/* --------------------------------------------------------- screens */}
-        <section id="screens" className="border-y border-line bg-[#0a0d10] py-24 sm:py-28">
+        <section id="screens" className="below-fold border-y border-line bg-[#0a0d10] py-24 sm:py-28">
           <div className={wrap}>
             <div className="max-w-3xl">
               <h2 className="type-h2">Three buttons. Nothing to set up afloat.</h2>
@@ -178,13 +183,13 @@ export default function Home() {
               </p>
             </div>
             <div className="mt-12">
-              <ScreenTour />
+              <ScreenTourIsland fallback={<ScreenTourView i={0} />} />
             </div>
           </div>
         </section>
 
         {/* --------------------------------------------------------- cox box */}
-        <section id="cox-box" className="py-24 sm:py-32">
+        <section id="cox-box" className="below-fold py-24 sm:py-32">
           <div className={wrap}>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end lg:gap-16">
               <div>
@@ -197,7 +202,7 @@ export default function Home() {
               </p>
             </div>
             <div className="mt-12">
-              <CoxBoxDiagram />
+              <CoxBoxIsland fallback={<CoxBoxView lit={8} />} />
             </div>
             <dl className="mt-14 grid grid-cols-1 gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
               <div>
@@ -229,7 +234,7 @@ export default function Home() {
         </section>
 
         {/* ------------------------------------------------------- boathouse */}
-        <section id="boathouse" className="border-t border-line bg-[#0a0d10] py-24 sm:py-28">
+        <section id="boathouse" className="below-fold border-t border-line bg-[#0a0d10] py-24 sm:py-28">
           <div className={cn(wrap, "grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-16")}>
             <h2 className="type-h2">Made for the boathouse, not the lab.</h2>
             <dl className="grid grid-cols-1 gap-x-12 gap-y-10 sm:grid-cols-2">
@@ -266,7 +271,7 @@ export default function Home() {
         </section>
 
         {/* ----------------------------------------------- what's in the beta */}
-        <section id="beta-scope" className="border-t border-line py-24 sm:py-28">
+        <section id="beta-scope" className="below-fold border-t border-line py-24 sm:py-28">
           <div className={wrap}>
             <h2 className="type-h2 max-w-3xl">What&rsquo;s in the beta.</h2>
             <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-line">
@@ -274,7 +279,7 @@ export default function Home() {
                 <h3 className="type-h3 flex items-center gap-2.5">
                   <Lamp tone="ok" /> On every node today
                 </h3>
-                <InView threshold={0.15}>
+                <InView>
                   <ul className="mt-6 space-y-3">
                     {TODAY.map((t, i) => (
                       <li key={t} className="rise type-body flex gap-3 text-muted-foreground" style={{ "--i": i } as React.CSSProperties}>
@@ -289,7 +294,7 @@ export default function Home() {
                 <h3 className="type-h3 flex items-center gap-2.5">
                   <Lamp tone="trace" /> Coming next, built with beta crews
                 </h3>
-                <InView threshold={0.15}>
+                <InView>
                   <ul className="mt-6 space-y-3">
                     {NEXT.map((t, i) => (
                       <li key={t} className="rise type-body flex gap-3 text-muted-foreground" style={{ "--i": i + 3 } as React.CSSProperties}>
@@ -305,7 +310,7 @@ export default function Home() {
         </section>
 
         {/* ------------------------------------------------------------- FAQ */}
-        <section id="faq" className="border-t border-line bg-[#0a0d10] py-24 sm:py-28">
+        <section id="faq" className="below-fold border-t border-line bg-[#0a0d10] py-24 sm:py-28">
           <div className={cn(wrap, "grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-16")}>
             <h2 className="type-h2">Questions coaches ask first.</h2>
             <div className="divide-y divide-line border-y border-line">
@@ -326,7 +331,7 @@ export default function Home() {
         </section>
 
         {/* ------------------------------------------------------- closing */}
-        <section className="relative overflow-hidden border-t border-line">
+        <section className="below-fold relative overflow-hidden border-t border-line">
           <div aria-hidden className="scope-grid absolute inset-0 [mask-image:linear-gradient(to_bottom,transparent_35%,black)]" />
           <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-full bg-[radial-gradient(60%_80%_at_50%_100%,rgb(34_227_239/0.12),transparent)]" />
           <ClosingTrace />
@@ -343,6 +348,7 @@ export default function Home() {
         </section>
       </main>
       <SiteFooter />
+      <Reveals />
     </>
   );
 }

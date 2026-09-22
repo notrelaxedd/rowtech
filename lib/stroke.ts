@@ -40,8 +40,41 @@ export function forceAt(t: number, seed = 0) {
   return -0.35 * Math.sin(((ph - drive) / (period - drive)) * Math.PI)
 }
 
-export function toPath(pts: Array<[number, number]>) {
-  return pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join("")
+/** Ramer-Douglas-Peucker: drop points within `tol` of the line through their neighbours. */
+function simplify(pts: Array<[number, number]>, tol: number): Array<[number, number]> {
+  if (pts.length < 3) return pts
+  const keep = new Uint8Array(pts.length)
+  keep[0] = keep[pts.length - 1] = 1
+  const stack: Array<[number, number]> = [[0, pts.length - 1]]
+  while (stack.length) {
+    const [a, b] = stack.pop()!
+    const [ax, ay] = pts[a]
+    const [bx, by] = pts[b]
+    const dx = bx - ax
+    const dy = by - ay
+    const len = Math.hypot(dx, dy) || 1
+    let far = -1
+    let dmax = tol
+    for (let i = a + 1; i < b; i++) {
+      const d = Math.abs(dy * (pts[i][0] - ax) - dx * (pts[i][1] - ay)) / len
+      if (d > dmax) {
+        dmax = d
+        far = i
+      }
+    }
+    if (far >= 0) {
+      keep[far] = 1
+      stack.push([a, far], [far, b])
+    }
+  }
+  return pts.filter((_, i) => keep[i])
+}
+
+/** SVG path through the points. Server-rendered curves pass a tolerance (in
+ *  viewBox units) so the page ships the shape, not every sample. */
+export function toPath(pts: Array<[number, number]>, tol = 0) {
+  const ps = tol > 0 ? simplify(pts, tol) : pts
+  return ps.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join("")
 }
 
 // -----------------------------------------------------------------------------

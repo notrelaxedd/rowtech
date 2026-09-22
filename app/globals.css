@@ -165,6 +165,14 @@
   letter-spacing: 0.02em;
 }
 
+/* Below-the-fold sections skip layout and paint until they near the
+   viewport. `auto` remembers each section's real height once it has been
+   rendered, so scrolling back never jumps. */
+@utility below-fold {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
 /* The sweep graph's quarter gridlines. */
 @utility scope-grid {
   background-image: linear-gradient(to bottom, var(--line) 1px, transparent 1px);

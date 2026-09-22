@@ -2,15 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { toPath } from "@/lib/stroke";
-import {
-  NODE,
-  StrokeDetector,
-  consistencyCv,
-  valueAt,
-  type DetectorEvent,
-  type Sample,
-  type Stroke,
-} from "@/lib/stroke-detector";
+import { NODE, StrokeDetector, consistencyCv, valueAt, type DetectorEvent, type Sample } from "@/lib/stroke-detector";
+import { FIRST_WIN, NOISE, type Input, type LiveState, type LiveStroke, type LiveSummary, type MetricId, type Win } from "./stroke-live-types";
 import { H, KG_GRID, PX0, PX1, W, y } from "./stroke-frame";
 
 // Live mode of the stroke chart. The visitor's input becomes a force signal,
@@ -18,38 +11,8 @@ import { H, KG_GRID, PX0, PX1, W, y } from "./stroke-frame";
 // through the node's own detector (lib/stroke-detector.ts). The trace is drawn
 // straight into the DOM every frame; React only re-renders on detector events.
 
-/** `since` < 0 on a hold means "not started": the engine stamps it with its own clock. */
-export type Input = { src: "none" | "pointer" | "hold"; kg: number; since: number };
-export type LiveState = "ready" | "drive" | "recovery" | "idle" | "short";
-/** What the chart spans: like the LIVE screen, a catch restarts it at the left edge. */
-export type Win = { start: number; len: number; catchT: number | null };
-export type LiveStroke = Stroke & { trace: Sample[] };
-export type LiveSummary = {
-  state: LiveState;
-  strokes: LiveStroke[]; // newest first
-  threshold: number;
-  spm: number | null;
-  cv: number | null;
-  win: Win;
-  note: string; // for the screen-reader live region
-};
-
-export type MetricId = "catch" | "rise" | "peak" | "thirds" | "release" | "rhythm" | "consistency";
-
-const NOISE = 0.35; // kg, one sigma
 const LEAD = 120; // ms of signal kept left of the catch
-const FIRST_WIN = 2400;
 const MAX_WIN = 6000;
-
-export const emptySummary = (): LiveSummary => ({
-  state: "ready",
-  strokes: [],
-  threshold: NODE.noiseFloorMult * NOISE,
-  spm: null,
-  cv: null,
-  win: { start: 0, len: FIRST_WIN, catchT: null },
-  note: "",
-});
 
 /** Force while the hold button (or Space on it) is held: a stroke-shaped push. */
 function heldForce(s: number) {
