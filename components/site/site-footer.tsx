@@ -16,7 +16,7 @@ export function SiteFooter() {
           <Link href="/#stroke" className="hover:text-foreground">One stroke</Link>
           <Link href="/#vieve" className="hover:text-foreground">Cox box</Link>
           <Link href="/#beta" className="hover:text-foreground">The beta</Link>
-          <Link href="/beta?from=footer" className="text-foreground hover:text-trace">Apply for the beta</Link>
+          <Link href="/beta?from=footer" data-cta="footer" className="text-foreground hover:text-trace">Apply for the beta</Link>
         </nav>
       </div>
       <div className="mx-auto max-w-7xl px-5 pb-10 text-xs text-muted-foreground sm:px-8">

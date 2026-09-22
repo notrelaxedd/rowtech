@@ -25,7 +25,7 @@ export function BetaLink({
   className?: string;
 }) {
   return (
-    <Link href={`/beta?from=${from}`} className={cn(ctaPrimary, "group", className)}>
+    <Link href={`/beta?from=${from}`} data-cta={from} className={cn(ctaPrimary, "group", className)}>
       {children}
       <ArrowRight
         aria-hidden
@@ -44,7 +44,7 @@ export function SectionEnd({
 }: {
   from: string;
   children: React.ReactNode;
-  secondary?: { href: string; label: string };
+  secondary?: { href: string; label: string; from?: string };
   className?: string;
 }) {
   return (
@@ -52,7 +52,7 @@ export function SectionEnd({
       <p className="type-body max-w-[52ch] text-foreground">{children}</p>
       <div className="flex shrink-0 flex-wrap gap-3">
         {secondary && (
-          <Link href={secondary.href} className={cn(ctaSecondary, "max-sm:w-full")}>
+          <Link href={secondary.href} data-cta={secondary.from} className={cn(ctaSecondary, "max-sm:w-full")}>
             {secondary.label}
           </Link>
         )}

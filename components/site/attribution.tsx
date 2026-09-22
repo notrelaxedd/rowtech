@@ -2,22 +2,29 @@
 
 import { useEffect } from "react";
 
-const KEY = "rt_src";
-const PARAMS = ["utm_source", "utm_medium", "utm_campaign", "ref"];
+const KEY = "rt_attr";
+export const UTM = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
+export type Attribution = Partial<Record<(typeof UTM)[number] | "referrer", string>>;
 
 /** First-touch attribution: remembers where a visitor came from for this tab,
  *  so the beta form can record it even after they browse the landing page. */
-export function Attribution() {
+export function AttributionCapture() {
   useEffect(() => {
     try {
       if (sessionStorage.getItem(KEY)) return;
       const q = new URLSearchParams(location.search);
-      const parts = PARAMS.filter((p) => q.get(p)).map((p) => `${p}=${q.get(p)}`);
-      if (!parts.length && document.referrer) {
-        const host = new URL(document.referrer).host;
-        if (host && host !== location.host) parts.push(`referrer=${host}`);
+      const a: Attribution = {};
+      for (const k of UTM) {
+        const v = q.get(k);
+        if (v) a[k] = v.slice(0, 100);
       }
-      if (parts.length) sessionStorage.setItem(KEY, parts.join("&").slice(0, 150));
+      // `ref` is the informal version people type into links.
+      if (!a.utm_source && q.get("ref")) a.utm_source = q.get("ref")!.slice(0, 100);
+      if (document.referrer) {
+        const host = new URL(document.referrer).host;
+        if (host && host !== location.host) a.referrer = host.slice(0, 200);
+      }
+      sessionStorage.setItem(KEY, JSON.stringify(a));
     } catch {
       // Storage can be blocked; attribution is a nicety, never a requirement.
     }
@@ -25,10 +32,18 @@ export function Attribution() {
   return null;
 }
 
-export function readAttribution(): string {
+export function readAttribution(): Attribution {
   try {
-    return sessionStorage.getItem(KEY) ?? "";
+    const raw = sessionStorage.getItem(KEY);
+    const v: unknown = raw ? JSON.parse(raw) : {};
+    if (!v || typeof v !== "object") return {};
+    const out: Attribution = {};
+    for (const k of [...UTM, "referrer"] as const) {
+      const x = (v as Record<string, unknown>)[k];
+      if (typeof x === "string" && x) out[k] = x;
+    }
+    return out;
   } catch {
-    return "";
+    return {};
   }
 }

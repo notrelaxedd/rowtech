@@ -14,6 +14,7 @@ import { CoxBoxView } from "@/components/site/cox-box-view";
 import { SessionFiles } from "@/components/site/session-files";
 import { ClosingTrace } from "@/components/site/closing-trace";
 import { Reveals } from "@/components/site/reveals";
+import { FunnelBar } from "@/components/site/funnel-bar";
 import { emptySummary } from "@/components/site/stroke-live-types";
 import { cn } from "@/lib/utils";
 
@@ -433,6 +434,7 @@ export default function Home() {
       </main>
       <SiteFooter />
       <Reveals />
+      <FunnelBar />
     </>
   );
 }

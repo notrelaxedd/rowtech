@@ -1,17 +1,27 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { ArrowRight, LoaderCircle } from "lucide-react";
-import { readAttribution } from "@/components/site/attribution";
-import { ctaPrimary } from "@/components/site/cta";
+import { readAttribution, UTM } from "@/components/site/attribution";
+import { ctaPrimary, ctaSecondary } from "@/components/site/cta";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
-import { submitSignup } from "./actions";
-import { EMPTY_STATE, LIMITS, ROLES, SEATS, type Field, type SignupState } from "./fields";
+import { submitApplication } from "./actions";
+import { BOATS, EMAIL, EMPTY_STATE, LIMITS, REQUIRED, ROLES, type ApplyState, type Field } from "./fields";
 
 const input =
   "block w-full rounded-md border border-input bg-[#0b0e11] px-3.5 text-base text-foreground placeholder:text-muted-foreground transition-[border-color,box-shadow] duration-150 focus:border-trace focus:outline-none focus:ring-3 focus:ring-trace/25 aria-[invalid=true]:border-destructive";
 const chip =
   "relative flex min-h-11 cursor-pointer items-center justify-center rounded-md border border-input px-4 text-[0.9375rem] text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground has-[:checked]:border-trace has-[:checked]:bg-trace/10 has-[:checked]:text-foreground has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-trace";
+const label = "text-[0.9375rem] font-semibold";
+const optional = <span className="font-normal text-muted-foreground">(optional)</span>;
+
+export const NEXT_STEPS = [
+  { t: "We read your application.", d: "Every one, properly." },
+  { t: "We get in touch by email.", d: "To talk through your boat, your rigging, your schedule and what you want to see." },
+  { t: "We fit the nodes, and you row.", d: "Then you tell us what's useful, and help shape what RowTech becomes." },
+];
 
 function Err({ id, msg }: { id: string; msg?: string }) {
   if (!msg) return null;
@@ -22,30 +32,101 @@ function Err({ id, msg }: { id: string; msg?: string }) {
   );
 }
 
-export function SignupForm({ from }: { from: string }) {
-  // The hidden field carries which CTA sent them; first-touch UTM/referrer is
-  // added at submit time. Without JS the form still posts, minus the UTM part.
-  const [state, action, pending] = useActionState(
-    (prev: SignupState, fd: FormData) => {
-      const first = readAttribution();
-      if (first) fd.set("source", `${fd.get("source") ?? ""}&${first}`);
-      return submitSignup(prev, fd);
-    },
-    EMPTY_STATE
+function Done({ name }: { name?: string }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => heading.current?.focus(), []);
+  return (
+    <div>
+      <p className="readout inline-flex items-center gap-2.5 text-sm text-muted-foreground">
+        <span aria-hidden className="size-2 rounded-full bg-ok shadow-[0_0_10px_rgb(61_220_110/0.7)]" />
+        <span className="text-ok">SAVED</span>
+      </p>
+      <h1 ref={heading} tabIndex={-1} className="type-h2 mt-4 outline-none">
+        {`${name ? `Thanks, ${name.split(" ")[0]}.` : "Thanks."} You’re in.`}
+      </h1>
+      <p className="type-lead mt-5 text-muted-foreground">Here&rsquo;s what happens next.</p>
+      <ol className="mt-8 space-y-6 border-t border-line pt-8">
+        {NEXT_STEPS.map((s, i) => (
+          <li key={s.t} className="grid grid-cols-[1.75rem_1fr] gap-3">
+            <span className="readout pt-0.5 text-sm text-trace">{i + 1}</span>
+            <div>
+              <p className="font-semibold">{s.t}</p>
+              <p className="mt-1 text-[0.9375rem] leading-relaxed text-muted-foreground">{s.d}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-8 text-sm text-muted-foreground">
+        No email from us yet? That&rsquo;s expected: we reply personally, not automatically.
+      </p>
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link href="/" className={ctaSecondary}>
+          Back to the site
+        </Link>
+      </div>
+    </div>
   );
-  const source = `from=${from}`;
+}
+
+export function SignupForm({ from }: { from: string }) {
+  const [state, action, pending] = useActionState(async (prev: ApplyState, fd: FormData) => {
+    // First-touch UTM/referrer rides along at submit time. Without JS the form
+    // still posts, minus that part.
+    const a = readAttribution();
+    for (const k of [...UTM, "referrer"] as const) if (a[k]) fd.set(k, a[k]!);
+    const next = await submitApplication(prev, fd);
+    track("beta_form_submit", { ok: next.status === "ok", from, errors: Object.keys(next.errors).join(",") || undefined });
+    return next;
+  }, EMPTY_STATE);
+
+  const started = useRef(false);
+  const completed = useRef(new Set<string>());
+  const [open, setOpen] = useState(false);
+  const form = useRef<HTMLFormElement>(null);
+
+  if (state.status === "ok") return <Done name={state.values.name} />;
 
   const e = state.errors;
   const v = state.values;
   const invalid = (f: Field) => (e[f] ? true : undefined);
   const describe = (f: Field) => (e[f] ? `${f}-error` : undefined);
 
+  // Progressive disclosure: the optional details open by themselves once the
+  // three required fields hold something plausible.
+  const checkRequired = () => {
+    const el = form.current;
+    if (!el || open) return;
+    const val = (n: string) => ((el.elements.namedItem(n) as HTMLInputElement | null)?.value ?? "").trim();
+    if (REQUIRED.every((f) => val(f)) && EMAIL.test(val("email"))) setOpen(true);
+  };
+
   return (
+    <>
+    <h1 className="type-h2">Apply for the beta.</h1>
+    <p className="type-lead mt-5 text-muted-foreground">
+      Three things and you&rsquo;re in. Tell us more about your boat if you like: we want crews of every size and level.
+    </p>
     <form
+      ref={form}
       key={state === EMPTY_STATE ? "init" : JSON.stringify(v) + state.message}
       action={action}
       noValidate
-      className="space-y-7"
+      className="mt-10 space-y-7"
+      onFocus={() => {
+        if (started.current) return;
+        started.current = true;
+        track("beta_form_start", { from });
+      }}
+      onBlur={(ev) => {
+        const t = ev.target;
+        if (!(t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement)) return;
+        if (!t.name || completed.current.has(t.name)) return;
+        const done = t instanceof HTMLInputElement && (t.type === "radio" || t.type === "checkbox") ? t.checked : t.value.trim() !== "";
+        if (!done) return;
+        completed.current.add(t.name);
+        track("beta_field_complete", { field: t.name, from });
+      }}
+      onInput={checkRequired}
     >
       {state.message && (
         <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[0.9375rem] text-foreground">
@@ -53,84 +134,100 @@ export function SignupForm({ from }: { from: string }) {
         </p>
       )}
 
-      <div className="grid gap-7 sm:grid-cols-2 sm:gap-5">
-        <div>
-          <label htmlFor="name" className="text-[0.9375rem] font-semibold">
-            Name
-          </label>
-          <input id="name" name="name" autoComplete="name" required maxLength={LIMITS.name} defaultValue={v.name} aria-invalid={invalid("name")} aria-describedby={describe("name")} className={cn(input, "mt-2 h-12")} />
-          <Err id="name-error" msg={e.name} />
-        </div>
-        <div>
-          <label htmlFor="email" className="text-[0.9375rem] font-semibold">
-            Email
-          </label>
-          <input id="email" name="email" type="email" autoComplete="email" inputMode="email" required maxLength={LIMITS.email} defaultValue={v.email} aria-invalid={invalid("email")} aria-describedby={describe("email")} className={cn(input, "mt-2 h-12")} />
-          <Err id="email-error" msg={e.email} />
-        </div>
+      <div>
+        <label htmlFor="name" className={label}>
+          Name
+        </label>
+        <input id="name" name="name" autoComplete="name" required maxLength={LIMITS.name} defaultValue={v.name} aria-invalid={invalid("name")} aria-describedby={describe("name")} className={cn(input, "mt-2 h-12")} />
+        <Err id="name-error" msg={e.name} />
       </div>
 
-      <fieldset aria-describedby={describe("role")}>
-        <legend className="text-[0.9375rem] font-semibold">I&rsquo;m a&hellip;</legend>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {ROLES.map((r) => (
-            <label key={r.value} className={chip}>
-              <input type="radio" name="role" value={r.value} defaultChecked={v.role === r.value} required className="sr-only" />
-              {r.label}
-            </label>
-          ))}
-        </div>
-        <Err id="role-error" msg={e.role} />
-      </fieldset>
+      <div>
+        <label htmlFor="email" className={label}>
+          Email
+        </label>
+        <input id="email" name="email" type="email" autoComplete="email" inputMode="email" required maxLength={LIMITS.email} defaultValue={v.email} aria-invalid={invalid("email")} aria-describedby={describe("email")} className={cn(input, "mt-2 h-12")} />
+        <Err id="email-error" msg={e.email} />
+      </div>
 
       <div>
-        <label htmlFor="organization" className="text-[0.9375rem] font-semibold">
-          Club, school or team <span className="font-normal text-muted-foreground">(optional)</span>
+        <label htmlFor="organization" className={label}>
+          Club, school or program
         </label>
-        <input id="organization" name="organization" autoComplete="organization" maxLength={LIMITS.organization} defaultValue={v.organization} aria-invalid={invalid("organization")} aria-describedby={describe("organization")} className={cn(input, "mt-2 h-12")} />
+        <input id="organization" name="organization" autoComplete="organization" required maxLength={LIMITS.organization} defaultValue={v.organization} aria-invalid={invalid("organization")} aria-describedby={describe("organization")} className={cn(input, "mt-2 h-12")} />
         <Err id="organization-error" msg={e.organization} />
       </div>
 
-      <fieldset aria-describedby={describe("seats")}>
-        <legend className="text-[0.9375rem] font-semibold">
-          How many seats would you want to measure? <span className="font-normal text-muted-foreground">(optional)</span>
-        </legend>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {SEATS.map((s) => (
-            <label key={s} className={cn(chip, "readout min-w-14")}>
-              <input type="radio" name="seats" value={s} defaultChecked={v.seats === s} className="sr-only" />
-              {s}
+      <details
+        open={open || Boolean(v.role || v.boats?.length || v.location || v.message || e.role || e.boats || e.location || e.message)}
+        onToggle={(ev) => setOpen((ev.currentTarget as HTMLDetailsElement).open)}
+        className="group rounded-lg border border-line"
+      >
+        <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace [&::-webkit-details-marker]:hidden">
+          <span>
+            <span className="font-semibold">Tell us about your boat</span>{" "}
+            <span className="text-sm text-muted-foreground">optional, and it helps us pick crews</span>
+          </span>
+          <span aria-hidden className="relative size-3.5 shrink-0">
+            <span className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 bg-muted-foreground" />
+            <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-muted-foreground transition-transform duration-200 ease-out group-open:scale-y-0" />
+          </span>
+        </summary>
+
+        <div className="space-y-7 border-t border-line px-4 pt-6 pb-6">
+          <fieldset aria-describedby={describe("role")}>
+            <legend className={label}>I&rsquo;m a&hellip; {optional}</legend>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {ROLES.map((r) => (
+                <label key={r.value} className={chip}>
+                  <input type="radio" name="role" value={r.value} defaultChecked={v.role === r.value} className="sr-only" />
+                  {r.label}
+                </label>
+              ))}
+            </div>
+            <Err id="role-error" msg={e.role} />
+          </fieldset>
+
+          <fieldset aria-describedby={describe("boats")}>
+            <legend className={label}>Boats you row {optional}</legend>
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              {BOATS.map((b) => (
+                <label key={b} className={cn(chip, "readout px-2")}>
+                  <input type="checkbox" name="boats" value={b} defaultChecked={v.boats?.includes(b)} className="sr-only" />
+                  {b}
+                </label>
+              ))}
+            </div>
+            <Err id="boats-error" msg={e.boats} />
+          </fieldset>
+
+          <div>
+            <label htmlFor="location" className={label}>
+              Where do you row? {optional}
             </label>
-          ))}
+            <input id="location" name="location" placeholder="City, country" maxLength={LIMITS.location} defaultValue={v.location} aria-invalid={invalid("location")} aria-describedby={describe("location")} className={cn(input, "mt-2 h-12")} />
+            <Err id="location-error" msg={e.location} />
+          </div>
+
+          <div>
+            <label htmlFor="message" className={label}>
+              What do you want to see inside your boat? {optional}
+            </label>
+            <textarea id="message" name="message" rows={4} maxLength={LIMITS.message} defaultValue={v.message} aria-invalid={invalid("message")} aria-describedby={describe("message")} className={cn(input, "mt-2 resize-y py-3 leading-relaxed")} />
+            <Err id="message-error" msg={e.message} />
+          </div>
         </div>
-        <Err id="seats-error" msg={e.seats} />
-      </fieldset>
-
-      <div>
-        <label htmlFor="location" className="text-[0.9375rem] font-semibold">
-          Where do you row? <span className="font-normal text-muted-foreground">(optional)</span>
-        </label>
-        <input id="location" name="location" placeholder="City, country" maxLength={LIMITS.location} defaultValue={v.location} aria-invalid={invalid("location")} aria-describedby={describe("location")} className={cn(input, "mt-2 h-12")} />
-        <Err id="location-error" msg={e.location} />
-      </div>
-
-      <div>
-        <label htmlFor="message" className="text-[0.9375rem] font-semibold">
-          What would you want to learn from force data? <span className="font-normal text-muted-foreground">(optional)</span>
-        </label>
-        <textarea id="message" name="message" rows={4} maxLength={LIMITS.message} defaultValue={v.message} aria-invalid={invalid("message")} aria-describedby={describe("message")} className={cn(input, "mt-2 resize-y py-3 leading-relaxed")} />
-        <Err id="message-error" msg={e.message} />
-      </div>
+      </details>
 
       {/* Honeypot: hidden from people and assistive tech; bots fill it. */}
       <div aria-hidden className="absolute -left-[9999px] size-px overflow-hidden">
         <label htmlFor="website">Website</label>
         <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
-      <input type="hidden" name="source" value={source} />
+      <input type="hidden" name="from" value={from} />
 
-      <div className="flex flex-col gap-4 pt-1 sm:flex-row sm:items-center sm:gap-6">
-        <button type="submit" disabled={pending} className={cn(ctaPrimary, "h-13 px-7 text-base disabled:cursor-wait disabled:opacity-70")}>
+      <div className="flex flex-col gap-4 pt-1">
+        <button type="submit" disabled={pending} className={cn(ctaPrimary, "h-13 w-full px-7 text-base disabled:cursor-wait disabled:opacity-70 sm:w-auto sm:self-start")}>
           {pending ? (
             <>
               <LoaderCircle aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />
@@ -143,8 +240,9 @@ export function SignupForm({ from }: { from: string }) {
             </>
           )}
         </button>
-        <p className="text-sm text-muted-foreground">We&rsquo;ll only use this to contact you about the RowTech beta.</p>
+        <p className="text-sm text-muted-foreground">Two minutes, no commitment. We&rsquo;ll only use this to talk to you about the RowTech beta.</p>
       </div>
     </form>
+    </>
   );
 }

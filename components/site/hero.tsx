@@ -10,7 +10,7 @@ export function Hero() {
   const d = (ms: number) => ({ "--d": `${ms}ms` }) as React.CSSProperties;
 
   return (
-    <section className="relative overflow-hidden">
+    <section data-section="hero" className="relative overflow-hidden">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-40 right-[-10%] h-[42rem] w-[60rem] rounded-full bg-[radial-gradient(closest-side,rgb(34_227_239/0.14),transparent)]"

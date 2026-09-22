@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Archivo, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Attribution } from "@/components/site/attribution";
+import { AttributionCapture } from "@/components/site/attribution";
+import { Analytics as ProductAnalytics } from "@/components/site/analytics";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -50,8 +51,9 @@ export default function RootLayout({
       className={`dark ${archivo.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Attribution />
+        <AttributionCapture />
         {children}
+        <ProductAnalytics />
         <Analytics />
         <SpeedInsights />
       </body>
