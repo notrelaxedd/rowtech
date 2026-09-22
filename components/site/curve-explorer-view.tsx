@@ -9,6 +9,7 @@ import {
   METRICS,
   NEAR_CATCH,
   RISE_END,
+  PHASES,
   STATE,
   STROKES,
   THIRD_AREAS,
@@ -18,6 +19,7 @@ import {
   third,
   x,
 } from "./curve-explorer-model";
+import type { Phase } from "./curve-explorer-model";
 import type { Input, LiveSummary, MetricId } from "./stroke-live-types";
 import { H, KG_GRID, PX0, PX1, PY1, W, y } from "./stroke-frame";
 
@@ -39,12 +41,17 @@ export type CurveExplorerViewProps = {
   liveChart?: ReactNode;
   chartRef?: Ref<HTMLDivElement>;
   readoutRef?: Ref<HTMLSpanElement>;
+  /** The phase under the cursor (example) or the detector's state (live). */
+  phase?: Phase | null;
+  /** Drawn over the example curve: the cursor that runs along it. */
+  cursor?: ReactNode;
   on?: {
     go?: (m: CurveMode) => void;
     setActive?: (id: MetricId) => void;
     down?: (e: PointerEvent<HTMLDivElement>) => void;
     move?: (e: PointerEvent<HTMLDivElement>) => void;
     up?: () => void;
+    leave?: () => void;
     clear?: () => void;
     holdButton?: HTMLAttributes<HTMLButtonElement>;
   };
@@ -61,6 +68,8 @@ export function CurveExplorerView({
   liveChart,
   chartRef,
   readoutRef,
+  phase = null,
+  cursor,
   on,
 }: CurveExplorerViewProps) {
   const isLive = mode === "live";
@@ -174,6 +183,7 @@ export function CurveExplorerView({
               onPointerUp={on?.up}
               onPointerCancel={on?.up}
               onLostPointerCapture={on?.up}
+              onPointerLeave={on?.leave}
               onClick={on?.go && (() => !isLive && on.go!("live"))}
               className={cn("group/chart relative select-none", isLive ? "cursor-ns-resize touch-none" : "cursor-pointer")}
             >
@@ -274,6 +284,8 @@ export function CurveExplorerView({
                       release
                     </text>
                   </g>
+
+                  {cursor}
                 </svg>
               )}
 
@@ -296,6 +308,29 @@ export function CurveExplorerView({
                 </div>
               )}
             </div>
+
+            {/* where in the stroke the cursor (or the live detector) is */}
+            <ol aria-label="Phases of the stroke" className="readout flex justify-between gap-2 border-t border-line px-4 py-2.5 text-xs sm:text-[0.8125rem]">
+              {PHASES.map((p) => (
+                <li
+                  key={p}
+                  aria-current={phase === p ? "step" : undefined}
+                  className={cn(
+                    "flex items-center gap-1.5 transition-colors duration-200",
+                    phase === p ? "text-trace" : "text-muted-foreground/70"
+                  )}
+                >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "size-1.5 rounded-full transition-[background-color,box-shadow,transform] duration-200",
+                      phase === p ? "scale-125 bg-trace shadow-[0_0_8px_rgb(34_227_239/0.8)]" : "bg-white/20"
+                    )}
+                  />
+                  {p}
+                </li>
+              ))}
+            </ol>
 
             {/* drive : recovery, to scale */}
             <div className={cn("border-t border-line px-4 py-3", fade)} style={{ opacity: 0.45 + 0.55 * lit("rhythm") }}>

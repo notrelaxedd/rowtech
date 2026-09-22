@@ -6,7 +6,8 @@ import { Hero } from "@/components/site/hero";
 import { InView } from "@/components/site/in-view";
 import { ScopeStrip } from "@/components/site/scope-strip";
 import { CrewLanes } from "@/components/site/crew-lanes";
-import { CoxBoxIsland, CurveExplorerIsland, ScreenTourIsland } from "@/components/site/islands";
+import { CoxBoxIsland, CurveExplorerIsland, RiverMapIsland, ScreenTourIsland } from "@/components/site/islands";
+import { RiverMapView } from "@/components/site/river-map-view";
 import { CurveExplorerView } from "@/components/site/curve-explorer-view";
 import { ScreenTourView } from "@/components/site/screen-tour-view";
 import { CoxBoxView } from "@/components/site/cox-box-view";
@@ -172,7 +173,7 @@ export default function Home() {
           <div className={cn(wrap, "grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-16")}>
             <div>
               <Coming>In development</Coming>
-              <h2 className="type-h2 mt-6">See who&rsquo;s early. See who&rsquo;s carrying the boat.</h2>
+              <h2 data-reveal="" className="fade-up type-h2 mt-6">See who&rsquo;s early. See who&rsquo;s carrying the boat.</h2>
               <p className="type-body mt-6 max-w-[58ch] text-muted-foreground">
                 A rate meter tells you about the boat. RowTech shows you every seat in it: whose catch lands late, who does
                 the work through the middle of the drive, and whether bow side and stroke side pull evenly.
@@ -193,12 +194,12 @@ export default function Home() {
         <section id="how" data-section="how" className="below-fold border-t border-line bg-[#0a0d10] py-24 sm:py-28">
           <div className={wrap}>
             <div className="max-w-2xl">
-              <h2 className="type-h2">Fit it. Row. Review.</h2>
+              <h2 data-reveal="" className="fade-up type-h2">Fit it. Row. Review.</h2>
               <p className="type-lead mt-5 text-muted-foreground">No laptop in the launch, no app, no pairing.</p>
             </div>
-            <ol className="mt-14 grid grid-cols-1 gap-14 md:grid-cols-3 md:gap-8 lg:gap-12">
+            <ol data-reveal="" className="mt-14 grid grid-cols-1 gap-14 md:grid-cols-3 md:gap-8 lg:gap-12">
               {STEPS.map((s, i) => (
-                <li key={s.t}>
+                <li key={s.t} className="step" style={{ "--i": i } as React.CSSProperties}>
                   <div className={cn("flex h-64 items-center lg:h-72", "img" in s && "justify-center")}>
                     {"img" in s ? (
                       <Image
@@ -227,7 +228,7 @@ export default function Home() {
         <section id="stroke" data-section="stroke" className="below-fold py-24 sm:py-32">
           <div className={wrap}>
             <div className="max-w-3xl">
-              <h2 className="type-h2">One stroke, taken apart.</h2>
+              <h2 data-reveal="" className="fade-up type-h2">One stroke, taken apart.</h2>
               <p className="type-lead mt-5 text-muted-foreground">
                 How fast the blade loads, how high the peak is and where it lands, and where the work goes through the drive.
                 The node measures all of it on every stroke. Pick a measure, or row a stroke yourself.
@@ -246,7 +247,7 @@ export default function Home() {
         <section id="screens" data-section="screens" className="below-fold border-y border-line bg-[#0a0d10] py-24 sm:py-28">
           <div className={wrap}>
             <div className="max-w-3xl">
-              <h2 className="type-h2">Three buttons. Nothing to set up afloat.</h2>
+              <h2 data-reveal="" className="fade-up type-h2">Three buttons. Nothing to set up afloat.</h2>
               <p className="type-lead mt-5 text-muted-foreground">
                 The middle button always means NEXT, and holding it always brings you back to LIVE, so nobody gets lost
                 mid-piece.
@@ -265,7 +266,7 @@ export default function Home() {
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end lg:gap-16">
               <div>
                 <Coming>Now in development</Coming>
-                <h2 className="type-h2 mt-6">Vieve hears every seat.</h2>
+                <h2 data-reveal="" className="fade-up type-h2 mt-6">Vieve hears every seat.</h2>
               </div>
               <p className="type-lead text-muted-foreground">
                 It does the job every cox relies on, and it&rsquo;s the hub every seat node reports to. Target price for the
@@ -275,14 +276,17 @@ export default function Home() {
             <div className="mt-12">
               <CoxBoxIsland fallback={<CoxBoxView lit={8} />} />
             </div>
-            <dl className="mt-14 grid grid-cols-1 gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-              {VIEVE.map((f) => (
-                <div key={f.t}>
-                  <dt className="type-h3">{f.t}</dt>
-                  <dd className="type-body mt-2 text-muted-foreground">{f.d}</dd>
-                </div>
-              ))}
-            </dl>
+            <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-16">
+              <RiverMapIsland className="mx-auto w-full max-w-md lg:max-w-none" fallback={<RiverMapView />} />
+              <dl className="grid grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2">
+                {VIEVE.map((f) => (
+                  <div key={f.t}>
+                    <dt className="type-h3">{f.t}</dt>
+                    <dd className="type-body mt-2 text-muted-foreground">{f.d}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
             <SectionEnd from="vieve">Vieve is being built with our beta crews. Apply and help decide what goes on it.</SectionEnd>
           </div>
         </section>
@@ -291,7 +295,7 @@ export default function Home() {
         <section id="boathouse" data-section="boathouse" className="below-fold border-t border-line bg-[#0a0d10] py-24 sm:py-28">
           <div className={wrap}>
             <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-16">
-              <h2 className="type-h2">Made for the boathouse, not the lab.</h2>
+              <h2 data-reveal="" className="fade-up type-h2">Made for the boathouse, not the lab.</h2>
               <div>
                 <dl className="grid grid-cols-1 gap-x-12 gap-y-10 sm:grid-cols-2">
                   {BOATHOUSE.map((f) => (
@@ -327,7 +331,7 @@ export default function Home() {
         {/* ----------------------------------------------- what's in the beta */}
         <section id="beta-scope" data-section="beta-scope" className="below-fold border-t border-line py-24 sm:py-28">
           <div className={wrap}>
-            <h2 className="type-h2 max-w-3xl">What&rsquo;s in the beta.</h2>
+            <h2 data-reveal="" className="fade-up type-h2 max-w-3xl">What&rsquo;s in the beta.</h2>
             <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-line">
               <div className="lg:pr-12">
                 <h3 className="type-h3 flex items-center gap-2.5">
@@ -368,7 +372,7 @@ export default function Home() {
         <section id="faq" data-section="faq" className="below-fold border-t border-line bg-[#0a0d10] py-24 sm:py-28">
           <div className={wrap}>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-16">
-              <h2 className="type-h2">Questions coaches ask first.</h2>
+              <h2 data-reveal="" className="fade-up type-h2">Questions coaches ask first.</h2>
               <div className="divide-y divide-line border-y border-line">
                 {FAQ.map((f) => (
                   <details key={f.q} className="group">
@@ -391,7 +395,7 @@ export default function Home() {
         {/* ------------------------------------------------ the beta, plainly */}
         <section id="beta" data-section="beta" className="below-fold border-t border-line py-24 sm:py-28">
           <div className={wrap}>
-            <h2 className="type-h2 max-w-3xl">The beta, plainly.</h2>
+            <h2 data-reveal="" className="fade-up type-h2 max-w-3xl">The beta, plainly.</h2>
             <div className="mt-12 grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-8 lg:gap-12">
               {BETA.map((b) => (
                 <div key={b.h} className="border-t border-line pt-6">
@@ -417,7 +421,7 @@ export default function Home() {
           <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-full bg-[radial-gradient(60%_80%_at_50%_100%,rgb(34_227_239/0.12),transparent)]" />
           <ClosingTrace />
           <div className={cn(wrap, "relative py-28 sm:py-36")}>
-            <h2 className="type-h2 max-w-4xl">Want to see inside your boat?</h2>
+            <h2 data-reveal="" className="fade-up type-h2 max-w-4xl">Want to see inside your boat?</h2>
             <p className="type-lead mt-6 max-w-[52ch] text-muted-foreground">
               We&rsquo;re choosing beta crews now. Tell us about your boat. It takes two minutes and commits you to nothing.
             </p>

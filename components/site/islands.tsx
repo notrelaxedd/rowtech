@@ -49,3 +49,4 @@ function island<P extends object>(load: () => Promise<ComponentType<P>>, margin 
 export const CurveExplorerIsland = island(() => import("./curve-explorer").then((m) => m.CurveExplorer));
 export const ScreenTourIsland = island(() => import("./screen-tour").then((m) => m.ScreenTour));
 export const CoxBoxIsland = island(() => import("./cox-box-diagram").then((m) => m.CoxBoxDiagram));
+export const RiverMapIsland = island(() => import("./river-map").then((m) => m.RiverMap));

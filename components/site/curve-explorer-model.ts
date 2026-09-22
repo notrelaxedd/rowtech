@@ -143,3 +143,40 @@ export const STATE: Record<LiveState, { text: string; lamp: string; tone: string
 };
 
 export const IDLE_INPUT: Input = { src: "none", kg: 0, since: 0 };
+
+// -----------------------------------------------------------------------------
+// Phases of the example stroke, for the strip under the chart and the cursor
+// that runs along the curve.
+// -----------------------------------------------------------------------------
+export const PHASES = ["catch", "drive", "peak", "release", "recovery"] as const;
+export type Phase = (typeof PHASES)[number];
+
+export function phaseAt(t: number): Phase {
+  if (Math.abs(t - M.catchT) < 0.03) return "catch";
+  if (Math.abs(t - M.peakT) < 0.04) return "peak";
+  if (Math.abs(t - M.releaseT) < 0.03) return "release";
+  if (t > M.catchT && t < M.releaseT) return "drive";
+  return "recovery";
+}
+
+/** Where on the stroke each measure lives: picking one sends the cursor there. */
+export function metricT(id: MetricId): number {
+  switch (id) {
+    case "catch":
+      return M.catchT;
+    case "rise":
+      return M.catchT + 0.05;
+    case "peak":
+    case "consistency":
+      return M.peakT;
+    case "thirds":
+      return (M.catchT + M.releaseT) / 2;
+    case "release":
+      return M.releaseT;
+    case "rhythm":
+      return Math.min(T1 - 0.02, M.releaseT + 0.18);
+  }
+}
+
+/** Time on the chart under a viewBox x, clamped to the chart. */
+export const tAtX = (vx: number) => Math.min(T1, Math.max(T0, T0 + ((vx - PX0) / (PX1 - PX0)) * (T1 - T0)));

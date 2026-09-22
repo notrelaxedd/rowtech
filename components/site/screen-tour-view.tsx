@@ -38,16 +38,34 @@ export const SCREENS = [
   },
 ] as const;
 
+// Soft-key boxes in the screen renders (960x640, the panel at 2x): the right
+// 84 panel px, split into three between the header and the bottom edge.
+const SOFT_KEYS = [
+  { left: "82.5%", width: "17.5%", top: "8.75%", height: "29.7%" },
+  { left: "82.5%", width: "17.5%", top: "39.1%", height: "29.7%" },
+  { left: "82.5%", width: "17.5%", top: "69.4%", height: "29.7%" },
+];
+
 export function ScreenTourView({
   i,
   onSelect,
   onKey,
   tabRef,
+  hot = null,
+  pressed = 0,
+  onHot,
+  onPress,
 }: {
   i: number;
   onSelect?: (n: number) => void;
   onKey?: (e: KeyboardEvent) => void;
   tabRef?: (n: number) => (el: HTMLButtonElement | null) => void;
+  /** The button under the pointer or focus: its soft key lights on screen. */
+  hot?: number | null;
+  /** Bumped on every press, to replay the press flash. */
+  pressed?: number;
+  onHot?: (n: number | null) => void;
+  onPress?: (n: number) => void;
 }) {
   const s = SCREENS[i];
   return (
@@ -80,7 +98,7 @@ export function ScreenTourView({
         aria-labelledby={`tab-${s.id}`}
         className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-center lg:gap-12"
       >
-        <div className="rounded-xl bg-[#0b0d10] p-2.5 ring-1 ring-white/10 sm:p-3.5">
+        <div className="relative rounded-xl bg-[#0b0d10] p-2.5 ring-1 ring-white/10 sm:p-3.5">
           <Image
             key={s.id}
             src={`/product/${s.id}.png`}
@@ -90,21 +108,53 @@ export function ScreenTourView({
             unoptimized
             className="block h-auto w-full rounded-[3px]"
           />
+          {/* The three soft keys down the right of the screen, where the
+              firmware draws each button's label. */}
+          <div aria-hidden className="pointer-events-none absolute inset-2.5 sm:inset-3.5">
+            {SOFT_KEYS.map((k, n) => (
+              <span
+                key={`${n}-${hot === n ? pressed : 0}`}
+                style={k}
+                className={cn(
+                  "absolute rounded-[2px] transition-[box-shadow,background-color] duration-200",
+                  hot === n ? "bg-trace/15 shadow-[inset_0_0_0_2px_var(--trace),0_0_18px_rgb(34_227_239/0.35)]" : "bg-transparent",
+                  hot === n && pressed > 0 && "rt-key-press"
+                )}
+              />
+            ))}
+          </div>
         </div>
         <div>
           <h3 className="type-h3 text-[1.5rem]">{s.title}</h3>
           <p className="type-body mt-3 text-muted-foreground">{s.body}</p>
-          <dl className="mt-6 divide-y divide-line border-y border-line">
+          <ul aria-label="Buttons on this screen" className="mt-6 divide-y divide-line border-y border-line">
             {s.keys.map(([k, v], n) => (
-              <div key={k} className="grid grid-cols-[5.5rem_1fr] items-baseline gap-4 py-3">
-                <dt className="readout text-sm text-foreground">
-                  <span aria-hidden className="mr-2 text-muted-foreground">{["↑", "○", "↓"][n]}</span>
-                  {k}
-                </dt>
-                <dd className="text-[0.9375rem] text-muted-foreground">{v}</dd>
-              </div>
+              <li key={k}>
+                <button
+                  type="button"
+                  onPointerEnter={onHot && (() => onHot(n))}
+                  onPointerLeave={onHot && (() => onHot(null))}
+                  onFocus={onHot && (() => onHot(n))}
+                  onBlur={onHot && (() => onHot(null))}
+                  onClick={onPress && (() => onPress(n))}
+                  className={cn(
+                    "grid w-full grid-cols-[5.5rem_1fr] items-baseline gap-4 py-3 text-left transition-colors",
+                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace",
+                    hot === n && "bg-white/[0.03]"
+                  )}
+                >
+                  <span className={cn("readout text-sm transition-colors", hot === n ? "text-trace" : "text-foreground")}>
+                    <span aria-hidden className={cn("mr-2 transition-colors", hot === n ? "text-trace" : "text-muted-foreground")}>
+                      {["↑", "○", "↓"][n]}
+                    </span>
+                    {k}
+                  </span>
+                  <span className="text-[0.9375rem] text-muted-foreground">{v}</span>
+                </button>
+              </li>
             ))}
-          </dl>
+          </ul>
+          <p className="mt-3 text-sm text-muted-foreground">Point at a button to find it on the screen. NEXT works like it does on the water.</p>
         </div>
       </div>
     </div>

@@ -1,23 +1,35 @@
 import type { Ref } from "react";
 import { cn } from "@/lib/utils";
 
-// Top-down eight: a node on every rigger, each reporting to the cox box at the
+// Top-down eight: a node on every rigger, each reporting to Vieve at the
 // stern. A diagram of the system in development, not a drawing of hardware.
-// Scrolling through it connects the seats one at a time, bow to stroke; with
-// all eight in, the cox box lights and its clock pulse starts.
+// Driven by the client (cox-box-diagram.tsx): seats join the clock bow to
+// stern, one per tick; then the whole crew pulses together on every tick.
+// At rest -- server render, reduced motion -- everything is connected.
 const HULL = "M28 150 C 220 118, 760 116, 972 150 C 760 184, 220 182, 28 150 Z";
 const SEAT_X = [236, 318, 400, 482, 564, 646, 728, 810]; // bow (1) to stroke (8)
 const BOX = { x: 872, y: 150 };
 
-export function CoxBoxView({ lit, figureRef }: { lit: number; figureRef?: Ref<HTMLElement> }) {
+export function CoxBoxView({
+  lit,
+  tick = 0,
+  figureRef,
+}: {
+  /** Seats on the clock, bow first. */
+  lit: number;
+  /** Clock ticks so far; each one restarts the pulse. 0 = no pulse. */
+  tick?: number;
+  figureRef?: Ref<HTMLElement>;
+}) {
   const all = lit >= 8;
+
   return (
     <figure ref={figureRef} className="m-0">
       <div className="rounded-lg border border-line bg-panel px-3 py-6 sm:px-6 sm:py-8">
         <svg
           viewBox="0 44 1000 212"
           role="img"
-          aria-label="Diagram: an eight seen from above, with a RowTech node on each of the eight riggers sending its data to Vieve, the cox box at the stern."
+          aria-label="Diagram: an eight seen from above, with a RowTech node on each of the eight riggers. Vieve, the cox box at the stern, keeps every node on one clock, within 5 milliseconds."
           className="block h-auto w-full"
         >
           <defs>
@@ -63,11 +75,15 @@ export function CoxBoxView({ lit, figureRef }: { lit: number; figureRef?: Ref<HT
                   filter={on ? "url(#glow)" : undefined}
                   className="transition-[fill,stroke] duration-300 ease-out"
                 />
+                {/* The shared tick, landing on every seat at once. */}
+                {all && tick > 0 && (
+                  <rect key={tick} x={x - 7} y={nodeY - 7} width={14} height={14} rx={3} fill="var(--trace)" className="rt-tick-flash" />
+                )}
               </g>
             );
           })}
 
-          {all && <circle cx={BOX.x} cy={BOX.y} r={16} fill="none" stroke="var(--trace)" className="rt-ping" />}
+          {tick > 0 && <circle key={tick} cx={BOX.x} cy={BOX.y} r={16} fill="none" stroke="var(--trace)" className="rt-ping-once" />}
           <rect
             x={BOX.x - 16}
             y={BOX.y - 11}
@@ -80,12 +96,21 @@ export function CoxBoxView({ lit, figureRef }: { lit: number; figureRef?: Ref<HT
             className="transition-[fill] duration-500 ease-out"
           />
         </svg>
-        <div className="readout mt-4 flex justify-between gap-4 text-xs text-muted-foreground">
-          <span>bow</span>
-          <span aria-hidden>
-            <span className={cn("transition-colors duration-300", all ? "text-trace" : "text-foreground")}>{lit}/8</span> seats on one
-            clock <span>→</span> <span className="text-trace">Vieve</span> · stern
-          </span>
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+          <p className="readout text-xs text-muted-foreground">
+            bow <span aria-hidden>→</span> stern ·{" "}
+            <span className={cn("transition-colors duration-300", all ? "text-trace" : "text-foreground")}>{lit}/8</span> seats on{" "}
+            <span className="text-trace">Vieve</span>&rsquo;s clock
+          </p>
+          <p
+            className={cn(
+              "flex items-baseline gap-2 transition-[opacity,transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
+              all ? "translate-y-0 opacity-100 blur-0" : "translate-y-3 opacity-0 blur-[3px]"
+            )}
+          >
+            <span className="text-sm text-muted-foreground">every seat within</span>
+            <span className="readout text-3xl text-trace sm:text-4xl">5 ms</span>
+          </p>
         </div>
       </div>
     </figure>
