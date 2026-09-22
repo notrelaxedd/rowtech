@@ -34,8 +34,8 @@ export function Hero() {
           </p>
           <div className="rt-rise mt-8 flex flex-wrap gap-3" style={d(520)}>
             <BetaLink from="hero" className="max-sm:w-full" />
-            <Link href="#how" className={cn(ctaSecondary, "max-sm:w-full")}>
-              See how it works
+            <Link href="/demo?from=hero" data-cta="hero-demo" className={cn(ctaSecondary, "max-sm:w-full")}>
+              See what a session looks like
             </Link>
           </div>
           <p className="rt-rise mt-5 text-sm text-muted-foreground" style={d(600)}>

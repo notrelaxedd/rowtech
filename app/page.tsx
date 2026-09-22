@@ -152,7 +152,7 @@ const FAQ = [
   },
   {
     q: "Where does the data go?",
-    a: "Onto each node’s SD card, and off it as plain files over the node’s own WiFi. Beta crews upload those files to the team dashboard to review them stroke by stroke.",
+    a: "Onto each node’s SD card, and off it as plain files over the node’s own WiFi. Beta crews upload those files to the team dashboard and go through the outing stroke by stroke — there’s a sample session to poke at on the demo page.",
   },
   {
     q: "How accurate is the force reading?",
@@ -221,7 +221,9 @@ export default function Home() {
                 </li>
               ))}
             </ol>
-            <SectionEnd from="how">We fit the nodes with every beta crew, for the boats you actually row.</SectionEnd>
+            <SectionEnd from="how" secondary={{ href: "/demo?from=how", label: "See what a session looks like", from: "how-demo" }}>
+              We fit the nodes with every beta crew, for the boats you actually row.
+            </SectionEnd>
           </div>
         </section>
 
@@ -240,7 +242,9 @@ export default function Home() {
                 fallback={<CurveExplorerView active="catch" mode="example" switched={false} live={emptySummary()} held="none" session={0} />}
               />
             </div>
-            <SectionEnd from="stroke">Every seat in your boat, measured like this, on every stroke of every outing.</SectionEnd>
+            <SectionEnd from="stroke" secondary={{ href: "/demo?from=stroke", label: "See a whole session", from: "stroke-demo" }}>
+              Every seat in your boat, measured like this, on every stroke of every outing.
+            </SectionEnd>
           </div>
         </section>
 

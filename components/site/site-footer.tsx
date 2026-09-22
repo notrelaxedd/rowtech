@@ -12,6 +12,7 @@ export function SiteFooter() {
           </p>
         </div>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+          <Link href="/demo" className="hover:text-foreground">See a session</Link>
           <Link href="/#how" className="hover:text-foreground">How it works</Link>
           <Link href="/#stroke" className="hover:text-foreground">One stroke</Link>
           <Link href="/#vieve" className="hover:text-foreground">Cox box</Link>
