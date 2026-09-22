@@ -1,6 +1,6 @@
 "use server";
 
-import { supabaseAnon } from "@/lib/supabase";
+import { supabaseAnon } from "@/lib/supabase/anon";
 import { BOATS, EMAIL, LIMITS, ROLES, type ApplyState, type Values } from "./fields";
 
 type Application = {
