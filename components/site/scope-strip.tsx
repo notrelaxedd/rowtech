@@ -16,7 +16,7 @@ function tracePath() {
     const t = (i / 600) * WIN_S;
     pts.push([(t / WIN_S) * W, H - 12 - (strokeForce(CATCH_S + t) / 70) * (H - 24)]);
   }
-  return toPath(pts, 0.4);
+  return toPath(pts, 0.9);
 }
 
 export function ScopeStrip() {

@@ -15,7 +15,7 @@ function path() {
     const f = t < 0 ? 0 : strokeForce(t);
     pts.push([(i / 400) * W, H - 30 - (f / 66) * (H - 80)]);
   }
-  return toPath(pts, 0.6);
+  return toPath(pts, 1.2);
 }
 
 export function ClosingTrace() {

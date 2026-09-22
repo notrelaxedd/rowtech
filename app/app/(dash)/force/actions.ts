@@ -5,6 +5,7 @@ import { supabaseServer, getViewer } from "@/lib/supabase/server";
 import { parseSession } from "@/lib/session/parse";
 import { SessionFormatError, type ParsedSession } from "@/lib/session/format";
 import { collectSessions, type NamedFile, type SessionFolder } from "@/lib/session/collect";
+import { looksLikeVieve, VieveNotSupportedError } from "@/lib/session/vieve";
 
 export type UploadState = { status: "idle" | "error" | "ok"; message: string; sessionId?: string };
 
@@ -33,6 +34,9 @@ async function collect(fd: FormData): Promise<Map<string, SessionFolder>> {
     if (!(entry instanceof File) || entry.size === 0) continue;
     files.push({ name: entry.name, bytes: new Uint8Array(await entry.arrayBuffer()) });
   }
+  // A Vieve bundle is refused outright rather than half-read: its format
+  // isn't final yet (lib/session/vieve.ts).
+  if (looksLikeVieve(files)) throw new VieveNotSupportedError();
   return collectSessions(files);
 }
 
@@ -43,7 +47,8 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
   let folders: Map<string, SessionFolder>;
   try {
     folders = await collect(fd);
-  } catch {
+  } catch (e) {
+    if (e instanceof VieveNotSupportedError) return { status: "error", message: e.message };
     return { status: "error", message: "That zip couldn't be opened." };
   }
 

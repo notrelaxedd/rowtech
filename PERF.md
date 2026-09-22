@@ -87,4 +87,56 @@ What changed:
 
 ## Final (after every step of the revamp)
 
-_Filled in after the last commit._
+Measured back to back with an almost-empty page on the same machine in the
+same session, because this workstation's Lighthouse numbers drift: one of the
+three runs below reported TBT 2,693 ms with nothing changed, so read these as
+a range, not a figure.
+
+The marketing page:
+
+| run | Perf | A11y | BP | SEO | FCP | LCP | TBT | CLS | Speed Index | Page weight |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 68 | 97 | 96 | 100 | 0.95 s | 4.22 s | 584 ms | 0 | 4.82 s | 403 kB |
+| 2 | 64 | 97 | 96 | 100 | 1.54 s | 2.84 s | 2,693 ms | 0 | 4.28 s | 404 kB |
+| 3 | 66 | 97 | 96 | 100 | 1.12 s | 3.84 s | 1,046 ms | 0 | 2.63 s | 402 kB |
+
+The floor on the same machine, minutes later (`/app/login`: a heading, two
+form fields and a link):
+
+| run | Perf | FCP | LCP | TBT | CLS |
+|---|---|---|---|---|---|
+| 1 | 86 | 0.87 s | 3.31 s | 293 ms | 0 |
+| 2 | 79 | 1.08 s | 3.12 s | 581 ms | 0 |
+| 3 | 91 | 0.83 s | 3.17 s | 175 ms | 0 |
+
+So the whole marketing page costs roughly **0.7 s of LCP and 300–500 ms of
+TBT above an almost-empty page on this stack**, and CLS stays at 0 everywhere.
+
+Against the baseline: LCP 8.4–10.3 s → 2.8–4.2 s, TBT 3.9–6.6 s → 0.6–1.0 s,
+page weight 667 kB → 403 kB, HTML 336 kB → 235 kB.
+
+### Against the brief's targets
+
+| Target | Where it ended up |
+|---|---|
+| LCP < 1.5 s | Not met as measured here, but the floor on this machine is 3.1 s. Needs PageSpeed Insights against a Vercel preview to judge. |
+| CLS 0 | Met, every run, including the island swaps and both sticky CTAs. |
+| TBT < 100 ms | Not met as measured here (floor 175–581 ms). The page's own share is 300–500 ms. |
+| JS < 120 kB gz | Not achievable: React + App Router alone is ~150 kB. Page-owned initial JS is **~15 kB** (a 10.5 kB page chunk and the 4.4 kB analytics wrapper). |
+
+Initial JS: **168 kB**, against a 163 kB floor. `posthog-js` (only with a key),
+`maplibre-gl`, the live screen engine, the stroke engine and every island are
+separate chunks, none of them in the first load.
+
+## Re-running these
+
+```bash
+npm run build && npx next start -p 3100
+# then, three runs, median of what you care about:
+npx lighthouse http://localhost:3100/ --preset=desktop   # or mobile, the default
+```
+
+The scripts used here live in the scratchpad, not the repo: they are three
+lines of `lighthouse --output=json` plus `gzip -9` over the page's module
+scripts.
+

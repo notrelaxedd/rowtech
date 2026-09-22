@@ -17,7 +17,7 @@ export const x = (t: number) => PX0 + ((t - T0) / (T1 - T0)) * (PX1 - PX0);
 export function curve(v = STROKES[0], a = T0, b = T1) {
   const pts: Array<[number, number]> = [];
   for (let t = a; t <= b + 1e-9; t += 0.004) pts.push([x(t), y(strokeForce(t, v))]);
-  return toPath(pts, 0.25);
+  return toPath(pts, 0.5);
 }
 export function area(a: number, b: number) {
   return `${curve(STROKES[0], a, b)}L${x(b).toFixed(1)} ${y(0).toFixed(1)}L${x(a).toFixed(1)} ${y(0).toFixed(1)}Z`;

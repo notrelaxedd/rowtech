@@ -6,7 +6,7 @@ import { toPath } from "./stroke";
 
 type Pt = [number, number];
 
-const N = 360;
+const N = 220;
 const HALF_WIDTH = 78;
 const MAP_H = 2400;
 
@@ -62,10 +62,10 @@ const LEFT: Pt[] = C.map(([x, y], i) => [x + NC[i][0] * HALF_WIDTH, y + NC[i][1]
 const RIGHT: Pt[] = C.map(([x, y], i) => [x - NC[i][0] * HALF_WIDTH, y - NC[i][1] * HALF_WIDTH]);
 
 export const RIVER = {
-  water: `${toPath(LEFT, 0.5)}L${toPath([...RIGHT].reverse(), 0.5).slice(1)}Z`,
-  left: toPath(LEFT, 0.5),
-  right: toPath(RIGHT, 0.5),
-  race: toPath(RACE, 0.5),
+  water: `${toPath(LEFT, 1.5)}L${toPath([...RIGHT].reverse(), 1.5).slice(1)}Z`,
+  left: toPath(LEFT, 1.5),
+  right: toPath(RIGHT, 1.5),
+  race: toPath(RACE, 1.2),
   height: MAP_H,
 };
 

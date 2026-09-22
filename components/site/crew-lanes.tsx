@@ -40,7 +40,7 @@ function ridge(off: number, k: number, y0: number) {
     const f = EXAMPLE.peakKg * k * driveShape((t - off / 1000) / PULSE);
     pts.push([x(t), y0 - f * GAIN]);
   }
-  const line = toPath(pts, 0.25);
+  const line = toPath(pts, 0.5);
   return { line, fill: `${line}L${X1} ${y0}L${X0} ${y0}Z` };
 }
 
