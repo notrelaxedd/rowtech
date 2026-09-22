@@ -17,7 +17,7 @@ export function CoxBoxView({ lit, figureRef }: { lit: number; figureRef?: Ref<HT
         <svg
           viewBox="0 44 1000 212"
           role="img"
-          aria-label="Diagram: an eight seen from above, with a RowTech node on each of the eight riggers sending its data to the cox box at the stern."
+          aria-label="Diagram: an eight seen from above, with a RowTech node on each of the eight riggers sending its data to Vieve, the cox box at the stern."
           className="block h-auto w-full"
         >
           <defs>
@@ -84,7 +84,7 @@ export function CoxBoxView({ lit, figureRef }: { lit: number; figureRef?: Ref<HT
           <span>bow</span>
           <span aria-hidden>
             <span className={cn("transition-colors duration-300", all ? "text-trace" : "text-foreground")}>{lit}/8</span> seats on one
-            clock <span>→</span> <span className="text-trace">cox box</span> · stern
+            clock <span>→</span> <span className="text-trace">Vieve</span> · stern
           </span>
         </div>
       </div>

@@ -29,8 +29,8 @@ export function Hero() {
             <span className="rt-rise block text-trace" style={d(280)}>Measured.</span>
           </h1>
           <p className="rt-rise type-lead mt-6 max-w-[34rem] text-muted-foreground" style={d(420)}>
-            RowTech puts a force sensor on the rigger of every seat in the boat. Each node records the force curve of
-            every stroke, shows it live on the seat, and hands the whole session to the coach when the boat comes in.
+            See who&rsquo;s carrying the boat, stroke by stroke. A force sensor on every seat&rsquo;s rigger records each
+            stroke&rsquo;s force curve, shows it live on the seat, and hands you the whole session when the boat comes in.
           </p>
           <div className="rt-rise mt-8 flex flex-wrap gap-3" style={d(520)}>
             <BetaLink from="hero" className="max-sm:w-full" />
@@ -39,7 +39,7 @@ export function Hero() {
             </Link>
           </div>
           <p className="rt-rise mt-5 text-sm text-muted-foreground" style={d(600)}>
-            For coaches, clubs and programs. Applying takes two minutes and commits you to nothing.
+            For coaches, clubs and programs. We&rsquo;re choosing beta crews now: two minutes to apply, no commitment.
           </p>
         </div>
 

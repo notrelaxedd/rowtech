@@ -6,7 +6,7 @@ const FILES = [
   ["strokes.csv", "Every stroke's numbers"],
   ["curves.bin", "Every force curve"],
   ["events.csv", "What happened, and when"],
-  ["meta.json", "Boat, seat and settings"],
+  ["meta.json", "Seat, settings and calibration"],
 ] as const;
 
 export function SessionFiles() {

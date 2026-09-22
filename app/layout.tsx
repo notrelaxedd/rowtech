@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     template: "%s · RowTech",
   },
   description:
-    "A force sensor on the rigger of every seat. Every stroke measured, live on the seat and reviewed stroke by stroke afterwards, with a cox box of our own on the way. Now recruiting beta crews.",
+    "See who's carrying the boat. A force sensor on the rigger of every seat measures every stroke, live on the seat and stroke by stroke afterwards. Vieve, the RowTech cox box, is on the way. Now choosing beta crews.",
   openGraph: {
     title: "RowTech — force from every seat in the boat",
     description:

@@ -6,7 +6,7 @@ const links = [
   { href: "/#crew", label: "The crew view" },
   { href: "/#how", label: "How it works" },
   { href: "/#stroke", label: "One stroke" },
-  { href: "/#cox-box", label: "Cox box" },
+  { href: "/#vieve", label: "Cox box" },
   { href: "/#faq", label: "FAQ" },
 ];
 
@@ -29,7 +29,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <BetaLink from="nav" className="h-10 px-4 text-sm">
-          Join the beta
+          Apply for the beta
         </BetaLink>
       </div>
       <div aria-hidden className="rt-progress absolute inset-x-0 -bottom-px h-px bg-trace shadow-[0_0_8px_rgb(34_227_239/0.8)]" />
