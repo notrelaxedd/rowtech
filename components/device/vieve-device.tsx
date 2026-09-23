@@ -93,7 +93,8 @@ export function VieveDevice({
       <rect x={PANEL.x - 12} y={PANEL.y - 12} width={PANEL.w + 24} height={PANEL.h + 24} rx={14} fill="#05080a" stroke="rgb(255 255 255 / 0.07)" />
       {screen ?? <VieveScreen idPrefix={idPrefix} frame={{ ...PANEL, width: PANEL.w, height: PANEL.h }} />}
 
-      {/* the speaker the whole boat hears */}
+      {/* the hub's own grille: alerts and tones. The cox's calls go out of
+          the headset port to the boat's speaker harness, not out of here. */}
       <rect x={GRILLE.x} y={GRILLE.y} width={GRILLE.w} height={GRILLE.h} rx={18} fill="#161b1f" stroke="rgb(255 255 255 / 0.04)" />
       <rect x={GRILLE.x + 16} y={GRILLE.y + 16} width={GRILLE.w - 32} height={GRILLE.h - 32} fill={`url(#${idPrefix}-holes)`} />
 

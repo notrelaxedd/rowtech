@@ -257,14 +257,6 @@
 [data-reveal="armed"] .dl-done { opacity: 0; transform: scale(0.6); }
 [data-reveal="in"] .dl-done { transition: opacity 0.2s ease-out, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); transition-delay: calc(var(--i, 0) * 420ms + 1450ms); }
 
-/* Page progress along the bottom of the header, driven by scroll where the
-   browser supports scroll timelines; absent elsewhere. */
-.rt-progress { transform: scaleX(0); transform-origin: left; }
-@keyframes rt-progress { to { transform: scaleX(1); } }
-@supports (animation-timeline: scroll()) {
-  .rt-progress { animation: rt-progress linear both; animation-timeline: scroll(root); }
-}
-
 /* Cox box diagram: data flowing from each seat to the stern, and the clock
    pulse going back out. */
 @keyframes rt-signal {
@@ -333,5 +325,5 @@
   .rt-stroke-reveal, .rt-rise, .rt-blink, .rt-signal, .rt-swap, .rt-tick, .rt-key-press { animation: none; }
   .rt-tick-flash { display: none; }
   .rt-stroke-reveal { clip-path: inset(0 calc(100% - var(--sweep-end, 91%)) 0 0); }
-  .rt-ping, .rt-ping-once, .rt-stroke-cursor, .rt-progress { display: none; }
+  .rt-ping, .rt-ping-once, .rt-stroke-cursor { display: none; }
 }

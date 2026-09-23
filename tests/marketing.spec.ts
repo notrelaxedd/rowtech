@@ -62,8 +62,9 @@ test("the node's keys light their key on the device", async ({ page }) => {
 
 test("Vieve is shown as well as described", async ({ page }) => {
   await page.goto("/");
-  await page.locator("#vieve").scrollIntoViewIfNeeded();
-  // The drawing is an island: it arrives when the section nears the viewport.
+  // The drawing is an island, so scroll to the figure itself, not the heading:
+  // on a phone the section is taller than the trigger margin.
+  await page.locator("#vieve figure").first().scrollIntoViewIfNeeded();
   await expect(page.locator("#vieve").getByRole("img", { name: /Vieve V1/i })).toBeVisible({ timeout: 15000 });
   await expect(page.locator("#vieve")).toContainText("Vieve specs");
 });

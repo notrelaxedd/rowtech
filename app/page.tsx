@@ -61,7 +61,7 @@ const STEPS = [
 ] as const;
 
 const VIEVE = [
-  { t: "The cox’s voice", d: "Amplified down the boat, with noise cancellation." },
+  { t: "The cox’s voice", d: "Mic in, amplified out to the boat’s speakers, with noise cancellation." },
   { t: "One clock for the crew", d: "Every seat in time to within 5 ms across an eight. That’s what makes catch timing measurable." },
   { t: "GPS, ten times a second", d: "Split, rate, and speed through the drive." },
   { t: "The river, heading-up", d: "A map that turns with the boat, with the most efficient race line on it." },
@@ -95,7 +95,7 @@ const VIEVE_SPECS = [
   ["Screen", "4.3″ 800×480 sunlight-readable IPS, optically bonded and anti-glare"],
   ["Electronics", "ESP32-S3, u-blox MAX-M10S GPS at 10 Hz"],
   ["Crew link", "ESP-NOW, up to 8 seats on one clock"],
-  ["Audio", "Front-firing speaker with noise cancellation; waterproof headset port"],
+  ["Audio", "Waterproof headset port: cox mic in, boat speaker harness out, with noise cancellation"],
   ["Keys", "START / SPLIT, MODE, and a volume rocker"],
   ["Storage", "microSD workout history; uploads over WiFi ashore"],
   ["Size", "About 200 × 38 mm"],
@@ -294,8 +294,8 @@ export default function Home() {
                   <VieveShowcaseIsland fallback={<DevicePlaceholder ratio={1320 / 900} name="VIEVE" />} />
                 </div>
                 <figcaption className="mt-3 text-sm text-muted-foreground">
-                  Vieve V1, in development: a 4.3&Prime; screen, the cox&rsquo;s voice through the front speaker, and one
-                  key you can find in a race without looking.
+                  Vieve V1, in development: a 4.3&Prime; screen, the cox&rsquo;s calls amplified out to the boat&rsquo;s
+                  speakers, and one key you can find in a race without looking.
                 </figcaption>
               </figure>
               <dl className="grid grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2">

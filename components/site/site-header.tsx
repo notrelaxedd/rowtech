@@ -35,7 +35,6 @@ export function SiteHeader({ cta = true }: { cta?: boolean }) {
           </BetaLink>
         )}
       </div>
-      <div aria-hidden className="rt-progress absolute inset-x-0 -bottom-px h-px bg-trace shadow-[0_0_8px_rgb(34_227_239/0.8)]" />
     </header>
   );
 }
