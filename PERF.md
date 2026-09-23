@@ -128,6 +128,39 @@ Initial JS: **168 kB**, against a 163 kB floor. `posthog-js` (only with a key),
 `maplibre-gl`, the live screen engine, the stroke engine and every island are
 separate chunks, none of them in the first load.
 
+## After the device drawings (Force and Vieve, drawn in code)
+
+The product images became SVG drawn by the site rather than WebP and PNG
+files: the node, Vieve, both screens and the mounting schematic. That trades
+image requests for markup, so it has to be watched.
+
+| | Before the drawings | After |
+|---|---|---|
+| HTML | 235 kB | 268 kB |
+| Page weight | 403 kB | 390 kB |
+| Images requested | 7 (≈150 kB) | 0 |
+| DOM elements | 850 | ~1,000 |
+| TBT | 0.6–1.0 s | 1.2–1.5 s |
+| CLS | 0 | 0 |
+| Accessibility | 97 | **100** |
+
+The machine drifted slower across this session -- the same near-empty floor
+page measured TBT 175–581 ms earlier and 454–786 ms at the end -- so read the
+TBT rows as "roughly 0.5 s above the floor, both times", not as a clean
+before/after.
+
+What keeps it in hand:
+
+- The hero's node is server-rendered inline, because it is the page's anchor
+  and the thing the LCP sits next to. Its screen is animated by id from a
+  ~1 kB client module, not by owning the SVG in React.
+- The two below-fold drawings (the node in "Three keys", Vieve in its own
+  section) are islands: the server sends a placeholder holding their exact
+  box, and the drawing loads when the section nears the viewport. CLS stays 0.
+- Accessibility went up: each device is one labelled image describing what is
+  on its screen, and two long-standing contrast failures in the stroke widget
+  were fixed (dimming a block with `opacity` had taken its labels to 2.27:1).
+
 ## Re-running these
 
 ```bash

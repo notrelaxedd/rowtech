@@ -317,14 +317,14 @@ export function CurveExplorerView({
                   aria-current={phase === p ? "step" : undefined}
                   className={cn(
                     "flex items-center gap-1.5 transition-colors duration-200",
-                    phase === p ? "text-trace" : "text-muted-foreground/70"
+                    phase === p ? "text-trace" : "text-muted-foreground"
                   )}
                 >
                   <span
                     aria-hidden
                     className={cn(
                       "size-1.5 rounded-full transition-[background-color,box-shadow,transform] duration-200",
-                      phase === p ? "scale-125 bg-trace shadow-[0_0_8px_rgb(34_227_239/0.8)]" : "bg-white/20"
+                      phase === p ? "scale-125 bg-trace shadow-[0_0_8px_rgb(34_227_239/0.8)]" : "bg-white/35"
                     )}
                   />
                   {p}
@@ -333,8 +333,14 @@ export function CurveExplorerView({
             </ol>
 
             {/* drive : recovery, to scale */}
-            <div className={cn("border-t border-line px-4 py-3", fade)} style={{ opacity: 0.45 + 0.55 * lit("rhythm") }}>
-              <div className="flex h-2 overflow-hidden rounded-full bg-white/[0.06]" aria-hidden>
+            {/* The bar dims when another measure is picked; the words stay
+                readable, which dimming the whole block would not. */}
+            <div className="border-t border-line px-4 py-3">
+              <div
+                className={cn("flex h-2 overflow-hidden rounded-full bg-white/[0.06]", fade)}
+                style={{ opacity: 0.45 + 0.55 * lit("rhythm") }}
+                aria-hidden
+              >
                 <div className="bg-trace transition-[flex-grow] duration-500 ease-out" style={{ flexGrow: rhythm.drive }} />
                 <div className="bg-white/15 transition-[flex-grow] duration-500 ease-out" style={{ flexGrow: rhythm.recovery }} />
               </div>
@@ -368,7 +374,7 @@ export function CurveExplorerView({
             </div>
           )}
 
-          <div aria-live={isLive ? undefined : "polite"} className="mt-5 min-h-[7.5rem]">
+          <div aria-live={isLive ? undefined : "polite"} className="mt-5 min-h-[7.5rem] bg-background">
             <p className="type-h3">
               {current.label} <span className="readout ml-2 text-base font-normal text-trace">{shown.value}</span>
             </p>

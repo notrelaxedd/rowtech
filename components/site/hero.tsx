@@ -1,11 +1,11 @@
-import Image from "next/image";
 import Link from "next/link";
 import { BetaLink, ctaSecondary } from "./cta";
-import { HeroScreen } from "./hero-screen";
+import { ForceDevice } from "@/components/device/force-device";
+import { ScreenAnimator } from "@/components/device/screen-animator";
 import { cn } from "@/lib/utils";
 
-// Server-rendered. The only client code is the running screen, which loads
-// after the page does and lays itself over the still render's screen.
+// Server-rendered, including the node and its screen. The only client code is
+// the animator, which runs the screen the server already drew.
 export function Hero() {
   const d = (ms: number) => ({ "--d": `${ms}ms` }) as React.CSSProperties;
 
@@ -29,7 +29,7 @@ export function Hero() {
             <span className="rt-rise block text-trace" style={d(280)}>Measured.</span>
           </h1>
           <p className="rt-rise type-lead mt-6 max-w-[34rem] text-muted-foreground" style={d(420)}>
-            See who&rsquo;s carrying the boat, stroke by stroke. A force sensor on every seat&rsquo;s rigger records each
+            See who&rsquo;s carrying the boat, stroke by stroke. A Force node on every seat&rsquo;s rigger records each
             stroke&rsquo;s force curve, shows it live on the seat, and hands you the whole session when the boat comes in.
           </p>
           <div className="rt-rise mt-8 flex flex-wrap gap-3" style={d(520)}>
@@ -43,22 +43,13 @@ export function Hero() {
           </p>
         </div>
 
-        <div className="[perspective:1800px]">
-          <div className="relative [transform:rotateY(-14deg)_rotateX(5deg)] drop-shadow-[0_40px_60px_rgb(0_0_0/0.6)] max-lg:[transform:rotateY(-8deg)_rotateX(3deg)]">
-            <Image
-              src="/product/device-front.webp"
-              alt="The RowTech node: a matte black enclosure with a 3.5-inch screen showing a live force reading over the graph of the stroke in progress, and three buttons down its right edge."
-              width={1360}
-              height={794}
-              preload
-              fetchPriority="high"
-              sizes="(min-width: 1280px) 720px, (min-width: 1024px) 56vw, 100vw"
-              className="block h-auto w-full"
-            />
-            <HeroScreen />
-          </div>
+        <div className="[perspective:2000px]">
+          <figure className="relative m-0 [transform:rotateY(-13deg)_rotateX(5deg)] drop-shadow-[0_40px_60px_rgb(0_0_0/0.6)] max-lg:[transform:rotateY(-7deg)_rotateX(3deg)]">
+            <ForceDevice idPrefix="hero" className="block h-auto w-full" />
+          </figure>
         </div>
       </div>
+      <ScreenAnimator target="hero" />
     </section>
   );
 }

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { BetaLink, SectionEnd } from "@/components/site/cta";
@@ -6,8 +5,10 @@ import { Hero } from "@/components/site/hero";
 import { InView } from "@/components/site/in-view";
 import { ScopeStrip } from "@/components/site/scope-strip";
 import { CrewLanes } from "@/components/site/crew-lanes";
-import { CoxBoxIsland, CurveExplorerIsland, RiverMapIsland, ScreenTourIsland } from "@/components/site/islands";
-import { RiverMapView } from "@/components/site/river-map-view";
+import { CoxBoxIsland, CurveExplorerIsland, ScreenTourIsland, VieveShowcaseIsland } from "@/components/site/islands";
+import { ForceMount } from "@/components/device/force-mount";
+import { ForceScreen } from "@/components/device/force-screen";
+import { DevicePlaceholder } from "@/components/device/device-placeholder";
 import { CurveExplorerView } from "@/components/site/curve-explorer-view";
 import { ScreenTourView } from "@/components/site/screen-tour-view";
 import { CoxBoxView } from "@/components/site/cox-box-view";
@@ -43,21 +44,17 @@ function Coming({ children }: { children: React.ReactNode }) {
 
 const STEPS = [
   {
-    img: { src: "/product/device-side.webp", alt: "The node from its side, showing the port where the sensor cable enters.", w: 1116, h: 972 },
+    art: "mount",
     t: "Fit a node to each seat",
-    d: "The sensor goes on the rigger backstay and cables to the node beside it. Each node runs on its own battery.",
+    d: "The load cell goes in the rigger backstay; the node clamps to the stay in front of the rower, over or under it. One thumbscrew, and the screen flips to face you either way up.",
   },
   {
-    img: {
-      src: "/product/device-stroke.webp",
-      alt: "The node showing its STROKE screen: 28.4 strokes a minute, drive and recovery times, peak position and the last stroke’s force curve.",
-      w: 1496,
-      h: 1030,
-    },
+    art: "device",
     t: "Row",
-    d: "Each node finds every catch and release on its own and records from the first stroke. Nobody presses record.",
+    d: "Each node finds every catch and release on its own and records from the first stroke. The rower reads their own peak and curve. Nobody presses record.",
   },
   {
+    art: "files",
     t: "Review",
     d: "At the dock, join the node’s WiFi from a phone and download the session: every stroke, every force curve.",
   },
@@ -80,16 +77,29 @@ const BOATHOUSE = [
 ] as const;
 
 const SPECS = [
-  ["Sensor", "Force sensor on the rigger backstay"],
-  ["Electronics", "HX711 into an ESP32-S3"],
-  ["Sampling", "80 samples a second"],
+  ["Load cell", "PBCL-11 50 kg button cell, in series on the rigger backstay"],
+  ["Electronics", "ESP32-S3-MINI-1U with an HX711, 80 samples a second"],
   ["Catch timing", "Detected on the node, to within about 3 ms"],
   ["Calibration", "Up to 5 points against known weights; reports its own worst-case error"],
-  ["Screen", "3.5\" TFT: LIVE, STROKE and SESSION"],
-  ["Buttons", "TARE, NEXT, UNITS"],
-  ["Battery", "About 8 hours"],
+  ["Screen", "3.5″ 480×320 TFT; flips automatically when the node hangs under the rigger"],
+  ["Keys", "VIEW, TARE, POWER under a sealed membrane, plus the link LED"],
+  ["Seat badge", "Snap-in tab, 1 to 8: it sets which seat the node is"],
+  ["Mounting", "Reversible split clamp, one thumbscrew; detented hinge, 0–40°"],
+  ["Battery", "About 8 hours, charged over USB-C"],
   ["Network", "Its own WiFi network; download from any phone or laptop"],
-  ["Storage", "SD card. Per session: strokes.csv, curves.bin, events.csv, meta.json"],
+  ["Storage", "microSD. Per session: strokes.csv, curves.bin, events.csv, meta.json"],
+  ["Size", "120 × 84 × 32 mm"],
+] as const;
+
+const VIEVE_SPECS = [
+  ["Screen", "4.3″ 800×480 sunlight-readable IPS, optically bonded and anti-glare"],
+  ["Electronics", "ESP32-S3, u-blox MAX-M10S GPS at 10 Hz"],
+  ["Crew link", "ESP-NOW, up to 8 seats on one clock"],
+  ["Audio", "Front-firing speaker with noise cancellation; waterproof headset port"],
+  ["Keys", "START / SPLIT, MODE, and a volume rocker"],
+  ["Storage", "microSD workout history; uploads over WiFi ashore"],
+  ["Size", "About 200 × 38 mm"],
+  ["Target retail", "$250–300, hub only"],
 ] as const;
 
 const TODAY = [
@@ -201,16 +211,13 @@ export default function Home() {
             <ol data-reveal="" className="mt-14 grid grid-cols-1 gap-14 md:grid-cols-3 md:gap-8 lg:gap-12">
               {STEPS.map((s, i) => (
                 <li key={s.t} className="step" style={{ "--i": i } as React.CSSProperties}>
-                  <div className={cn("flex h-64 items-center lg:h-72", "img" in s && "justify-center")}>
-                    {"img" in s ? (
-                      <Image
-                        src={s.img.src}
-                        alt={s.img.alt}
-                        width={s.img.w}
-                        height={s.img.h}
-                        sizes="(min-width: 768px) 30vw, 100vw"
-                        className="h-full w-full object-contain"
-                      />
+                  <div className="flex h-64 items-center justify-center lg:h-72">
+                    {s.art === "mount" ? (
+                      <ForceMount className="h-full w-full" />
+                    ) : s.art === "device" ? (
+                      <div className="w-full rounded-lg bg-[#0b0d10] p-2 ring-1 ring-white/10">
+                        <ForceScreen idPrefix="step" />
+                      </div>
                     ) : (
                       <SessionFiles />
                     )}
@@ -252,14 +259,14 @@ export default function Home() {
         <section id="screens" data-section="screens" className="below-fold border-y border-line bg-[#0a0d10] py-24 sm:py-28">
           <div className={wrap}>
             <div className="max-w-3xl">
-              <h2 data-reveal="" className="fade-up type-h2">Three buttons. Nothing to set up afloat.</h2>
+              <h2 data-reveal="" className="fade-up type-h2">Three keys. Nothing to set up afloat.</h2>
               <p className="type-lead mt-5 text-muted-foreground">
-                The middle button always means NEXT, and holding it always brings you back to LIVE, so nobody gets lost
-                mid-piece.
+                VIEW, TARE and POWER, under a sealed membrane you can work in a glove. The rower sees their own peak and
+                their own curve; nobody is reading a menu mid-piece.
               </p>
             </div>
             <div className="mt-12">
-              <ScreenTourIsland fallback={<ScreenTourView i={0} />} />
+              <ScreenTourIsland fallback={<ScreenTourView placeholder />} />
             </div>
             <SectionEnd from="screens">Your crew will have it figured out by the first paddle. Beta crews tell us what else belongs on the screen.</SectionEnd>
           </div>
@@ -281,8 +288,16 @@ export default function Home() {
             <div className="mt-12">
               <CoxBoxIsland fallback={<CoxBoxView lit={8} />} />
             </div>
-            <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-16">
-              <RiverMapIsland className="mx-auto w-full max-w-md lg:max-w-none" fallback={<RiverMapView />} />
+            <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)] lg:items-start lg:gap-16">
+              <figure className="m-0">
+                <div className="rounded-xl bg-[#0b0d10] p-3 ring-1 ring-white/10 sm:p-4">
+                  <VieveShowcaseIsland fallback={<DevicePlaceholder ratio={1320 / 900} name="VIEVE" />} />
+                </div>
+                <figcaption className="mt-3 text-sm text-muted-foreground">
+                  Vieve V1, in development: a 4.3&Prime; screen, the cox&rsquo;s voice through the front speaker, and one
+                  key you can find in a race without looking.
+                </figcaption>
+              </figure>
               <dl className="grid grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2">
                 {VIEVE.map((f) => (
                   <div key={f.t}>
@@ -292,6 +307,25 @@ export default function Home() {
                 ))}
               </dl>
             </div>
+            <details className="group mt-12 border-y border-line">
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 py-4 text-[1.0625rem] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace [&::-webkit-details-marker]:hidden">
+                Vieve specs
+                <span aria-hidden className="relative size-3.5 shrink-0">
+                  <span className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 bg-muted-foreground" />
+                  <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-muted-foreground transition-transform duration-200 ease-out group-open:scale-y-0" />
+                </span>
+              </summary>
+              <dl className="divide-y divide-line pb-4">
+                {VIEVE_SPECS.map(([k, v]) => (
+                  <div key={k} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[9rem_1fr] sm:gap-6">
+                    <dt className="readout text-sm text-muted-foreground">{k}</dt>
+                    <dd className="text-[0.9375rem]">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="pb-4 text-sm text-muted-foreground">Concept A, in development: dimensions and parts are proposed, not final.</p>
+            </details>
+
             <SectionEnd from="vieve">Vieve is being built with our beta crews. Apply and help decide what goes on it.</SectionEnd>
           </div>
         </section>

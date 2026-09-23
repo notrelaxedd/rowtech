@@ -233,7 +233,7 @@
 .land { transform-box: fill-box; transform-origin: center; }
 [data-reveal="armed"] .land { opacity: 0; transform: translateY(-16px); }
 [data-reveal="in"] .land {
-  transition: opacity 0.15s ease-out var(--d, 0ms), transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) var(--d, 0ms);
+  transition: opacity 0.15s ease-out var(--d, 0ms), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms);
 }
 .pulse-once { opacity: 0; transform-box: fill-box; transform-origin: center; }
 @keyframes rt-pulse {
@@ -255,7 +255,7 @@
 [data-reveal="in"] .dl-bar { transition: transform 0.55s cubic-bezier(0.45, 0, 0.55, 1) calc(var(--i, 0) * 420ms + 900ms); }
 .dl-done { opacity: 1; }
 [data-reveal="armed"] .dl-done { opacity: 0; transform: scale(0.6); }
-[data-reveal="in"] .dl-done { transition: opacity 0.2s ease-out, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); transition-delay: calc(var(--i, 0) * 420ms + 1450ms); }
+[data-reveal="in"] .dl-done { transition: opacity 0.2s ease-out, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); transition-delay: calc(var(--i, 0) * 420ms + 1450ms); }
 
 /* Page progress along the bottom of the header, driven by scroll where the
    browser supports scroll timelines; absent elsewhere. */

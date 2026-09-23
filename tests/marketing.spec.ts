@@ -4,8 +4,9 @@ test("the marketing page renders, and every section offers the beta", async ({ p
   await page.goto("/");
 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Every seat.");
-  // The hero still render is the LCP: it must be in the markup, not fetched later.
-  await expect(page.getByRole("img", { name: /RowTech node/i }).first()).toBeVisible();
+  // The node and its screen are drawn by the server, not fetched as a picture.
+  await expect(page.getByRole("img", { name: /Force seat node/i }).first()).toBeVisible();
+  await expect(page.locator("#hero-peak")).toHaveCount(1);
 
   for (const id of ["crew", "how", "stroke", "screens", "vieve", "boathouse", "beta-scope", "faq", "beta"]) {
     await expect(page.locator(`#${id}`)).toHaveCount(1);
@@ -44,4 +45,25 @@ test("reduced motion leaves the page in its finished state", async ({ page }) =>
   await page.locator("#crew").scrollIntoViewIfNeeded();
   await expect(page.locator('[data-reveal="armed"]')).toHaveCount(0);
   await expect(page.locator("#vieve")).toContainText("8/8");
+});
+
+test("the node's keys light their key on the device", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#screens").scrollIntoViewIfNeeded();
+
+  const view = page.getByRole("button", { name: /^VIEW/ });
+  await expect(view).toBeVisible();
+  // The device is drawn in the markup, with the screen the keys drive.
+  await expect(page.locator("#screens").getByRole("img", { name: /Force seat node/i })).toBeVisible({ timeout: 15000 });
+
+  await view.hover();
+  await expect(page.locator("#screens")).toContainText("Cycles what the screen shows");
+});
+
+test("Vieve is shown as well as described", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#vieve").scrollIntoViewIfNeeded();
+  // The drawing is an island: it arrives when the section nears the viewport.
+  await expect(page.locator("#vieve").getByRole("img", { name: /Vieve V1/i })).toBeVisible({ timeout: 15000 });
+  await expect(page.locator("#vieve")).toContainText("Vieve specs");
 });

@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     title: "RowTech — force from every seat in the boat",
     description:
       "Every seat, every stroke, measured. Now recruiting coaches and crews for the beta.",
-    images: [{ url: "/product/device-hero.webp", width: 1496, height: 1030 }],
+    images: [{ url: "/og.png", width: 1200, height: 630 }],
     type: "website",
   },
 };

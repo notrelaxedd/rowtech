@@ -88,11 +88,14 @@ export function boatAt(p: number): { x: number; y: number; heading: number } {
   return { x: ax + (bx - ax) * k, y: ay + (by - ay) * k, heading: (h * 180) / Math.PI };
 }
 
-/** The map transform that puts the boat at (cx, cy) with its heading pointing up. */
-export function headingUp(p: number, cx: number, cy: number) {
+/** The map transform that puts the boat at (cx, cy) with its heading pointing
+ *  up. `scale` zooms the river out for a small panel: 1 is the sketch's own
+ *  size, so a 400-unit-wide panel shows a bend and both banks. */
+export function headingUp(p: number, cx: number, cy: number, scale = 1) {
   const b = boatAt(p);
+  const zoom = scale === 1 ? "" : ` scale(${scale})`;
   return {
-    transform: `translate(${cx} ${cy}) rotate(${(-b.heading).toFixed(2)}) translate(${(-b.x).toFixed(1)} ${(-b.y).toFixed(1)})`,
+    transform: `translate(${cx} ${cy}) rotate(${(-b.heading).toFixed(2)})${zoom} translate(${(-b.x).toFixed(1)} ${(-b.y).toFixed(1)})`,
     heading: b.heading,
   };
 }
