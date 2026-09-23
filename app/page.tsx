@@ -291,7 +291,7 @@ export default function Home() {
             <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)] lg:items-start lg:gap-16">
               <figure className="m-0">
                 <div className="rounded-xl bg-[#0b0d10] p-3 ring-1 ring-white/10 sm:p-4">
-                  <VieveShowcaseIsland fallback={<DevicePlaceholder ratio={1320 / 900} name="VIEVE" />} />
+                  <VieveShowcaseIsland fallback={<DevicePlaceholder ratio={1320 / 760} name="VIEVE" />} />
                 </div>
                 <figcaption className="mt-3 text-sm text-muted-foreground">
                   Vieve V1, in development: a 4.3&Prime; screen, the cox&rsquo;s calls amplified out to the boat&rsquo;s

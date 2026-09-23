@@ -34,7 +34,7 @@ export function ScreenTourView({
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-center lg:gap-14">
       <div className="rounded-xl bg-[#0b0d10] p-3 ring-1 ring-white/10 sm:p-5">
-        {placeholder ? <DevicePlaceholder ratio={1180 / 860} name="FORCE" /> : <ForceDevice idPrefix={idPrefix} hot={hot} className="block h-auto w-full" />}
+        {placeholder ? <DevicePlaceholder ratio={1180 / 800} name="FORCE" /> : <ForceDevice idPrefix={idPrefix} hot={hot} className="block h-auto w-full" />}
       </div>
 
       <div>

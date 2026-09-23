@@ -16,7 +16,7 @@ export const FORCE_KEYS = [
 export type ForceKeyId = (typeof FORCE_KEYS)[number]["id"];
 
 const W = 1180;
-const H = 860;
+const H = 800;
 const BODY = { x: 24, y: 24, w: 1020, h: 740, r: 46 };
 const PANEL = { x: 86, y: 90, w: 702, h: 468 }; // the screen window, 3:2 like the panel
 const KEY_X = 900;
@@ -66,9 +66,6 @@ export function ForceDevice({
           <feGaussianBlur stdDeviation="10" />
         </filter>
       </defs>
-
-      {/* cable gland, bottom edge: the load cell lead */}
-      <rect x={838} y={BODY.y + BODY.h - 12} width={92} height={70} rx={14} fill="#161a1d" stroke="rgb(255 255 255 / 0.06)" />
 
       {/* body */}
       <rect x={BODY.x} y={BODY.y} width={BODY.w} height={BODY.h} rx={BODY.r} fill={`url(#${idPrefix}-shell)`} />
