@@ -1,0 +1,30 @@
+{
+  "format": 1,
+  "uuid": "d5f26a10-4c8e-4f1b-9a62-7c4e91b3f068",
+  "device_id": "RowTech-7A3F27",
+  "seat": 6,
+  "fw": "v10.0.0",
+  "git": "demo",
+  "session": 42,
+  "open_reason": "stroke",
+  "start_ms": 40170,
+  "units": "kg",
+  "curve_points": 64,
+  "curve_scale": 10000,
+  "sample_rate": 79.94,
+  "clock": "boot_ms",
+  "cal": {
+    "valid": true,
+    "points": 5,
+    "slope": 0.00043277,
+    "intercept": -12.4183,
+    "lin_err_pct": 0.48,
+    "tare_offset": 128920
+  },
+  "strokes": 147,
+  "dropped_samples": 9,
+  "end_ms": 357385,
+  "elapsed_ms": 317215,
+  "close_reason": "idle",
+  "closed": true
+}

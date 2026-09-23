@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Archivo, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Attribution } from "@/components/site/attribution";
+import { AttributionCapture } from "@/components/site/attribution";
+import { Analytics as ProductAnalytics } from "@/components/site/analytics";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -29,12 +30,12 @@ export const metadata: Metadata = {
     template: "%s · RowTech",
   },
   description:
-    "A force sensor on the rigger of every seat. Every stroke measured, live on the seat and reviewed stroke by stroke afterwards, with a cox box of our own on the way. Now recruiting beta crews.",
+    "See who's carrying the boat. A force sensor on the rigger of every seat measures every stroke, live on the seat and stroke by stroke afterwards. Vieve, the RowTech cox box, is on the way. Now choosing beta crews.",
   openGraph: {
     title: "RowTech — force from every seat in the boat",
     description:
       "Every seat, every stroke, measured. Now recruiting coaches and crews for the beta.",
-    images: [{ url: "/product/device-hero.webp", width: 1496, height: 1030 }],
+    images: [{ url: "/og.png", width: 1200, height: 630 }],
     type: "website",
   },
 };
@@ -50,8 +51,9 @@ export default function RootLayout({
       className={`dark ${archivo.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Attribution />
+        <AttributionCapture />
         {children}
+        <ProductAnalytics />
         <Analytics />
         <SpeedInsights />
       </body>

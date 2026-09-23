@@ -27,7 +27,7 @@ Force from every seat in the boat, measured on the water, stroke by stroke.
 - Primary CTA: apply for the beta (the `/beta` page, "Interested? Contact us for beta testing."). Secondary: see how it works, on the same page.
 - The line a visitor remembers after 10 seconds: every seat, every stroke, measured.
 - Belief ladder: the node measures something real (a force curve per stroke, not a guess); it is practical in a real boathouse (its own network, no app, survives the dock power-off); the crew view is where it is heading and beta crews shape it; applying costs nothing and commits to nothing.
-- Proof on hand: no testimonials, press or logos yet. The device screens are rendered pixel-for-pixel from the v9 firmware. Product photography is AI-generated from the CAD design and must be presented as renders, not as field photos. Nothing specific is promised to beta testers.
+- Proof on hand: no testimonials, press or logos yet. Force and Vieve are drawn on the site as vector concept renders, after "Vieve V1 + Force, concept A" (2026-09-22), in the site's own colours: they are the design, not photographs of finished hardware, and dimensions and parts are proposed. The numbers on every screen are computed from the same stroke model the rest of the page uses, not typed in. Nothing specific is promised to beta testers.
 
 ## Brand Personality
 

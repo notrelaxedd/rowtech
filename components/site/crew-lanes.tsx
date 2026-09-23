@@ -40,9 +40,15 @@ function ridge(off: number, k: number, y0: number) {
     const f = EXAMPLE.peakKg * k * driveShape((t - off / 1000) / PULSE);
     pts.push([x(t), y0 - f * GAIN]);
   }
-  const line = toPath(pts);
+  const line = toPath(pts, 0.5);
   return { line, fill: `${line}L${X1} ${y0}L${X0} ${y0}Z` };
 }
+
+// The catch dots land in the crew's real order, bow first, spaced in
+// proportion to their real timing (1 ms of catch = 30 ms of animation), once
+// every ridge has risen.
+const EARLIEST = Math.min(...SEATS.map((s) => s.off));
+const land = (off: number) => ({ "--d": `${900 + (off - EARLIEST) * 30}ms` }) as React.CSSProperties;
 
 export function CrewLanes() {
   const late = SEATS.reduce((a, s) => (s.off > a.off ? s : a));
@@ -71,18 +77,12 @@ export function CrewLanes() {
             const r = ridge(s.off, s.k, y0);
             return (
               <g key={s.seat}>
-                <path d={r.fill} fill="var(--panel)" />
                 <line x1={X0} x2={X1} y1={y0} y2={y0} stroke="rgb(255 255 255 / 0.1)" />
-                <path
-                  d={r.line}
-                  pathLength={1}
-                  fill="none"
-                  stroke="var(--trace)"
-                  strokeWidth={1.6}
-                  strokeLinejoin="round"
-                  className="draw"
-                  style={{ "--i": SEATS.length - 1 - i } as React.CSSProperties}
-                />
+                {/* Rises out of its own baseline, bow first. */}
+                <g className="ridge" style={{ "--i": SEATS.length - 1 - i } as React.CSSProperties}>
+                  <path d={r.fill} fill="var(--panel)" />
+                  <path d={r.line} fill="none" stroke="var(--trace)" strokeWidth={1.6} strokeLinejoin="round" />
+                </g>
               </g>
             );
           })}
@@ -103,15 +103,17 @@ export function CrewLanes() {
             const far = Math.abs(rel) > 7;
             return (
               <g key={s.seat}>
-                <circle
-                  cx={x(s.off / 1000)}
-                  cy={y0}
-                  r={far ? 3.5 : 2.5}
-                  fill={far ? "var(--warn)" : "white"}
-                  fillOpacity={far ? 1 : 0.7}
-                  className="pop"
-                  style={{ "--i": SEATS.length - 1 - i } as React.CSSProperties}
-                />
+                <g style={land(s.off)}>
+                  {far && <circle cx={x(s.off / 1000)} cy={y0} r={3.5} fill="none" stroke="var(--warn)" strokeWidth={1.5} className="pulse-once" />}
+                  <circle
+                    cx={x(s.off / 1000)}
+                    cy={y0}
+                    r={far ? 3.5 : 2.5}
+                    fill={far ? "var(--warn)" : "white"}
+                    fillOpacity={far ? 1 : 0.7}
+                    className="land"
+                  />
+                </g>
                 <text x={14} y={y0 - 3} className="fill-foreground text-[13px] font-semibold">
                   {s.seat}
                   <tspan className="fill-muted-foreground font-normal"> {s.name}</tspan>

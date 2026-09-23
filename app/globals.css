@@ -165,6 +165,14 @@
   letter-spacing: 0.02em;
 }
 
+/* Below-the-fold sections skip layout and paint until they near the
+   viewport. `auto` remembers each section's real height once it has been
+   rendered, so scrolling back never jumps. */
+@utility below-fold {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
 /* The sweep graph's quarter gridlines. */
 @utility scope-grid {
   background-image: linear-gradient(to bottom, var(--line) 1px, transparent 1px);
@@ -216,6 +224,39 @@
   transition-delay: calc(var(--i, 0) * 70ms);
 }
 
+/* Crew view: ridges rise out of their baselines, then the catch dots land in
+   the crew's real timing order (--d, set per seat), and the ones off the
+   average pulse once. */
+.ridge { transform-box: fill-box; transform-origin: 50% 100%; }
+[data-reveal="armed"] .ridge { transform: scaleY(0); }
+[data-reveal="in"] .ridge { transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i, 0) * 70ms); }
+.land { transform-box: fill-box; transform-origin: center; }
+[data-reveal="armed"] .land { opacity: 0; transform: translateY(-16px); }
+[data-reveal="in"] .land {
+  transition: opacity 0.15s ease-out var(--d, 0ms), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms);
+}
+.pulse-once { opacity: 0; transform-box: fill-box; transform-origin: center; }
+@keyframes rt-pulse {
+  from { opacity: 0.9; transform: scale(1); }
+  to   { opacity: 0; transform: scale(3.6); }
+}
+[data-reveal="in"] .pulse-once { animation: rt-pulse 1s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--d, 0ms) + 250ms) forwards; }
+
+/* Section headings: a short fade up as they arrive. */
+.fade-up[data-reveal="armed"] { opacity: 0; transform: translateY(12px); }
+.fade-up[data-reveal="in"] { transition: opacity 0.7s ease-out, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* How it works: the three steps arrive in order, then the session in step 3
+   "downloads" off the node, file by file. */
+[data-reveal="armed"] .step { opacity: 0; transform: translateY(18px); }
+[data-reveal="in"] .step { transition: opacity 0.6s ease-out, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(var(--i, 0) * 260ms); }
+.dl-bar { transform: scaleX(1); transform-origin: left; }
+[data-reveal="armed"] .dl-bar { transform: scaleX(0); }
+[data-reveal="in"] .dl-bar { transition: transform 0.55s cubic-bezier(0.45, 0, 0.55, 1) calc(var(--i, 0) * 420ms + 900ms); }
+.dl-done { opacity: 1; }
+[data-reveal="armed"] .dl-done { opacity: 0; transform: scale(0.6); }
+[data-reveal="in"] .dl-done { transition: opacity 0.2s ease-out, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); transition-delay: calc(var(--i, 0) * 420ms + 1450ms); }
+
 /* Page progress along the bottom of the header, driven by scroll where the
    browser supports scroll timelines; absent elsewhere. */
 .rt-progress { transform: scaleX(0); transform-origin: left; }
@@ -242,6 +283,19 @@
   transform-origin: center;
   animation: rt-ping 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
+
+/* Buttons section: a press on a soft key, and Vieve's shared tick landing on
+   every seat. */
+@keyframes rt-key-press {
+  0% { background-color: rgb(34 227 239 / 0.55); }
+  100% { background-color: rgb(34 227 239 / 0.15); }
+}
+.rt-key-press { animation: rt-key-press 380ms ease-out; }
+@keyframes rt-tick-flash {
+  from { opacity: 0.85; }
+  to   { opacity: 0; }
+}
+.rt-tick-flash { opacity: 0; animation: rt-tick-flash 600ms ease-out; }
 
 /* The REC lamp. */
 @keyframes rt-blink {
@@ -276,7 +330,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .rt-stroke-reveal, .rt-rise, .rt-blink, .rt-signal, .rt-swap, .rt-tick { animation: none; }
+  .rt-stroke-reveal, .rt-rise, .rt-blink, .rt-signal, .rt-swap, .rt-tick, .rt-key-press { animation: none; }
+  .rt-tick-flash { display: none; }
   .rt-stroke-reveal { clip-path: inset(0 calc(100% - var(--sweep-end, 91%)) 0 0); }
   .rt-ping, .rt-ping-once, .rt-stroke-cursor, .rt-progress { display: none; }
 }

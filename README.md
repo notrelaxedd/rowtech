@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RowTech
 
-## Getting Started
-
-First, run the development server:
+The RowTech site: the marketing page and beta funnel at `/`, and the beta
+dashboard at `/app`. Next.js (App Router) + Tailwind + Supabase, on Vercel.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev     # http://localhost:3000
+npm run build && npm start
+npm run lint
+npx playwright test
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Copy `.env.example` to `.env.local`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | What it does |
+|---|---|
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | Supabase project `rowtech`. Server-side only. The publishable key can insert into `beta_signups` and, for a signed-in user, read what RLS allows. |
+| `SITE_URL` | Absolute site URL, for Open Graph tags and auth redirects. Optional on Vercel. |
+| `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | Product analytics. **No project exists yet.** With the key unset, `posthog-js` is never downloaded and no events are sent. |
+| `BETA_DRY_RUN` | `1` makes the beta form validate and confirm without writing to Supabase. Used by the Playwright tests; never set it in production. |
 
-## Learn More
+## Layout
 
-To learn more about Next.js, take a look at the following resources:
+| Path | What's there |
+|---|---|
+| `app/page.tsx` | The marketing page. Server components; interactive blocks are islands (`components/site/islands.tsx`). |
+| `app/beta` | The application form, its server action and the shared field definitions. |
+| `app/app` | The dashboard. `(dash)` is gated; `login` is not. |
+| `lib/stroke.ts`, `lib/stroke-detector.ts` | The node's own maths, in the browser: the marketing page's numbers are computed, not typed in. |
+| `components/device` | Force and Vieve, drawn as SVG in the site's colours (after "Vieve V1 + Force, concept A"): the devices, their screens, and the animator that runs the hero's screen. |
+| `supabase/migrations` | Applied to the `rowtech` project. |
+| `PERF.md` | Lighthouse baselines, targets, and what this machine's floor is. |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Supabase
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Schema changes go in `supabase/migrations`, named for the version Supabase
+records. `beta_signups` holds beta applications (it predates the revamp and
+was extended, not replaced).
 
-## Deploy on Vercel
+### Dashboard access
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`/app` is open to emails in `public.allowed_users`. Anyone else who signs in
+gets the "request beta access" page. To let someone in:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sql
+insert into public.allowed_users (email, note)
+values ('lower-case@example.com', 'Club, joined Sept')
+on conflict (email) do nothing;
+```
+
+### Auth setup, still to do in the Supabase dashboard
+
+These can't be set from migrations:
+
+1. **Google provider** — Authentication → Providers → Google: add the Google
+   OAuth client ID and secret. Magic links work without this; the "Continue
+   with Google" button will fail until it's done.
+2. **Redirect URLs** — Authentication → URL Configuration: set Site URL to the
+   production domain, and add `https://<domain>/auth/callback` plus
+   `http://localhost:3000/auth/callback` to the allow list.

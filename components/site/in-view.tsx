@@ -1,45 +1,12 @@
-"use client";
-
-import { useEffect, useRef } from "react";
-
 /**
- * Scroll-reveal wrapper. Everything inside renders fully drawn by default; on
- * mount, if the block is still below the fold (and motion is allowed), it is
- * armed -- `data-reveal="armed"` -- and flips to "in" when it scrolls into view.
- * CSS in globals.css does the rest: `.draw` paths trace themselves (use
- * pathLength={1}), `.pop` marks scale in, `.rise` items slide up, all staggered
- * by `--i`. If JS never runs, nothing is hidden.
+ * Marks a block for a scroll reveal. No client code of its own: the page's
+ * single observer (reveals.tsx) arms it if it is below the fold and plays it
+ * when it scrolls in. Rendered fully drawn until then, so nothing is ever
+ * hidden without JS.
  */
-export function InView({
-  children,
-  className,
-  threshold = 0.3,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  threshold?: number;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (el.getBoundingClientRect().top < window.innerHeight * 0.85) return;
-    el.dataset.reveal = "armed";
-    const io = new IntersectionObserver(
-      (entries) => {
-        // Batched entries: reveal if any of them saw the block on screen.
-        if (!entries.some((e) => e.isIntersecting)) return;
-        el.dataset.reveal = "in";
-        io.disconnect();
-      },
-      { threshold }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [threshold]);
+export function InView({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div ref={ref} className={className}>
+    <div data-reveal="" className={className}>
       {children}
     </div>
   );

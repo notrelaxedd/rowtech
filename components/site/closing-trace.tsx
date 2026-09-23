@@ -15,13 +15,13 @@ function path() {
     const f = t < 0 ? 0 : strokeForce(t);
     pts.push([(i / 400) * W, H - 30 - (f / 66) * (H - 80)]);
   }
-  return toPath(pts);
+  return toPath(pts, 1.2);
 }
 
 export function ClosingTrace() {
   const d = path();
   return (
-    <InView threshold={0.2} className="pointer-events-none absolute inset-x-0 bottom-0 h-[85%]">
+    <InView className="pointer-events-none absolute inset-x-0 bottom-0 h-[85%]">
       <svg aria-hidden viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-full w-full">
         <defs>
           <linearGradient id="closing-fill" x1="0" x2="0" y1="0" y2="1">

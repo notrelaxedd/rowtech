@@ -25,12 +25,39 @@ export function BetaLink({
   className?: string;
 }) {
   return (
-    <Link href={`/beta?from=${from}`} className={cn(ctaPrimary, "group", className)}>
+    <Link href={`/beta?from=${from}`} data-cta={from} className={cn(ctaPrimary, "group", className)}>
       {children}
       <ArrowRight
         aria-hidden
         className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5"
       />
     </Link>
+  );
+}
+
+/** How every section ends: one reason to apply, and the way in. */
+export function SectionEnd({
+  from,
+  children,
+  secondary,
+  className,
+}: {
+  from: string;
+  children: React.ReactNode;
+  secondary?: { href: string; label: string; from?: string };
+  className?: string;
+}) {
+  return (
+    <div className={cn("mt-14 flex flex-col gap-5 border-t border-line pt-8 sm:flex-row sm:items-center sm:justify-between sm:gap-8", className)}>
+      <p className="type-body max-w-[52ch] text-foreground">{children}</p>
+      <div className="flex shrink-0 flex-wrap gap-3">
+        {secondary && (
+          <Link href={secondary.href} data-cta={secondary.from} className={cn(ctaSecondary, "max-sm:w-full")}>
+            {secondary.label}
+          </Link>
+        )}
+        <BetaLink from={from} className="max-sm:w-full" />
+      </div>
+    </div>
   );
 }

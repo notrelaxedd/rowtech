@@ -12,11 +12,12 @@ export function SiteFooter() {
           </p>
         </div>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+          <Link href="/demo" className="hover:text-foreground">See a session</Link>
           <Link href="/#how" className="hover:text-foreground">How it works</Link>
           <Link href="/#stroke" className="hover:text-foreground">One stroke</Link>
-          <Link href="/#cox-box" className="hover:text-foreground">Cox box</Link>
-          <Link href="/#beta-scope" className="hover:text-foreground">What&rsquo;s in the beta</Link>
-          <Link href="/beta?from=footer" className="text-foreground hover:text-trace">Apply for the beta</Link>
+          <Link href="/#vieve" className="hover:text-foreground">Cox box</Link>
+          <Link href="/#beta" className="hover:text-foreground">The beta</Link>
+          <Link href="/beta?from=footer" data-cta="footer" className="text-foreground hover:text-trace">Apply for the beta</Link>
         </nav>
       </div>
       <div className="mx-auto max-w-7xl px-5 pb-10 text-xs text-muted-foreground sm:px-8">

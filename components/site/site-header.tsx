@@ -6,11 +6,12 @@ const links = [
   { href: "/#crew", label: "The crew view" },
   { href: "/#how", label: "How it works" },
   { href: "/#stroke", label: "One stroke" },
-  { href: "/#cox-box", label: "Cox box" },
+  { href: "/#vieve", label: "Cox box" },
   { href: "/#faq", label: "FAQ" },
 ];
 
-export function SiteHeader() {
+/** `cta={false}` on pages that are already the destination (/beta). */
+export function SiteHeader({ cta = true }: { cta?: boolean }) {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-5 sm:px-8">
@@ -28,9 +29,11 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <BetaLink from="nav" className="h-10 px-4 text-sm">
-          Join the beta
-        </BetaLink>
+        {cta && (
+          <BetaLink from="nav" className="h-10 px-4 text-sm">
+            Apply for the beta
+          </BetaLink>
+        )}
       </div>
       <div aria-hidden className="rt-progress absolute inset-x-0 -bottom-px h-px bg-trace shadow-[0_0_8px_rgb(34_227_239/0.8)]" />
     </header>
