@@ -26,7 +26,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <h1 className="type-h2 mt-8 text-[2rem]">Sign in</h1>
           <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
             The RowTech dashboard is for beta crews.{" "}
-            <Link href="/beta?from=login" data-cta="login" className="text-trace underline-offset-4 hover:underline">
+            <Link href="/beta?from=login" data-cta="login" className="text-trace underline underline-offset-4">
               Apply for the beta
             </Link>{" "}
             if you&rsquo;re not in yet.

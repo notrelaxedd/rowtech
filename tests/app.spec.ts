@@ -14,6 +14,13 @@ test("the dashboard is closed to people who aren't signed in", async ({ page }) 
   await expect(page.getByRole("link", { name: /apply for the beta/i })).toBeVisible();
 });
 
+// A link inside a sentence can't rely on its colour alone (A11Y-002).
+test("the sign-in page's beta link is underlined, not just coloured", async ({ page }) => {
+  await page.goto("/app/login");
+  const link = page.getByRole("main").getByRole("link", { name: /apply for the beta/i });
+  await expect(link).toHaveCSS("text-decoration-line", "underline");
+});
+
 test("a stale magic link says so instead of failing quietly", async ({ page }) => {
   await page.goto("/auth/callback");
   await expect(page).toHaveURL(/\/app\/login\?error=link/);
