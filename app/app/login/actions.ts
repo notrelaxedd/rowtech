@@ -15,7 +15,12 @@ async function callbackUrl(next: string) {
   return `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
 }
 
-/** Magic link. The reply is the same whether or not the address is known. */
+/**
+ * Magic link, for people who already have an account: accounts are made by
+ * hand when someone is let into the beta (README, "Dashboard access"), so
+ * typing an address here never creates one. The reply is the same whether or
+ * not the address has an account, so the form doesn't reveal who does.
+ */
 export async function sendMagicLink(_prev: LoginState, fd: FormData): Promise<LoginState> {
   const email = (fd.get("email") as string | null)?.trim().toLowerCase() ?? "";
   if (!email || !EMAIL.test(email)) return { status: "error", message: "That doesn't look like an email address.", email };
@@ -23,9 +28,10 @@ export async function sendMagicLink(_prev: LoginState, fd: FormData): Promise<Lo
   const sb = await supabaseServer();
   const { error } = await sb.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: await callbackUrl("/app"), shouldCreateUser: true },
+    options: { emailRedirectTo: await callbackUrl("/app"), shouldCreateUser: false },
   });
-  if (error) {
+  // otp_disabled: no account for this address. Nothing is sent; say the same.
+  if (error && error.code !== "otp_disabled") {
     console.error("magic link failed", error);
     return { status: "error", message: "We couldn't send that link. Try again in a minute.", email };
   }

@@ -61,14 +61,24 @@ was extended, not replaced).
 
 ### Dashboard access
 
-`/app` is open to emails in `public.allowed_users`. Anyone else who signs in
-gets the "request beta access" page. To let someone in:
+`/app` is open to emails in `public.allowed_users`. Signing in never creates
+an account, so letting someone in takes two steps:
 
-```sql
-insert into public.allowed_users (email, note)
-values ('lower-case@example.com', 'Club, joined Sept')
-on conflict (email) do nothing;
-```
+1. Put their address on the list:
+
+   ```sql
+   insert into public.allowed_users (email, note)
+   values ('lower-case@example.com', 'Club, joined Sept')
+   on conflict (email) do nothing;
+   ```
+
+2. Create their account: Authentication → Users → Add user → Create new user,
+   with the same address and **Auto Confirm User** ticked. The password field
+   is required there; use a long random one and don't share it (they sign in
+   with a magic link or Google).
+
+To take someone out, delete their `allowed_users` row: their team's data is
+closed to them at once, even with a live session.
 
 ### Auth setup, still to do in the Supabase dashboard
 
@@ -80,3 +90,6 @@ These can't be set from migrations:
 2. **Redirect URLs** — Authentication → URL Configuration: set Site URL to the
    production domain, and add `https://<domain>/auth/callback` plus
    `http://localhost:3000/auth/callback` to the allow list.
+3. **No self sign-up** — Authentication → Sign In / Providers: turn off
+   "Allow new users to sign up". The app never creates accounts; this stops
+   Google sign-in and the Auth API from creating them too.

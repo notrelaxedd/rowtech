@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { zipSync } from "fflate";
-import { localSupabaseMissing, makeUser, signInBrowser } from "./support/local-supabase";
+import { hasAccount, localSupabaseMissing, makeUser, signInBrowser } from "./support/local-supabase";
 
 test("the dashboard is closed to people who aren't signed in", async ({ page }) => {
   await page.goto("/app/force");
@@ -14,6 +14,19 @@ test("a stale magic link says so instead of failing quietly", async ({ page }) =
   await page.goto("/auth/callback");
   await expect(page).toHaveURL(/\/app\/login\?error=link/);
   await expect(page.getByRole("alert").first()).toContainText(/expired|already used/i);
+});
+
+test.describe("signing in", () => {
+  test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
+
+  test("an address with no account gets the same reply, and no account is made", async ({ page }) => {
+    const email = `nobody-${Date.now()}@example.com`;
+    await page.goto("/app/login");
+    await page.getByLabel("Email").fill(email);
+    await page.getByRole("button", { name: /email me a link/i }).click();
+    await expect(page.getByRole("heading", { name: "Check your email." })).toBeVisible();
+    expect(await hasAccount(email)).toBe(false);
+  });
 });
 
 // Uploading needs a signed-in beta account, so these run against a local

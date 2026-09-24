@@ -53,6 +53,13 @@ export async function allow(email: string) {
   if (error) throw error;
 }
 
+/** Whether Supabase Auth has an account for this address. */
+export async function hasAccount(email: string) {
+  const { data, error } = await admin().auth.admin.listUsers({ perPage: 1000 });
+  if (error) throw error;
+  return data.users.some((u) => u.email === email);
+}
+
 /** Takes someone off the beta list, as README says to. */
 export async function revoke(email: string) {
   const { error } = await admin().from("allowed_users").delete().eq("email", email);

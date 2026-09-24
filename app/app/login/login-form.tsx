@@ -20,8 +20,8 @@ export function LoginForm({ error }: { error?: string }) {
         </p>
         <h2 className="type-h3 mt-4">Check your email.</h2>
         <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
-          We sent a sign-in link to <span className="text-foreground">{state.email}</span>. It works once, and only for a
-          short while.
+          If <span className="text-foreground">{state.email}</span> has a dashboard account, a sign-in link is on its way.
+          It works once, and only for a short while.
         </p>
       </div>
     );
