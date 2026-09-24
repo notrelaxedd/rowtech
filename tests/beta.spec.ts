@@ -130,3 +130,23 @@ test("a required field says what's wrong as soon as it's left", async ({ page })
   // Only the field says so; the form-wide alert is for a sent form.
   await expect(page.locator("form").getByRole("alert")).toHaveCount(0);
 });
+
+test.describe("without JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("the form still posts, and says what's wrong or that it's in", async ({ page }) => {
+    await page.goto("/beta");
+    await expect(page.locator("form").first()).not.toHaveAttribute("action", /^javascript:/);
+
+    await page.getByLabel("Name").fill("Sam Rower");
+    await page.getByLabel("Email").fill("not-an-email");
+    await page.getByLabel("Club, school or program").fill("Riverside RC");
+    await page.getByRole("button", { name: /apply for the beta/i }).click();
+    await expect(page.locator("#email-error")).toHaveText("That doesn't look like an email address. Check for a typo.");
+    await expect(page.getByLabel("Name")).toHaveValue("Sam Rower");
+
+    await page.getByLabel("Email").fill("sam.rower@example.com");
+    await page.getByRole("button", { name: /apply for the beta/i }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
+  });
+});

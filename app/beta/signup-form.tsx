@@ -68,24 +68,39 @@ function Done({ name }: { name?: string }) {
 }
 
 export function SignupForm({ from }: { from: string }) {
-  const [state, action, pending] = useActionState(async (prev: ApplyState, fd: FormData) => {
-    // First-touch UTM/referrer rides along at submit time. Without JS the form
-    // still posts, minus that part.
-    const a = readAttribution();
-    for (const k of [...UTM, "referrer"] as const) {
-      const v = a[k];
-      if (v) fd.set(k, v);
-    }
-    const next = await submitApplication(prev, fd);
-    track("beta_form_submit", { ok: next.status === "ok", from, errors: Object.keys(next.errors).join(",") || undefined });
-    return next;
-  }, EMPTY_STATE);
+  // The action itself, so the form posts without JavaScript too (and before
+  // it has loaded); what JavaScript adds rides along in the effects below.
+  const [state, action, pending] = useActionState(submitApplication, EMPTY_STATE);
 
   const started = useRef(false);
   const completed = useRef(new Set<string>());
   const [open, setOpen] = useState(false);
   const form = useRef<HTMLFormElement>(null);
   const details = useRef<HTMLDetailsElement>(null);
+
+  // First-touch UTM/referrer is added to what's sent, read as the form is
+  // sent. Without JavaScript the form posts without it.
+  useEffect(() => {
+    const el = form.current;
+    if (!el) return;
+    const send = (ev: FormDataEvent) => {
+      const a = readAttribution();
+      for (const k of [...UTM, "referrer"] as const) {
+        const x = a[k];
+        if (x) ev.formData.set(k, x);
+      }
+    };
+    el.addEventListener("formdata", send);
+    return () => el.removeEventListener("formdata", send);
+  }, []);
+
+  const tracked = useRef(EMPTY_STATE);
+  useEffect(() => {
+    if (state === tracked.current) return;
+    tracked.current = state;
+    track("beta_form_submit", { ok: state.status === "ok", from, errors: Object.keys(state.errors).join(",") || undefined });
+  }, [state, from]);
+
   // The required fields are checked as they're left, with the action's own
   // messages. A result from the action starts over from what it found; null
   // means checked here and fine, which clears the action's error for it.
