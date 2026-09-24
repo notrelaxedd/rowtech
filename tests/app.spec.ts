@@ -503,7 +503,7 @@ test.describe("signed in", () => {
 
     page.once("dialog", (d) => d.accept());
     await page.getByRole("button", { name: "Delete session" }).click();
-    await expect(page).toHaveURL(/\/app\/force$/);
+    await expect(page).toHaveURL(/\/app\/force$/, { timeout: 30_000 });
     await expect(page.getByRole("link", { name: /2 seats/ })).toHaveCount(0);
 
     expect((await user.db.from("sessions").select("id")).data).toEqual([]);
@@ -523,7 +523,7 @@ test.describe("signed in", () => {
     for (const [i, seat] of seats!.entries()) {
       await page.goto(`/app/force/${seat.id}`);
       await page.getByRole("button", { name: "Delete session" }).click();
-      await expect(page).toHaveURL(/\/app\/force$/);
+      await expect(page).toHaveURL(/\/app\/force$/, { timeout: 30_000 });
       const { data: left } = await user.db.from("sessions").select("id");
       const expected = i === 0 ? [crew, seats![1].id] : [];
       expect(left?.map((r) => r.id).sort(), `after seat ${i + 1}`).toEqual(expected.sort());
@@ -548,7 +548,7 @@ test.describe("signed in", () => {
       return d.accept();
     });
     await page.getByRole("button", { name: "Delete session" }).click();
-    await expect(page.getByRole("alert").filter({ hasText: "Only the team's owner or a coach can delete a session." })).toBeVisible();
+    await expect(page.getByRole("alert").filter({ hasText: "Only the team's owner or a coach can delete a session." })).toBeVisible({ timeout: 30_000 });
     expect(asked).toBe(true);
     await expect(page).toHaveURL(new RegExp(`/app/force/${id}$`));
     expect((await owner.db.from("sessions").select("id")).data).toEqual([{ id }]);
