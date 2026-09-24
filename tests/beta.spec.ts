@@ -193,6 +193,23 @@ test("a failed send takes focus to the first field to fix", async ({ page }) => 
   await expect(page.locator("form").getByRole("alert")).toBeFocused();
 });
 
+test("the bot trap is nothing a browser would fill in, and a bot that fills it is told it's in", async ({ page }) => {
+  await page.goto("/beta");
+  const trap = page.locator("form input[tabindex='-1'][type=text]");
+  await expect(trap).toHaveCount(1);
+  await expect(trap).toHaveAttribute("name", "leave_blank");
+  await expect(trap).toHaveAttribute("autocomplete", "off");
+  await expect(trap).toHaveAttribute("data-1p-ignore");
+  await expect(page.locator("form [aria-hidden] label")).toHaveText("Leave this blank");
+
+  await page.getByLabel("Name").fill("Sam Rower");
+  await page.getByLabel("Email").fill("sam.rower@example.com");
+  await page.getByLabel("Club, school or program").fill("Riverside RC");
+  await trap.evaluate((el) => ((el as HTMLInputElement).value = "https://spam.example"));
+  await page.getByRole("button", { name: /apply for the beta/i }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
+});
+
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 

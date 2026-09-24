@@ -77,8 +77,12 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
   };
 
   // Honeypot: a field people never see. Bots that fill it get the success
-  // screen and nothing is stored.
-  if (text(fd, "website")) return { status: "ok", errors: {}, message: "", values };
+  // screen and nothing is stored. Logged, without anything they sent, so a
+  // run of these (or a real person caught by it) shows up.
+  if (text(fd, "leave_blank")) {
+    console.warn("beta application dropped: honeypot filled", { from: cleanFrom(text(fd, "from")) || null });
+    return { status: "ok", errors: {}, message: "", values };
+  }
 
   const errors: ApplyState["errors"] = {};
   for (const f of ["name", "email", "organization"] as const) {

@@ -286,10 +286,12 @@ export function SignupForm() {
         </div>
       </details>
 
-      {/* Honeypot: hidden from people and assistive tech; bots fill it. */}
+      {/* Honeypot: hidden from people and assistive tech; bots fill it. Named
+          like nothing a browser or password manager fills in (an address's
+          "website" was), and marked for the managers to leave alone. */}
       <div aria-hidden className="absolute -left-[9999px] size-px overflow-hidden">
-        <label htmlFor="website">Website</label>
-        <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+        <label htmlFor="leave_blank">Leave this blank</label>
+        <input id="leave_blank" name="leave_blank" type="text" tabIndex={-1} autoComplete="off" data-1p-ignore data-lpignore="true" data-bwignore />
       </div>
       <input type="hidden" name="from" value={from} />
 
