@@ -57,7 +57,11 @@ function parseCal(v: Json | undefined): Calibration {
   };
 }
 
+/** meta.json is under 1 kB as the node writes it; it is kept whole, so it's capped. */
+const META_MAX_CHARS = 64 * 1024;
+
 export function parseMeta(text: string): SessionMeta {
+  if (text.length > META_MAX_CHARS) throw new SessionFormatError("meta.json is far bigger than a node writes (over 64 kB).");
   let raw: Json;
   try {
     raw = JSON.parse(text) as Json;
