@@ -99,6 +99,44 @@ test("a file row can only point into its own team's folder", async () => {
   expect(own).toBeNull();
 });
 
+test("a user in two teams reads both, only those, and nothing once off the beta list", async () => {
+  // The policies compare each row's team with the caller's teams, looked up once a query (PERF-012).
+  const a = await crewWithData();
+  const b = await crewWithData();
+  const other = await crewWithData();
+  await addToTeam(b.team, a.user, "member");
+  for (const crew of [a, b]) {
+    const { data: boat, error } = await crew.user.db.from("boats").insert({ team_id: crew.team, name: "Eight" }).select("id").single();
+    if (error) throw error;
+    const { error: seatError } = await crew.user.db.from("seats").insert({ boat_id: boat.id, seat_number: 1 });
+    if (seatError) throw seatError;
+    const { error: gpsError } = await crew.user.db.from("gps_points").insert({ session_id: crew.session, t_ms: 0, lat: 51.5, lon: -0.1 });
+    if (gpsError) throw gpsError;
+  }
+
+  const seen = async (table: string, column: string) =>
+    ((await a.user.db.from(table).select(column)).data ?? []).map((r) => (r as unknown as Record<string, string>)[column]).sort();
+  const both = (x: string, y: string) => [x, y].sort();
+  expect(await seen("teams", "id")).toEqual(both(a.team, b.team));
+  expect(await seen("team_members", "team_id")).toEqual([a.team, b.team, b.team].sort());
+  expect(await seen("boats", "team_id")).toEqual(both(a.team, b.team));
+  expect((await seen("seats", "seat_number")).length).toBe(2);
+  expect(await seen("sessions", "id")).toEqual(both(a.session, b.session));
+  expect(await seen("session_stats", "session_id")).toEqual(both(a.session, b.session));
+  expect(await seen("gps_points", "session_id")).toEqual(both(a.session, b.session));
+  expect(await seen("sessions", "id")).not.toContain(other.session);
+
+  await revoke(a.user.email);
+  for (const [table, column] of [["teams", "id"], ["team_members", "team_id"], ["boats", "id"], ["seats", "id"], ["sessions", "id"],
+    ["session_stats", "session_id"], ["strokes", "session_id"], ["gps_points", "session_id"], ["session_files", "path"]]) {
+    expect(await seen(table, column), table).toEqual([]);
+  }
+  // B's owner still reads B.
+  expect(await sessionsSeenBy(b.user)).toEqual([{ id: b.session }]);
+  // The helper, like is_team_member, isn't something the API exposes.
+  expect((await a.user.db.rpc("my_team_ids")).error?.code).toBe("PGRST202");
+});
+
 test("the membership check can't be called through the API", async () => {
   const { user, team } = await crewWithData();
   const { error } = await user.db.rpc("is_team_member", { team });
