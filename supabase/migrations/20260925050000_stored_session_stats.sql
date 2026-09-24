@@ -77,6 +77,10 @@ begin
       from (select o.session_id from old_rows o union select n.session_id from new_rows n) x;
   end if;
   if v_ids is not null then
+    -- Another statement writing these sessions' strokes may hold their rows.
+    -- Wait for it here, in id order, so the figures below are worked out
+    -- after it commits and count its strokes too.
+    perform 1 from public.sessions where id = any (v_ids) order by id for no key update;
     perform private.store_session_stats(v_ids);
   end if;
   return null;

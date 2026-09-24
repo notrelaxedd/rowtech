@@ -138,6 +138,21 @@ test.describe("signed in", () => {
     expect((await user.db.from("strokes").delete().eq("session_id", seat)).error).toBeNull();
     const { data: emptied } = await user.db.from("session_stats").select("strokes, avg_peak, span_ms").eq("session_id", seat).single();
     expect(emptied).toEqual({ strokes: 0, avg_peak: null, span_ms: null });
+
+    // Writes to one session at the same time each wait for the one before, so
+    // none of them leaves the others' strokes out of the figures.
+    const stroke = (rec: number) => ({
+      session_id: seat, rec, seq: rec + 1, catch_ms: rec * 2_000, drive_ms: 800, recovery_ms: 1_200,
+      peak: 1, peak_pos_pct: 30, impulse: 1, rise_rate: 1, third1: 1, third2: 1, third3: 1,
+    });
+    const writes = await Promise.all([
+      ...Array.from({ length: 30 }, (_, rec) => user.db.from("strokes").insert(stroke(rec))),
+      ...Array.from({ length: 10 }, (_, i) => user.db.from("strokes").delete().eq("session_id", seat).eq("rec", i * 3)),
+    ]);
+    expect(writes.map((w) => w.error)).toEqual(writes.map(() => null));
+    const { count: kept } = await user.db.from("strokes").select("*", { count: "exact", head: true }).eq("session_id", seat);
+    const { data: after } = await user.db.from("session_stats").select("strokes").eq("session_id", seat).single();
+    expect(after?.strokes).toBe(kept);
   });
 
   // An uncalibrated node writes raw counts, five or six digits before the
