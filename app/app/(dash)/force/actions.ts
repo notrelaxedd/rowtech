@@ -269,7 +269,8 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     return { status: "error", message: "The upload couldn't be saved. Try again in a minute." };
   }
 
-  revalidatePath("/app/force");
+  // A crew upload shows on /app/cox and its compare page too.
+  revalidatePath("/app", "layout");
   const { parent, sessions } = saved as { parent: string | null; sessions: string[] };
   return { status: "ok", message: "", sessionId: parent ?? sessions[0] };
 }
@@ -330,6 +331,6 @@ export async function deleteSession(id: string): Promise<DeleteResult> {
     if (parentError) console.error("delete: empty crew not removed", { id: session.parent_id, message: parentError.message });
   }
 
-  revalidatePath("/app/force");
+  revalidatePath("/app", "layout");
   return { ok: true };
 }
