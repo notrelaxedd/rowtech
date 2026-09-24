@@ -112,10 +112,21 @@ test("a user in two teams reads both, only those, and nothing once off the beta 
     if (seatError) throw seatError;
     const { error: gpsError } = await crew.user.db.from("gps_points").insert({ session_id: crew.session, t_ms: 0, lat: 51.5, lon: -0.1 });
     if (gpsError) throw gpsError;
+    const { error: strokeError } = await crew.user.db.from("strokes").insert({
+      session_id: crew.session, rec: 0, seq: 1, catch_ms: 1000, drive_ms: 700, recovery_ms: 1300, peak: 50, peak_pos_pct: 40,
+      impulse: 25, rise_rate: 200, third1: 8, third2: 12, third3: 5, curve_valid: true,
+    });
+    if (strokeError) throw strokeError;
+    const { error: fileError } = await crew.user.db.from("session_files").insert({ session_id: crew.session, kind: "meta", path: crew.path });
+    if (fileError) throw fileError;
   }
 
-  const seen = async (table: string, column: string) =>
-    ((await a.user.db.from(table).select(column)).data ?? []).map((r) => (r as unknown as Record<string, string>)[column]).sort();
+  // A failed query must fail the test, not read as "no rows".
+  const seen = async (table: string, column: string) => {
+    const { data, error } = await a.user.db.from(table).select(column);
+    if (error) throw new Error(`${table}: ${error.message}`);
+    return (data ?? []).map((r) => (r as unknown as Record<string, string>)[column]).sort();
+  };
   const both = (x: string, y: string) => [x, y].sort();
   expect(await seen("teams", "id")).toEqual(both(a.team, b.team));
   expect(await seen("team_members", "team_id")).toEqual([a.team, b.team, b.team].sort());
@@ -124,6 +135,8 @@ test("a user in two teams reads both, only those, and nothing once off the beta 
   expect(await seen("sessions", "id")).toEqual(both(a.session, b.session));
   expect(await seen("session_stats", "session_id")).toEqual(both(a.session, b.session));
   expect(await seen("gps_points", "session_id")).toEqual(both(a.session, b.session));
+  expect(await seen("strokes", "session_id")).toEqual(both(a.session, b.session));
+  expect(await seen("session_files", "path")).toEqual(both(a.path, b.path));
   expect(await seen("sessions", "id")).not.toContain(other.session);
 
   await revoke(a.user.email);
