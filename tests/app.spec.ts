@@ -165,8 +165,12 @@ test.describe("signed in", () => {
     await expect(cell("Avg impulse")).toHaveText(fmt(both((s) => s.avgImpulse)));
     await expect(cell("Consistency")).toHaveText(`CV ${fmt(both((s) => s.consistencyPct!))}%`);
 
-    // Strokes written or removed some other way move the figures with them.
+    // Only the strokes set them: written straight to the session, they're refused.
     const seat = rows![0].session_id;
+    expect((await user.db.from("sessions").update({ avg_peak: 999 }).eq("id", seat)).error?.code).toBe("42501");
+    expect((await user.db.from("sessions").update({ consistency_pct: 0, span_ms: 0 }).eq("id", seat)).error?.code).toBe("42501");
+
+    // Strokes written or removed some other way move the figures with them.
     expect((await user.db.from("strokes").delete().eq("session_id", seat)).error).toBeNull();
     const { data: emptied } = await user.db.from("session_stats").select("strokes, avg_peak, span_ms").eq("session_id", seat).single();
     expect(emptied).toEqual({ strokes: 0, avg_peak: null, span_ms: null });
