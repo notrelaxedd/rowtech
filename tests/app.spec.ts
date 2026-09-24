@@ -621,4 +621,20 @@ test.describe("signed in", () => {
     await expect(seat2.getByRole("button", { name: "P" })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByText(/wasn.t saved/)).toHaveCount(0);
   });
+
+  // Nothing writes a GPS clock yet; this is the day Vieve does, on an outing
+  // whose seats have all gone.
+  test("an outing on one clock with no seats left still shows", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const crew = await upload(page, await crewZip(2, 6));
+    expect((await user.db.from("sessions").delete().eq("parent_id", crew)).error).toBeNull();
+    expect((await user.db.from("sessions").update({ clock_source: "gps" }).eq("id", crew)).error).toBeNull();
+
+    const res = await page.goto(`/app/cox/${crew}`);
+    expect(res?.status()).toBe(200);
+    await expect(page.getByRole("heading", { name: "Catch spread and sequencing" })).toBeVisible();
+    await expect(page.getByText("one clock", { exact: true })).toBeVisible();
+    await expect(page.getByText("· 0 seats")).toBeVisible();
+  });
 });

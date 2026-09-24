@@ -64,7 +64,8 @@ export function CrewPanel({
 
   // Catch spread, only when the whole crew is on one clock.
   const spread = useMemo(() => {
-    if (!synced) return null;
+    // No seats at all would make n Infinity, and the loop below endless.
+    if (!synced || !seats.length) return null;
     const n = Math.min(...seats.map((s) => s.strokes.length));
     if (!n) return null;
     const rows = [];
