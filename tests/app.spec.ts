@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { zipSync } from "fflate";
-import { addToTeam, hasAccount, localSupabaseMissing, makeUser, signInBrowser } from "./support/local-supabase";
+import { addToTeam, emailedLink, hasAccount, localSupabaseMissing, mailpitMissing, makeUser, signInBrowser } from "./support/local-supabase";
 import { parseStrokes } from "../lib/session/parse";
 import { duration, fmt, summarise, type SessionSummary } from "../lib/session/analyse";
 
@@ -37,6 +37,21 @@ test.describe("signing in", () => {
     await page.getByRole("button", { name: /email me a link/i }).click();
     await expect(page.getByRole("heading", { name: "Check your email." })).toBeVisible();
     expect(await hasAccount(email)).toBe(false);
+  });
+
+  // Sign-ups are off (supabase/config.toml, as on the rowtech project); a
+  // magic link still works for an account that was made by hand.
+  test("an account on the beta list signs in with the emailed link", async ({ page }) => {
+    test.skip(!!mailpitMissing, mailpitMissing ?? "");
+    const user = await makeUser();
+    await page.goto("/app/login");
+    await page.getByLabel("Email").fill(user.email);
+    await page.getByRole("button", { name: /email me a link/i }).click();
+    await expect(page.getByRole("heading", { name: "Check your email." })).toBeVisible();
+
+    await page.goto(await emailedLink(user.email));
+    await expect(page).toHaveURL(/\/app\/force$/);
+    await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
   });
 });
 

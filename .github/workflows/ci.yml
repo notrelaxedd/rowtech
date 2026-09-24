@@ -1,0 +1,58 @@
+# Lint, type-check and the Playwright suite, the signed-in tests included,
+# against a local Supabase built from supabase/migrations and supabase/seed.sql.
+# Nothing here talks to the rowtech project.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json # engines.node
+          cache: npm
+
+      - run: npm ci
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.117.0
+
+      # Only what the tests use: Postgres, Auth, the REST API, Storage, the
+      # gateway in front of them, and Mailpit for the magic-link test.
+      - name: Start Supabase
+        run: supabase start -x realtime,studio,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor
+
+      # The local stack's own URL and keys, the ones `supabase start` prints.
+      - name: Point the tests at it
+        run: |
+          supabase status -o env | sed -n -E \
+            -e 's/^API_URL="(.*)"$/SUPABASE_URL=\1/p' \
+            -e 's/^PUBLISHABLE_KEY="(.*)"$/SUPABASE_PUBLISHABLE_KEY=\1/p' \
+            -e 's/^SECRET_KEY="(.*)"$/SUPABASE_SECRET_KEY=\1/p' >> "$GITHUB_ENV"
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run lint
+
+      # typegen writes next-env.d.ts and the route types that tsc reads.
+      - run: npx next typegen && npx tsc --noEmit
+
+      - run: npx playwright test
+        env:
+          CI: "1"
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7
