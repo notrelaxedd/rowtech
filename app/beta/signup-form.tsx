@@ -105,9 +105,11 @@ export function SignupForm({ from }: { from: string }) {
     <p className="type-lead mt-5 text-muted-foreground">
       Three fields are required: your name, email and program. Tell us more about your boats if you like.
     </p>
+    {/* React resets the form once the action returns. By then each field's
+        default is what was sent (state.values), so the reset keeps what
+        people typed, without remounting the form. */}
     <form
       ref={form}
-      key={state === EMPTY_STATE ? "init" : JSON.stringify(v) + state.message}
       action={action}
       noValidate
       className="mt-10 space-y-7"

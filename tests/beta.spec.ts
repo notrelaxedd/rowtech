@@ -32,6 +32,33 @@ test("the form says what is wrong rather than failing silently", async ({ page }
   await expect(page.getByLabel("Name")).toHaveValue("Sam");
 });
 
+test("a rejected application keeps the same form, with every answer in it", async ({ page }) => {
+  await page.goto("/beta");
+  await page.getByLabel("Name").fill("Sam Rower");
+  await page.getByLabel("Email").fill("sam.rower@example.com");
+  await page.getByLabel("Club, school or program").fill("Riverside RC");
+  await page.getByText("Coach", { exact: true }).click();
+  await page.getByText("8+", { exact: true }).click();
+  await page.getByLabel("Where do you row?").fill("Henley");
+  await page.getByLabel("Email").fill("not-an-email");
+  const form = await page.locator("form").elementHandle();
+  await page.getByRole("button", { name: /apply for the beta/i }).click();
+
+  await expect(page.getByText(/doesn't look like an email address/i)).toBeVisible();
+  expect(await form!.evaluate((el) => el.isConnected)).toBe(true);
+  await expect(page.getByLabel("Name")).toHaveValue("Sam Rower");
+  await expect(page.getByLabel("Email")).toHaveValue("not-an-email");
+  await expect(page.getByLabel("Club, school or program")).toHaveValue("Riverside RC");
+  await expect(page.getByRole("radio", { name: "Coach" })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "8+" })).toBeChecked();
+  await expect(page.getByLabel("Where do you row?")).toHaveValue("Henley");
+
+  // Fixed and sent again, it goes through with what was kept.
+  await page.getByLabel("Email").fill("sam.rower@example.com");
+  await page.getByRole("button", { name: /apply for the beta/i }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
+});
+
 test("a ?ref= link is sent with the application as its source", async ({ page }) => {
   await page.goto("/?ref=newsletter");
   // Remembered for the tab, then read back at submit time.
