@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import rowerMidStroke from "@/assets/photos/rower-mid-stroke.jpg";
 import { SitePage } from "@/components/site/site-page";
 import { BetaLink } from "@/components/site/cta";
 import { DeviceDiagram3D } from "@/components/site/device-diagram-3d";
@@ -7,6 +9,7 @@ import { DevicePlaceholder } from "@/components/device/device-placeholder";
 import { SpecTable } from "@/components/site/spec-table";
 import { FORCE_SPECS } from "@/lib/specs";
 import { siteUrl } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Force, the seat node",
@@ -44,12 +47,22 @@ export default function ForcePage() {
   return (
     <SitePage jsonLd={jsonLd}>
       <section className="py-20 sm:py-28">
-        <div className={wrap}>
-          <h1 className="type-h1 max-w-[16ch]">Force, the seat node.</h1>
-          <p className="type-lead mt-6 max-w-[40rem] text-muted-foreground">
-            One on each seat&rsquo;s rigger backstay. It records the force curve of every stroke, shows the rower their
-            own peak and curve live, and saves the practice for you to download at the dock.
-          </p>
+        <div className={cn(wrap, "grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16")}>
+          <div>
+            <h1 className="type-h1 max-w-[16ch]">Force, the seat node.</h1>
+            <p className="type-lead mt-6 max-w-[40rem] text-muted-foreground">
+              One on each seat&rsquo;s rigger backstay. It records the force curve of every stroke, shows the rower their
+              own peak and curve live, and saves the practice for you to download at the dock.
+            </p>
+          </div>
+          <Image
+            src={rowerMidStroke}
+            alt="A rower in a black uniform, oar in both hands, seated in a green boat on the water."
+            placeholder="blur"
+            loading="eager"
+            sizes="(min-width: 1024px) 40vw, (min-width: 448px) 448px, 100vw"
+            className="aspect-[4/5] w-full rounded-lg object-cover object-[50%_40%] max-lg:max-w-md"
+          />
         </div>
       </section>
 

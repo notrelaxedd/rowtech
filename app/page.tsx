@@ -3,7 +3,9 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { BetaLink, SectionEnd } from "@/components/site/cta";
 import { Hero } from "@/components/site/hero";
 import { CrewLanes } from "@/components/site/crew-lanes";
+import Image from "next/image";
 import Link from "next/link";
+import crewOnTheRiver from "@/assets/photos/crew-on-the-river.jpg";
 import { CurveExplorerIsland, ForceDeviceIsland, VieveDeviceIsland } from "@/components/site/islands";
 import { Status } from "@/components/site/status";
 import { ForceScreen } from "@/components/device/force-screen";
@@ -318,7 +320,7 @@ export default function Home() {
 
         {/* ------------------------------------------------------- closing */}
         <section data-section="closing" className="below-fold border-t border-line">
-          <div className={cn(wrap, "py-24 sm:py-32")}>
+          <div className={cn(wrap, "grid grid-cols-1 items-center gap-12 py-24 sm:py-32 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)] lg:gap-16")}>
             <div>
               <h2 className="type-h2 max-w-[16ch]">Tell us about your crew.</h2>
               <p className="type-lead mt-6 max-w-[44ch] text-muted-foreground">
@@ -328,6 +330,13 @@ export default function Home() {
                 <BetaLink from="closing" className="h-14 px-7 text-base max-sm:w-full" />
               </div>
             </div>
+            <Image
+              src={crewOnTheRiver}
+              alt="A crew rowing a boat down a river, with a city skyline behind them."
+              placeholder="blur"
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="aspect-[3/2] w-full rounded-lg object-cover"
+            />
           </div>
         </section>
       </main>
