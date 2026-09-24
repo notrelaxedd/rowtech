@@ -21,8 +21,9 @@ function nowLocal() {
 /**
  * datetime-local gives a wall-clock time with no zone, and the server can't
  * know the browser's, so the time is turned into an instant here, in the zone
- * it was typed in, and sent in a hidden field. Without JavaScript that field is
- * blank and the server takes it as now.
+ * it was typed in, and sent as recorded_at when the form is submitted. Without
+ * JavaScript only the typed time (recorded_local) is sent: blank, the server
+ * takes it as now; typed, it's refused rather than read in the wrong zone.
  */
 function toInstant(v: string) {
   // A date and time with no offset is read in the browser's zone.
@@ -34,7 +35,6 @@ export function UploadForm() {
   const [state, action, pending] = useActionState(uploadSession, EMPTY);
   const [picked, setPicked] = useState<string[]>([]);
   const when = useRef<HTMLInputElement>(null);
-  const instant = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
 
@@ -44,7 +44,17 @@ export function UploadForm() {
   useEffect(() => {
     const el = when.current;
     if (el && !el.value) el.value = nowLocal();
-    if (el && instant.current) instant.current.value = toInstant(el.value);
+  }, []);
+
+  // The instant is worked out from what the field shows as the form is sent,
+  // so it can't go stale: React resets the form after every submit, which
+  // blanks the field (and blank means now).
+  useEffect(() => {
+    const el = form.current;
+    if (!el) return;
+    const send = (e: FormDataEvent) => e.formData.set("recorded_at", toInstant(when.current?.value ?? ""));
+    el.addEventListener("formdata", send);
+    return () => el.removeEventListener("formdata", send);
   }, []);
 
   useEffect(() => {
@@ -84,15 +94,7 @@ export function UploadForm() {
         </label>
         <label>
           <span className="text-sm font-semibold">When was it rowed?</span>
-          <input
-            ref={when}
-            type="datetime-local"
-            onChange={(e) => {
-              if (instant.current) instant.current.value = toInstant(e.target.value);
-            }}
-            className={cn(field, "mt-1.5")}
-          />
-          <input ref={instant} type="hidden" name="recorded_at" />
+          <input ref={when} type="datetime-local" name="recorded_local" className={cn(field, "mt-1.5")} />
         </label>
         <label>
           <span className="text-sm font-semibold">

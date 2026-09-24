@@ -66,10 +66,12 @@ const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}
  * When the session was rowed. The node has no clock, so this is what the coach
  * typed, sent by the form as an instant (upload-form.tsx). A time with no
  * offset would be read in this server's zone, which isn't the coach's, so it's
- * refused (null) rather than guessed at. Left blank, it's now.
+ * refused (null) rather than guessed at. That includes a time typed with no
+ * script to turn it into an instant (typed, the field's own value). Left
+ * blank, it's now.
  */
-function readRecordedAt(v: FormDataEntryValue | null): Date | null {
-  if (v === null || v === "") return new Date();
+function readRecordedAt(v: FormDataEntryValue | null, typed: FormDataEntryValue | null): Date | null {
+  if (v === null || v === "") return typed === null || typed === "" ? new Date() : null;
   if (typeof v !== "string" || !INSTANT.test(v)) return null;
   const d = new Date(v);
   return Number.isNaN(d.getTime()) ? null : d;
@@ -134,7 +136,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     return { status: "error", message: "Two of those folders hold the same session. Pick each seat's folder once." };
   }
 
-  const recordedAt = readRecordedAt(fd.get("recorded_at"));
+  const recordedAt = readRecordedAt(fd.get("recorded_at"), fd.get("recorded_local"));
   if (!recordedAt) return { status: "error", message: "That date and time couldn't be read. Pick it again." };
   const boatName = (fd.get("boat") as string | null)?.trim() ?? "";
   const title = (fd.get("title") as string | null)?.trim() ?? "";

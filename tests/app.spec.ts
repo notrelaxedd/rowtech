@@ -466,8 +466,31 @@ test.describe("signed in", () => {
     });
   });
 
+  // React resets the form after every submit, error or not, which blanks the
+  // time; what's stored is what the field shows when the form is sent.
+  test("after a refused upload, a blank time is now, not the time typed before", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    await page.goto("/app/force");
+    await page.getByLabel("When was it rowed?").fill("2026-01-15T21:30");
+    await page.getByLabel("Files").setInputFiles({ name: "meta.json", mimeType: "application/json", buffer: Buffer.from("{") });
+    await page.getByRole("button", { name: "Upload" }).click();
+    await expect(page.getByText(/Pick a session folder with meta\.json/)).toBeVisible();
+    await expect(page.getByLabel("When was it rowed?")).toHaveValue("");
+
+    await page.getByLabel("Files").setInputFiles(seatFiles(1));
+    const before = Date.now();
+    await page.getByRole("button", { name: "Upload" }).click();
+    await expect(page).toHaveURL(/\/app\/force\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+    const { data: rows } = await user.db.from("sessions").select("recorded_at");
+    const at = new Date(rows![0].recorded_at).getTime();
+    expect(at).toBeGreaterThanOrEqual(before - 1000);
+    expect(at).toBeLessThanOrEqual(Date.now() + 1000);
+  });
+
   // The form posts to the server action itself, so it works before any script
-  // has run. With no script the time isn't sent, and the server takes now.
+  // has run. With no script the time can't be read in the coach's zone: left
+  // blank the server takes now, and a typed time is refused, not misread.
   test.describe("with JavaScript off", () => {
     test.use({ javaScriptEnabled: false });
 
@@ -486,6 +509,17 @@ test.describe("signed in", () => {
       const at = new Date(rows![0].recorded_at).getTime();
       expect(at).toBeGreaterThanOrEqual(before - 1000);
       expect(at).toBeLessThanOrEqual(Date.now() + 1000);
+    });
+
+    test("a typed time is refused rather than stored as some other time", async ({ page, context, baseURL }) => {
+      const user = await makeUser();
+      await signInBrowser(context, user, baseURL!);
+      await page.goto("/app/force");
+      await page.getByLabel("Files").setInputFiles(seatFiles(1));
+      await page.getByLabel("When was it rowed?").fill("2026-01-15T21:30");
+      await page.getByRole("button", { name: "Upload" }).click();
+      await expect(page.getByText("That date and time couldn't be read. Pick it again.")).toBeVisible();
+      expect((await user.db.from("sessions").select("id")).data).toEqual([]);
     });
   });
 
