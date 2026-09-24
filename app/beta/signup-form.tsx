@@ -82,6 +82,14 @@ export function SignupForm({ from }: { from: string }) {
   const completed = useRef(new Set<string>());
   const [open, setOpen] = useState(false);
   const form = useRef<HTMLFormElement>(null);
+  const details = useRef<HTMLDetailsElement>(null);
+
+  // A result with an error in an optional field opens the details, even ones
+  // the user closed after an earlier result (the form isn't remounted).
+  useEffect(() => {
+    const x = state.errors;
+    if (details.current && (x.role || x.boats || x.location || x.message)) details.current.open = true;
+  }, [state]);
 
   if (state.status === "ok") return <Done name={state.values.name} />;
 
@@ -160,6 +168,7 @@ export function SignupForm({ from }: { from: string }) {
       </div>
 
       <details
+        ref={details}
         open={open || Boolean(v.role || v.boats?.length || v.location || v.message || e.role || e.boats || e.location || e.message)}
         onToggle={(ev) => setOpen((ev.currentTarget as HTMLDetailsElement).open)}
         className="group rounded-lg border border-line"

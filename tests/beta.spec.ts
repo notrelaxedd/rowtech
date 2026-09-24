@@ -59,6 +59,32 @@ test("a rejected application keeps the same form, with every answer in it", asyn
   await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
 });
 
+test("an error in an optional field opens the details, even after they were closed", async ({ page }) => {
+  await page.goto("/beta");
+  await page.getByLabel("Name").fill("Sam Rower");
+  await page.getByLabel("Email").fill("sam.rower@example.com");
+  await page.getByLabel("Club, school or program").fill("Riverside RC");
+  await page.getByText("Coach", { exact: true }).click();
+  await page.getByLabel("Email").fill("not-an-email");
+  await page.getByRole("button", { name: /apply for the beta/i }).click();
+  await expect(page.getByText(/doesn't look like an email address/i)).toBeVisible();
+
+  const details = page.locator("form details");
+  await details.locator("summary").click();
+  await expect(details).not.toHaveAttribute("open");
+
+  // Over the limit, as a long message with line breaks can be once they are
+  // sent as CRLF. Set directly, since maxLength stops typing past it.
+  await page.getByLabel("What do you want to see inside your boat?").evaluate((el) => {
+    (el as HTMLTextAreaElement).value = "x".repeat(2001);
+  });
+  await page.getByLabel("Email").fill("sam.rower@example.com");
+  await page.getByRole("button", { name: /apply for the beta/i }).click();
+
+  await expect(page.getByText("Keep it under 2000 characters.")).toBeVisible();
+  await expect(details).toHaveAttribute("open", "");
+});
+
 test("a ?ref= link is sent with the application as its source", async ({ page }) => {
   await page.goto("/?ref=newsletter");
   // Remembered for the tab, then read back at submit time.
