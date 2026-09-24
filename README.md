@@ -32,7 +32,8 @@ only: the app never reads it, and it must never be set on Vercel.
 `supabase/config.toml` sets up the local stack: sign-ups off, as they should
 be on the `rowtech` project (see "Auth setup" below), and redirects allowed
 back to ports 3000 and 3210. Emails Auth sends land in Mailpit,
-http://127.0.0.1:54324.
+http://127.0.0.1:54324 (`TEST_MAILPIT_URL` points the tests at another port
+on this machine).
 
 GitHub Actions (`.github/workflows/ci.yml`) runs lint, the type check and the
 whole Playwright suite against a local stack on every pull request and every

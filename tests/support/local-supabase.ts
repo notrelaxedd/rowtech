@@ -38,9 +38,13 @@ export const localSupabaseMissing: string | null =
 export const outage =
   localSupabaseMissing || !isLocal(url) ? null : { app: "http://localhost:3211", supabase: `http://${new URL(url).hostname}:3212` };
 
-/** The local stack's Mailpit (supabase/config.toml, [local_smtp]), where Auth's emails land. */
-const mailpit = localSupabaseMissing || !isLocal(url) ? null : `http://${new URL(url).hostname}:54324`;
-export const mailpitMissing = mailpit ? null : "needs a local Supabase and its Mailpit (tests/support/local-supabase.ts)";
+/**
+ * The local stack's Mailpit (supabase/config.toml, [local_smtp]), where Auth's
+ * emails land. TEST_MAILPIT_URL points somewhere else on this machine.
+ */
+const mailpitUrl = process.env.TEST_MAILPIT_URL || (isLocal(url) ? `http://${new URL(url).hostname}:54324` : "");
+const mailpit = localSupabaseMissing || !isLocal(url) || !isLocal(mailpitUrl) ? null : mailpitUrl.replace(/\/+$/, "");
+export const mailpitMissing = mailpit ? null : "needs a local Supabase and its Mailpit on this machine (tests/support/local-supabase.ts)";
 
 /** The link in the newest email Auth sent to this address. */
 export async function emailedLink(email: string) {

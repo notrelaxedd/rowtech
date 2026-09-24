@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { zipSync } from "fflate";
-import { addToTeam, emailedLink, hasAccount, localSupabaseMissing, mailpitMissing, makeUser, signInBrowser } from "./support/local-supabase";
+import { addToTeam, allow, emailedLink, hasAccount, localSupabaseMissing, mailpitMissing, makeUser, revoke, signInBrowser } from "./support/local-supabase";
 import { parseStrokes } from "../lib/session/parse";
 import { duration, fmt, summarise, type SessionSummary } from "../lib/session/analyse";
 
@@ -49,9 +49,24 @@ test.describe("signing in", () => {
     await page.getByRole("button", { name: /email me a link/i }).click();
     await expect(page.getByRole("heading", { name: "Check your email." })).toBeVisible();
 
+    // The link goes to Auth, which sends the browser to /auth/callback with a
+    // code; the callback swaps it for a session.
+    const callback = page.waitForResponse((r) => new URL(r.url()).pathname === "/auth/callback");
     await page.goto(await emailedLink(user.email));
+    const swapped = await callback;
+    expect(new URL(swapped.url()).searchParams.get("code")).toBeTruthy();
+    expect(swapped.status()).toBe(307);
     await expect(page).toHaveURL(/\/app\/force$/);
     await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+
+    // The session cookies are the server's alone: no script on the page reads them.
+    const session = (await page.context().cookies()).filter((c) => c.name.startsWith("sb-"));
+    expect(session.some((c) => c.name.includes("-auth-token"))).toBe(true);
+    for (const c of session) {
+      expect(c.httpOnly, c.name).toBe(true);
+      expect(c.sameSite, c.name).toBe("Lax");
+    }
+    expect(await page.evaluate(() => document.cookie)).not.toContain("sb-");
   });
 });
 
@@ -74,9 +89,10 @@ test.describe("signed in", () => {
     return { name: "outing.zip", mimeType: "application/zip", buffer: Buffer.from(zipSync(entries)) };
   }
 
-  async function upload(page: Page, files: Parameters<Page["setInputFiles"]>[1]) {
+  async function upload(page: Page, files: Parameters<Page["setInputFiles"]>[1], rowedAt?: string) {
     await page.goto("/app/force");
     await page.getByLabel("Files").setInputFiles(files);
+    if (rowedAt) await page.getByLabel("When was it rowed?").fill(rowedAt);
     await page.getByRole("button", { name: "Upload" }).click();
     await expect(page).toHaveURL(/\/app\/force\/[0-9a-f-]{36}$/, { timeout: 30_000 });
     return page.url().split("/").pop()!;
@@ -693,5 +709,173 @@ test.describe("signed in", () => {
     await expect(page.getByRole("heading", { name: "Catch spread and sequencing" })).toBeVisible();
     await expect(page.getByText("one clock", { exact: true })).toBeVisible();
     await expect(page.getByText("· 0 seats")).toBeVisible();
+  });
+  /** Seat n's demo strokes, summed up the way the pages do it. */
+  const demoSummary = async (n: number) => summarise(parseStrokes((await readFile(`public/demo/seat-${n}/strokes.csv`)).toString()));
+  const demoImpulse = async (n: number) =>
+    parseStrokes((await readFile(`public/demo/seat-${n}/strokes.csv`)).toString()).reduce((a, s) => a + s.impulse, 0);
+
+  test("a crew outing is on the Cox tab, and its page shares the work out seat by seat", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const single = await upload(page, seatFiles(1));
+    const crew = await upload(page, await crewZip(2, 6));
+
+    await page.goto("/app/cox");
+    await expect(page.locator(`a[href="/app/cox/${single}"]`)).toHaveCount(0);
+    // One outing: nothing to compare it with yet.
+    await expect(page.getByRole("link", { name: "Compare two pieces →" })).toHaveCount(0);
+    const link = page.locator(`a[href="/app/cox/${crew}"]`);
+    await expect(link).toContainText("2 seats");
+    await expect(link).toContainText("seat clocks");
+    await link.click();
+    await expect(page).toHaveURL(new RegExp(`/app/cox/${crew}$`));
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("2 seats");
+    await expect(page.getByText("· 2 seats")).toBeVisible();
+    await expect(page.getByText("No GPS track on this outing.")).toBeVisible();
+    // Each node counts from its own boot, so no catch spread until Vieve.
+    await expect(page.getByText("needs Vieve")).toBeVisible();
+
+    const [two, six] = await Promise.all([demoImpulse(2), demoImpulse(6)]);
+    const even = (two + six) / 2;
+    const share = page.locator("section").filter({ has: page.getByRole("heading", { name: "Who’s carrying the boat" }) });
+    for (const [seat, total] of [["seat 2", two], ["seat 6", six]] as const) {
+      const off = ((total - even) / even) * 100;
+      await expect(share.getByRole("listitem").filter({ hasText: seat })).toContainText(
+        `${fmt((total / (two + six)) * 100)}% ${off >= 0 ? "+" : "−"}${fmt(Math.abs(off))}`
+      );
+    }
+
+    // With both sides set, the balance is each side's share of the impulse.
+    const sides = page.locator("section").filter({ has: page.getByRole("heading", { name: "Port and starboard" }) });
+    for (const [seat, side] of [["seat 2", "P"], ["seat 6", "S"]] as const) {
+      const saved = page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes(`/app/cox/${crew}`));
+      await sides.getByRole("listitem").filter({ hasText: seat }).getByRole("button", { name: side }).click();
+      await saved;
+    }
+    const balance = [`port ${fmt((two / (two + six)) * 100)}%`, `starboard ${fmt((six / (two + six)) * 100)}%`];
+    for (const text of balance) await expect(sides.getByText(text)).toBeVisible();
+    await page.reload();
+    for (const text of balance) await expect(sides.getByText(text)).toBeVisible();
+  });
+
+  test("compare lays two outings side by side, and the pickers change which", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const older = await upload(page, await crewZip(2, 6), "2026-03-01T09:00");
+    const newer = await upload(page, await crewZip(3, 7), "2026-03-08T09:00");
+    // The newer one has a track: 4 m/s is a 2:05 split.
+    const fixes = Array.from({ length: 100 }, (_, i) => ({
+      session_id: newer, t_ms: i * 100, lat: 51.5 + i * 1e-5, lon: -0.1, speed_mps: 4, heading_deg: 0,
+    }));
+    expect((await user.db.from("gps_points").insert(fixes)).error).toBeNull();
+
+    await page.goto("/app/cox");
+    await page.getByRole("link", { name: "Compare two pieces →" }).click();
+    await expect(page).toHaveURL(/\/app\/cox\/compare$/);
+    // Nothing picked yet: the two newest.
+    await expect(page.getByLabel("First")).toHaveValue(newer);
+    await expect(page.getByLabel("Second")).toHaveValue(older);
+
+    const [s2, s6, s3, s7] = await Promise.all([2, 6, 3, 7].map(demoSummary));
+    const cells = (measure: string) => page.getByRole("row").filter({ hasText: measure }).getByRole("cell");
+    await expect(cells("Seats")).toHaveText(["Seats", "2", "2"]);
+    await expect(cells("Strokes")).toHaveText(["Strokes", String(Math.max(s3.strokes, s7.strokes)), String(Math.max(s2.strokes, s6.strokes))]);
+    await expect(cells("Avg split")).toHaveText(["Avg split", "2:05.0", "—"]);
+    await expect(cells("Avg peak")).toHaveText(["Avg peak", fmt((s3.avgPeak + s7.avgPeak) / 2), fmt((s2.avgPeak + s6.avgPeak) / 2)]);
+    await expect(page.getByRole("button", { name: "Heading up" })).toHaveCount(1);
+    await expect(page.getByText("No GPS track: that comes from Vieve.")).toHaveCount(1);
+
+    await page.getByLabel("First").selectOption(older);
+    await expect(page).toHaveURL(new RegExp(`a=${older}`));
+    await expect(cells("Avg peak")).toHaveText(["Avg peak", fmt((s2.avgPeak + s6.avgPeak) / 2), fmt((s2.avgPeak + s6.avgPeak) / 2)]);
+    await expect(cells("Avg split")).toHaveText(["Avg split", "—", "—"]);
+    await page.getByLabel("Second").selectOption("");
+    await expect(page.getByRole("heading", { name: "Nothing picked" })).toBeVisible();
+    await expect(cells("Seats")).toHaveText(["Seats", "2", "—"]);
+  });
+
+  test("the history chart draws each seat across its sessions, one measure at a time", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const earlier = Object.entries(await longSeat(2, 100)).map(([name, bytes]) => ({ name, mimeType: "application/octet-stream", buffer: Buffer.from(bytes) }));
+    await upload(page, earlier, "2026-03-01T09:00");
+    await page.goto("/app/force");
+    // One session is no history yet.
+    await expect(page.getByRole("heading", { name: "Seat by seat, over time" })).toHaveCount(0);
+
+    await upload(page, await crewZip(2, 6), "2026-03-08T09:00");
+    await page.goto("/app/force");
+    await expect(page.getByRole("heading", { name: "Seat by seat, over time" })).toBeVisible();
+    await expect(page.getByText(/Every session with a seat set, by seat\..*\(3 sessions\)/)).toBeVisible();
+    const chart = page.getByRole("img", { name: "Peak by seat, across 3 sessions." });
+    await expect(chart).toBeVisible();
+
+    // Seat 2's line runs from its first session at the left edge to its second
+    // at the right; seat 6 has only the second.
+    const drawn = () =>
+      chart.evaluate((el) => {
+        const canvas = el as HTMLCanvasElement;
+        const dpr = canvas.width / canvas.clientWidth;
+        const { data, width, height } = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height);
+        const span = ([r, g, b]: number[]) => {
+          let from = Infinity;
+          let to = -Infinity;
+          for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+              const i = (y * width + x) * 4;
+              if (data[i + 3] > 200 && Math.abs(data[i] - r) < 16 && Math.abs(data[i + 1] - g) < 16 && Math.abs(data[i + 2] - b) < 16) {
+                from = Math.min(from, x);
+                to = Math.max(to, x);
+              }
+            }
+          }
+          return { from: from / dpr / canvas.clientWidth, to: to / dpr / canvas.clientWidth };
+        };
+        // The first two of the chart's colours, in seat order.
+        return { two: span([0x22, 0xe3, 0xef]), six: span([0x3d, 0xdc, 0x6e]) };
+      });
+    await expect.poll(async () => (await drawn()).two.from).toBeLessThan(0.25);
+    const { two, six } = await drawn();
+    expect(two.to).toBeGreaterThan(0.75);
+    expect(six.from).toBeGreaterThan(0.75);
+
+    const legend = page.getByRole("listitem").filter({ hasText: /^seat \d$/ });
+    await expect(legend).toHaveText(["seat 2", "seat 6"]);
+    await page.getByRole("button", { name: "Consistency" }).click();
+    await expect(page.getByRole("button", { name: "Consistency" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("button", { name: "Peak", exact: true })).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByRole("img", { name: "Consistency by seat, across 3 sessions." })).toBeVisible();
+  });
+
+  // The layout's check runs once per page load; the actions check again, so
+  // a page left open after someone is taken off the beta list changes nothing.
+  test("taken off the beta list, a page left open can't set a side or delete", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const crew = await upload(page, await crewZip(2, 6));
+    const outing = await context.newPage();
+    await outing.goto(`/app/cox/${crew}`);
+    await expect(outing.getByRole("heading", { name: "Port and starboard" })).toBeVisible();
+    await revoke(user.email);
+
+    await outing.getByRole("listitem").filter({ hasText: "seat 2" }).getByRole("button", { name: "P" }).click();
+    await expect(outing.getByRole("alert").filter({ hasText: "That side wasn't saved. Try again in a minute." })).toBeVisible();
+    await expect(outing.getByRole("listitem").filter({ hasText: "seat 2" }).getByRole("button", { name: "P" })).toHaveAttribute("aria-pressed", "false");
+
+    page.once("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "Delete session" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "Sign in with a beta account to delete a session." })).toBeVisible({ timeout: 30_000 });
+
+    // A fresh load says why.
+    await page.reload();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("The dashboard is for beta crews.");
+    await expect(page.getByText(user.email)).toBeVisible();
+    await expect(page.getByRole("link", { name: "Apply for the beta" })).toHaveAttribute("href", "/beta?from=app");
+
+    await allow(user.email);
+    const { data: rows } = await user.db.from("sessions").select("id, side");
+    expect(rows).toHaveLength(3);
+    expect(rows?.every((r) => r.side === null)).toBe(true);
   });
 });
