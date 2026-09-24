@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
 
 export type CrewSeat = {
   id: string;
-  seat: number;
+  /** null when the node's seat was never set. */
+  seat: number | null;
   label: string;
   side: "port" | "starboard" | "scull" | "cox" | null;
   strokes: StrokeRow[];
@@ -70,7 +71,7 @@ export function CrewPanel({
     for (let i = 0; i < n; i++) {
       const times = seats.map((s) => s.strokes[i].catchMs);
       const mean = times.reduce((a, b) => a + b, 0) / times.length;
-      rows.push({ i, offsets: seats.map((s, k) => ({ seat: s.seat, ms: times[k] - mean })) });
+      rows.push({ i, offsets: seats.map((s, k) => ({ id: s.id, seat: s.seat, ms: times[k] - mean })) });
     }
     const last = rows[rows.length - 1];
     const worst = Math.max(...rows.map((r) => Math.max(...r.offsets.map((o) => o.ms)) - Math.min(...r.offsets.map((o) => o.ms))));
@@ -195,8 +196,8 @@ export function CrewPanel({
                 .map((o) => {
                   const far = Math.abs(o.ms) > 7;
                   return (
-                    <li key={o.seat} className="grid grid-cols-[3rem_1fr_4.5rem] items-center gap-3">
-                      <span className="readout text-sm">{o.seat}</span>
+                    <li key={o.id} className="grid grid-cols-[3rem_1fr_4.5rem] items-center gap-3">
+                      <span className="readout text-sm">{o.seat ?? "?"}</span>
                       <span className="relative h-2 rounded-sm bg-white/[0.06]">
                         <span
                           className={cn("absolute top-0 h-full w-1.5 rounded-sm", far ? "bg-warn" : "bg-trace")}

@@ -480,6 +480,20 @@ test.describe("signed in", () => {
     await expect(page.getByText("This page didn’t load.")).toHaveCount(0);
   });
 
+  test("a node whose seat was never set is stored with no seat, and shows as seat ?", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const files = await Promise.all(seatFiles(1).map(async (f) => ({ name: f.split("/").pop()!, buffer: await readFile(f) })));
+    const meta = files.find((f) => f.name === "meta.json")!;
+    meta.buffer = Buffer.from(JSON.stringify({ ...JSON.parse(meta.buffer.toString()), seat: 0 }));
+    const id = await upload(page, files.map((f) => ({ ...f, mimeType: "application/octet-stream" })));
+
+    expect((await user.db.from("sessions").select("seat_number").eq("id", id).single()).data).toEqual({ seat_number: null });
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Seat ?");
+    await page.goto("/app/force");
+    await expect(page.getByRole("link", { name: /^Seat \?/ })).toBeVisible();
+  });
+
   test("the team's owner can delete an outing, its seats and their files", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);

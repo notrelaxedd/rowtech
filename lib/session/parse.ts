@@ -96,7 +96,7 @@ export function parseMeta(text: string): SessionMeta {
     format,
     uuid: short(str(raw.uuid, "meta.json uuid"), 64, "meta.json uuid"),
     deviceId: short(str(raw.device_id, "meta.json device_id"), 64, "meta.json device_id"),
-    seat,
+    seat: seat === 0 ? null : seat,
     firmware: str(raw.fw, "meta.json fw"),
     git: typeof raw.git === "string" ? raw.git : "",
     session: num(raw.session, "meta.json session"),

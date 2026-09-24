@@ -88,8 +88,8 @@ async function Crew({
 
   const seats = kids.map((k) => ({
     id: k.id,
-    seat: k.seat_number ?? 0,
-    label: k.seat_number ? `seat ${k.seat_number}` : "seat ?",
+    seat: k.seat_number,
+    label: k.seat_number !== null ? `seat ${k.seat_number}` : "seat ?",
     side: boatSeats?.find((s) => s.seat_number === k.seat_number)?.side ?? k.side ?? null,
     strokes: strokes.get(k.id) ?? [],
   }));

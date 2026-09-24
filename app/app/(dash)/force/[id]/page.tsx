@@ -82,8 +82,8 @@ async function Seats({ sb, members, title }: { sb: Awaited<ReturnType<typeof sup
     const file = files?.find((f) => f.session_id === m.id);
     return {
       id: m.id,
-      seat: m.seat_number ?? 0,
-      label: m.seat_number ? `seat ${m.seat_number}` : "seat ?",
+      seat: m.seat_number,
+      label: m.seat_number !== null ? `seat ${m.seat_number}` : "seat ?",
       units: m.units ?? "",
       strokes: strokes.get(m.id) ?? [],
       curvesUrl: (file && urls.get(file.path)) || null,

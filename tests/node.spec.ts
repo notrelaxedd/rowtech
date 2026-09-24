@@ -50,6 +50,12 @@ test("a node session parses into the numbers the firmware wrote", async () => {
   expect(summary.consistencyPct).not.toBeNull();
 });
 
+test("a node whose seat was never set has no seat, not the cox's", async () => {
+  const meta = JSON.parse((await read(1, "meta.json")).toString());
+  expect(parseMeta(JSON.stringify({ ...meta, seat: 0 })).seat).toBeNull();
+  expect(parseMeta(JSON.stringify({ ...meta, seat: 8 })).seat).toBe(8);
+});
+
 test("export gives back the same rows", async () => {
   const b = await bundle(3);
   const strokes = parseStrokes(b.strokes.toString());

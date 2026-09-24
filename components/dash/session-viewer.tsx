@@ -14,7 +14,8 @@ import { chip } from "./chip";
 /** One node session: its strokes, and where to fetch its curves.bin. */
 export type SeatSource = {
   id: string;
-  seat: number;
+  /** null when the node's seat was never set. */
+  seat: number | null;
   label: string;
   units: string;
   strokes: StrokeRow[];
@@ -86,7 +87,7 @@ export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: s
     const blob = new Blob([toCsv(strokes)], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${title ? title.replace(/\W+/g, "-").toLowerCase() : "session"}-seat-${seat.seat}.csv`;
+    a.download = `${title ? title.replace(/\W+/g, "-").toLowerCase() : "session"}${seat.seat === null ? "" : `-seat-${seat.seat}`}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
   };

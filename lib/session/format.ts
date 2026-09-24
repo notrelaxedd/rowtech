@@ -39,8 +39,11 @@ export type SessionMeta = {
   format: number;
   uuid: string;
   deviceId: string;
-  /** Seat the node was on. 0 when it was never set. */
-  seat: number;
+  /**
+   * Seat the node was on, 1 to 8; null when it was never set. The node writes
+   * 0 for that, and 0 is the cox's seat, where a node never sits.
+   */
+  seat: number | null;
   firmware: string;
   git: string;
   /** The node's own session counter. */

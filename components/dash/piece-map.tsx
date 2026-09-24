@@ -15,7 +15,7 @@ export type TrackPoint = {
 };
 
 /** Seat forces at a moment, for the hover readout. */
-export type SeatForceAt = (tMs: number) => Array<{ seat: number; peak: number | null }>;
+export type SeatForceAt = (tMs: number) => Array<{ seat: number | null; peak: number | null }>;
 
 /** Slow is dark, quick is bright: colour a segment by its split. */
 function splitColour(split: number | null, best: number, worst: number): string {
@@ -174,7 +174,7 @@ export function PieceMap({
             )}
             {forces.length > 0 && (
               <span className="readout text-muted-foreground">
-                {forces.map((f) => `${f.seat}: ${f.peak === null ? "—" : f.peak.toFixed(0)}`).join("  ")}
+                {forces.map((f) => `${f.seat ?? "?"}: ${f.peak === null ? "—" : f.peak.toFixed(0)}`).join("  ")}
               </span>
             )}
           </>
