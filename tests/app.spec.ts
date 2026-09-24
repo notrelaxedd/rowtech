@@ -295,7 +295,7 @@ test.describe("signed in", () => {
     expect((await user.db.from("strokes").insert(strokes)).error).toBeNull();
 
     await page.goto("/app/force");
-    await expect(page.getByText(/The most recent sessions, by seat; older ones aren’t in the chart/)).toBeVisible();
+    await expect(page.getByText(/The most recent sessions with a seat set, by seat; older ones aren’t in the chart/)).toBeVisible();
     await expect(page.getByRole("img", { name: /across 500 sessions/ })).toBeVisible();
     // The oldest seat session is past the first page of the list and, now, past the chart too.
     const html = await (await page.request.get("/app/force")).text();
@@ -329,7 +329,8 @@ test.describe("signed in", () => {
     const { data: team } = await user.db.rpc("ensure_own_team", { p_name: "test crew" });
     const at = (hours: number) => new Date(Date.UTC(2026, 0, 1) + hours * 3_600_000).toISOString();
     // 500 seat sessions with a stroke each, crew rows in among them, and
-    // only a crew row and an empty seat older than all of them.
+    // only a crew row, an empty seat and a node with no seat set older than
+    // all of them.
     const seats = Array.from({ length: 500 }, (_, i) => ({
       id: randomUUID(), team_id: team, kind: "node", seat_number: 1, recorded_at: at(10 + i), stroke_count: 1,
       device_id: "node-1", session_uuid: randomUUID(), units: "kg", created_by: user.id,
@@ -340,9 +341,13 @@ test.describe("signed in", () => {
       id: randomUUID(), team_id: team, kind: "node", seat_number: 2, recorded_at: at(1), stroke_count: 0,
       device_id: "node-2", session_uuid: randomUUID(), units: "kg", created_by: user.id,
     };
-    expect((await user.db.from("sessions").insert([...seats, empty])).error).toBeNull();
+    const unset = {
+      id: randomUUID(), team_id: team, kind: "node", seat_number: null, recorded_at: at(2), stroke_count: 1,
+      device_id: "node-3", session_uuid: randomUUID(), units: "kg", created_by: user.id,
+    };
+    expect((await user.db.from("sessions").insert([...seats, empty, unset])).error).toBeNull();
     expect((await user.db.from("sessions").insert(crews)).error).toBeNull();
-    const strokes = seats.map((s) => ({
+    const strokes = [...seats, unset].map((s) => ({
       session_id: s.id, rec: 0, seq: 1, catch_ms: 1000, drive_ms: 700, recovery_ms: 1300, peak: 50, peak_pos_pct: 40,
       impulse: 25, rise_rate: 200, third1: 8, third2: 12, third3: 5, curve_valid: true,
     }));
@@ -350,7 +355,7 @@ test.describe("signed in", () => {
 
     await page.goto("/app/force");
     await expect(page.getByRole("img", { name: /across 500 sessions/ })).toBeVisible();
-    await expect(page.getByText(/Every session so far, by seat\./)).toBeVisible();
+    await expect(page.getByText(/Every session with a seat set, by seat\./)).toBeVisible();
   });
 
   test("an outing and its seats stay on one page of the list", async ({ page, context, baseURL }) => {

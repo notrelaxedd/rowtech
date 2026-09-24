@@ -25,8 +25,8 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
   const { rows: sessions, older } = newestFirstPage(data ?? [], LISTED);
 
   // The newest seat sessions with strokes, back in time order for the chart.
-  // Crew rows and empty seats are left out in the query, so the cap and the
-  // "older ones" line count only what the chart draws.
+  // Crew rows, empty seats and nodes whose seat was never set are left out in
+  // the query, so the cap and the "older ones" line count only what the chart draws.
   const { data: statsData, error: statsError } = await sb
     .from("session_stats")
     .select("session_id, seat_number, recorded_at, avg_peak, avg_rise_rate, avg_peak_pos_pct, avg_drive_ms, avg_recovery_ms, consistency_pct, strokes")
@@ -111,7 +111,9 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
         <section>
           <h2 className="type-h3 text-lg">Seat by seat, over time</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            {moreHistory ? "The most recent sessions, by seat; older ones aren\u2019t in the chart." : "Every session so far, by seat."} Units are each
+            {moreHistory
+              ? "The most recent sessions with a seat set, by seat; older ones aren\u2019t in the chart."
+              : "Every session with a seat set, by seat."} Units are each
             session&rsquo;s own ({fmt(history.length, 0)} sessions).
           </p>
           <div className="mt-4">
