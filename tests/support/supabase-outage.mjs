@@ -2,17 +2,32 @@
 // tests/outage.spec.ts. Auth passes through, so a browser signed in on the
 // local Supabase is signed in here too. Then:
 // - Auth's health check fails, so /api/health has something to report;
-// - the beta-list check works and every other database or Storage call
-//   fails: the dashboard's header renders and its pages can't.
+// - for a user whose email starts with "auth-down-", Auth can't say who they
+//   are (though it still issues their tokens);
+// - for a user whose email starts with "db-down-", every database call fails,
+//   the beta-list check included;
+// - for anyone else the beta-list check works and every other database or
+//   Storage call fails: the dashboard's header renders and its pages can't.
 import http from "node:http";
 
 const upstream = new URL(process.env.UPSTREAM_SUPABASE_URL ?? "http://127.0.0.1:54321");
 const port = Number(process.env.PORT ?? 3212);
 
+function email(authorization) {
+  try {
+    const token = /^Bearer (.+)$/.exec(authorization ?? "")[1];
+    return JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString()).email ?? "";
+  } catch {
+    return "";
+  }
+}
+
 function fails(req) {
   const path = req.url ?? "";
+  const who = email(req.headers.authorization);
   if (path.startsWith("/auth/v1/health")) return true;
-  if (path.startsWith("/auth/")) return false;
+  if (path.startsWith("/auth/")) return who.startsWith("auth-down-") && path.startsWith("/auth/v1/user");
+  if (who.startsWith("db-down-")) return true;
   return !path.startsWith("/rest/v1/rpc/is_beta_user");
 }
 

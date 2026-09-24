@@ -76,6 +76,7 @@ function readRecordedAt(v: FormDataEntryValue | null): Date | null {
 
 export async function uploadSession(_prev: UploadState, fd: FormData): Promise<UploadState> {
   const viewer = await getViewer();
+  if (viewer.state === "error") return { status: "error", message: "The upload couldn't be saved. Try again in a minute." };
   if (viewer.state !== "allowed") return { status: "error", message: "Sign in with a beta account to upload." };
 
   let folders: Map<string, SessionFolder>;

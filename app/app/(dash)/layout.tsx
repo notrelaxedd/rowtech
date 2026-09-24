@@ -8,6 +8,8 @@ import { DashNav } from "./dash-nav";
 
 export default async function DashLayout({ children }: { children: React.ReactNode }) {
   const viewer = await getViewer();
+  // Not "not on the list": Supabase didn't say. app/error.tsx takes it from here.
+  if (viewer.state === "error") throw new Error("Couldn't check who is signed in");
   if (viewer.state === "signed-out") redirect("/app/login");
   if (viewer.state === "not-allowed") return <RequestAccess email={viewer.email} signOut={signOut} />;
 

@@ -1,5 +1,6 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
+import { isAuthApiError, isAuthSessionMissingError, type AuthError } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { authCookieOptions, withSessionLifetime } from "./cookies";
 
@@ -46,14 +47,28 @@ export function readFailed(error: { code?: string; message: string }) {
 export type Viewer =
   | { state: "signed-out" }
   | { state: "not-allowed"; email: string }
-  | { state: "allowed"; email: string; id: string };
+  | { state: "allowed"; email: string; id: string }
+  // Supabase didn't answer, so there is no telling who this is.
+  | { state: "error" };
+
+/** Auth's way of saying there is no session, or none it still honours. */
+const noSession = (e: AuthError) =>
+  isAuthSessionMissingError(e) || (isAuthApiError(e) && e.status >= 400 && e.status < 500 && e.status !== 429);
 
 /** Who is looking at /app, and whether they are on the beta list. */
 export async function getViewer(): Promise<Viewer> {
   const sb = await supabaseServer();
-  const { data } = await sb.auth.getUser();
+  const { data, error } = await sb.auth.getUser();
+  if (error && !noSession(error)) {
+    console.error("viewer: auth failed", { code: error.code, status: error.status, message: error.message });
+    return { state: "error" };
+  }
   const user = data.user;
   if (!user?.email) return { state: "signed-out" };
-  const { data: ok } = await sb.rpc("is_beta_user");
+  const { data: ok, error: rpcError } = await sb.rpc("is_beta_user");
+  if (rpcError) {
+    console.error("viewer: beta check failed", { code: rpcError.code, message: rpcError.message });
+    return { state: "error" };
+  }
   return ok === true ? { state: "allowed", email: user.email, id: user.id } : { state: "not-allowed", email: user.email };
 }

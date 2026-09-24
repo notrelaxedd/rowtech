@@ -44,8 +44,8 @@ const admin = () => createClient(url, secret, noSession);
 export type TestUser = { id: string; email: string; password: string; db: SupabaseClient };
 
 /** A fresh user with a password, signed in, and on the beta list unless told otherwise. */
-export async function makeUser({ allowed = true }: { allowed?: boolean } = {}): Promise<TestUser> {
-  const email = `test-${randomUUID()}@example.com`;
+export async function makeUser({ allowed = true, prefix = "test" }: { allowed?: boolean; prefix?: string } = {}): Promise<TestUser> {
+  const email = `${prefix}-${randomUUID()}@example.com`;
   const password = randomUUID();
   const { data, error } = await admin().auth.admin.createUser({ email, password, email_confirm: true });
   if (error || !data.user) throw error ?? new Error("no user created");
