@@ -95,6 +95,76 @@ test.describe("signed in", () => {
     expect(rows).toHaveLength(3);
   });
 
+  /** Seat n's demo session, stretched to `strokes` strokes (with curves), as a new session. */
+  async function longSeat(n: number, strokes: number) {
+    const [meta, csv, curves] = await Promise.all(
+      ["meta.json", "strokes.csv", "curves.bin"].map((f) => readFile(`public/demo/seat-${n}/${f}`))
+    );
+    const [header, ...rows] = csv.toString().trim().split("\n");
+    const lines = [header];
+    const curveBytes = new Uint8Array(strokes * 128);
+    for (let i = 0; i < strokes; i++) {
+      const p = rows[i % rows.length].split(",");
+      p[0] = String(i); // rec
+      p[1] = String(i + 1); // seq
+      p[2] = String(40_000 + i * 2_100); // catch_ms
+      lines.push(p.join(","));
+      const from = (i % rows.length) * 128;
+      curveBytes.set(curves.subarray(from, from + 128), i * 128);
+    }
+    const m = { ...JSON.parse(meta.toString()), uuid: randomUUID(), strokes };
+    return {
+      "meta.json": new TextEncoder().encode(JSON.stringify(m)),
+      "strokes.csv": new TextEncoder().encode(lines.join("\n") + "\n"),
+      "curves.bin": curveBytes,
+    };
+  }
+
+  // The API stops a table read at 1,000 rows; a long practice is ~2,000
+  // strokes a seat, and a GPS track is 10 fixes a second.
+  test("every stroke of a long session shows, and the whole track reaches the map", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const entries: Record<string, Uint8Array> = {};
+    for (const [n, strokes] of [[2, 1500], [6, 1200]]) {
+      for (const [f, bytes] of Object.entries(await longSeat(n, strokes))) entries[`outing/seat-${n}/${f}`] = bytes;
+    }
+    const crew = await upload(page, { name: "outing.zip", mimeType: "application/zip", buffer: Buffer.from(zipSync(entries)) });
+
+    // The header is sent first, and the strokes stream in after it.
+    expect(await (await page.request.get(`/app/force/${crew}`)).text()).toContain("Loading strokes…");
+
+    const slider = page.getByRole("slider", { name: "Stroke" });
+    await expect(slider).toHaveAttribute("aria-valuemax", "1500");
+    await expect(page.getByRole("img", { name: /Force curve for stroke 1/ })).toBeVisible();
+    await page.getByRole("button", { name: "seat 6" }).click();
+    await expect(slider).toHaveAttribute("aria-valuemax", "1200");
+    await slider.press("End");
+    await expect(slider).toHaveAttribute("aria-valuetext", "Stroke 1200 of 1200");
+
+    // A 5-minute track at 10 Hz: 3,000 fixes, thinned for the page but still
+    // running to the last one.
+    const fixes = Array.from({ length: 3000 }, (_, i) => ({
+      session_id: crew,
+      t_ms: i * 100,
+      lat: 51.5 + i * 1e-5,
+      lon: -0.1,
+      speed_mps: 4,
+      heading_deg: 0,
+    }));
+    const { error } = await user.db.from("gps_points").insert(fixes);
+    expect(error).toBeNull();
+    for (const path of [`/app/cox/${crew}`, `/app/cox/compare?a=${crew}`]) {
+      const res = await page.request.get(path);
+      expect(res.status(), path).toBe(200);
+      const html = await res.text();
+      const sent = html.match(/tMs\\?":/g)?.length ?? 0;
+      expect(sent, path).toBeGreaterThan(1000);
+      expect(sent, path).toBeLessThanOrEqual(2000);
+      expect(html, path).toMatch(/tMs\\?":299900\b/);
+    }
+  });
+
   test("an upload bigger than any outing is refused, and says why", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);

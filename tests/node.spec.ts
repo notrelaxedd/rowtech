@@ -6,6 +6,7 @@ import { parseSession, parseStrokes, parseMeta, curveAt } from "../lib/session/p
 import { SessionFormatError, CURVE_BYTES, CURVE_POINTS } from "../lib/session/format";
 import { collectSessions, ZIP_LIMITS, ZipTooLargeError } from "../lib/session/collect";
 import { summarise, toCsv } from "../lib/session/analyse";
+import { thinTrack } from "../lib/session/track";
 
 const seatDir = (n: number) => path.join(process.cwd(), "public", "demo", `seat-${n}`);
 const read = (n: number, f: string) => readFile(path.join(seatDir(n), f));
@@ -130,4 +131,21 @@ test("a zip that would expand past what an upload needs is refused before it is 
   // Anything that isn't a session file doesn't count, and isn't expanded.
   const junk = zipSync({ "photos/big.jpg": new Uint8Array(ZIP_LIMITS.totalBytes + 1), "s/notes.txt": new Uint8Array(10) });
   expect(collectSessions([{ name: "junk.zip", bytes: junk }]).size).toBe(0);
+});
+
+test("a long GPS track is thinned for the map, from its first fix to its last", () => {
+  const fix = (i: number) => ({ tMs: i * 100, lat: 51.5 + i * 1e-5, lon: -0.1, speedMps: 4, headingDeg: 0 });
+  const short = Array.from({ length: 2000 }, (_, i) => fix(i));
+  expect(thinTrack(short)).toBe(short);
+
+  for (const n of [2001, 3000, 24_000, 72_001]) {
+    const track = Array.from({ length: n }, (_, i) => fix(i));
+    const thin = thinTrack(track);
+    expect(thin.length, `${n}`).toBeLessThanOrEqual(2000);
+    expect(thin.length, `${n}`).toBeGreaterThan(1000);
+    expect(thin[0]).toBe(track[0]);
+    expect(thin[thin.length - 1]).toBe(track[n - 1]);
+    // In time order, never the same fix twice.
+    expect(thin.every((p, i) => i === 0 || p.tMs > thin[i - 1].tMs)).toBe(true);
+  }
 });

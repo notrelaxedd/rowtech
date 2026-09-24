@@ -1,34 +1,14 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { StorageApiError } from "@supabase/supabase-js";
 import { readFailed, supabaseServer } from "@/lib/supabase/server";
 import { isUuid } from "@/lib/uuid";
-import type { StrokeRow } from "@/lib/session/format";
+import { seatStrokes } from "@/lib/session/load";
 import { SessionViewer, type SeatSource } from "@/components/dash/session-viewer";
 import { LocalTime } from "@/components/dash/local-time";
 
 export const metadata = { title: "Session" };
-
-type DbStroke = {
-  rec: number; seq: number; catch_ms: number; drive_ms: number; recovery_ms: number;
-  peak: number; peak_pos_pct: number; impulse: number; rise_rate: number;
-  third1: number; third2: number; third3: number; curve_valid: boolean;
-};
-
-const toStroke = (s: DbStroke): StrokeRow => ({
-  rec: s.rec,
-  seq: s.seq,
-  catchMs: s.catch_ms,
-  driveMs: s.drive_ms,
-  recoveryMs: s.recovery_ms,
-  peak: s.peak,
-  peakPosPct: s.peak_pos_pct,
-  impulse: s.impulse,
-  riseRate: s.rise_rate,
-  thirds: [s.third1, s.third2, s.third3],
-  curveValid: s.curve_valid,
-});
 
 export default async function SessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -36,43 +16,20 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
   if (!isUuid(id)) notFound();
   const sb = await supabaseServer();
 
-  const { data: session, error } = await sb
-    .from("sessions")
-    .select("id, kind, parent_id, seat_number, title, recorded_at, units, boats(name)")
-    .eq("id", id)
-    .maybeSingle();
+  // The session and its seats together: a seat session has none.
+  const [{ data: session, error }, { data: kids, error: kidsError }] = await Promise.all([
+    sb
+      .from("sessions")
+      .select("id, kind, parent_id, seat_number, title, recorded_at, units, boats(name)")
+      .eq("id", id)
+      .maybeSingle(),
+    sb.from("sessions").select("id, seat_number, units").eq("parent_id", id).order("seat_number"),
+  ]);
   if (error) throw await readFailed(error);
   if (!session) notFound();
-
-  // A crew session shows its seats; a seat session shows itself.
-  const { data: kids, error: kidsError } = session.kind === "crew"
-    ? await sb.from("sessions").select("id, seat_number, units").eq("parent_id", id).order("seat_number")
-    : { data: null, error: null };
   if (kidsError) throw await readFailed(kidsError);
+  // A crew session shows its seats; a seat session shows itself.
   const members = kids?.length ? kids : [{ id: session.id, seat_number: session.seat_number, units: session.units }];
-
-  const seats: SeatSource[] = [];
-  for (const m of members) {
-    const { data: rows, error: rowsError } = await sb
-      .from("strokes")
-      .select("rec, seq, catch_ms, drive_ms, recovery_ms, peak, peak_pos_pct, impulse, rise_rate, third1, third2, third3, curve_valid")
-      .eq("session_id", m.id)
-      .order("rec");
-    if (rowsError) throw await readFailed(rowsError);
-    const { data: file, error: fileError } = await sb.from("session_files").select("path").eq("session_id", m.id).eq("kind", "curves").maybeSingle();
-    if (fileError) throw await readFailed(fileError);
-    const signed = file?.path ? await sb.storage.from("sessions").createSignedUrl(file.path, 3600) : null;
-    // A curves file Storage doesn't have shows as no curve; Storage not answering is an error.
-    if (signed?.error && !(signed.error instanceof StorageApiError && signed.error.statusCode === "404")) throw await readFailed(signed.error);
-    seats.push({
-      id: m.id,
-      seat: m.seat_number ?? 0,
-      label: m.seat_number ? `seat ${m.seat_number}` : "seat ?",
-      units: m.units ?? "",
-      strokes: ((rows ?? []) as DbStroke[]).map(toStroke),
-      curvesUrl: signed?.data?.signedUrl ?? null,
-    });
-  }
 
   const boat = (session.boats as unknown as { name: string } | null)?.name;
 
@@ -84,7 +41,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
           Sessions
         </Link>
         <h1 className="type-h3 mt-3 text-2xl">
-          {session.title || (session.kind === "crew" ? `${seats.length} seats` : `Seat ${session.seat_number ?? "?"}`)}
+          {session.title || (session.kind === "crew" ? `${members.length} seats` : `Seat ${session.seat_number ?? "?"}`)}
         </h1>
         <p className="readout mt-1 text-sm text-muted-foreground">
           <LocalTime at={session.recorded_at} />
@@ -93,7 +50,42 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
         </p>
       </div>
 
-      <SessionViewer seats={seats} title={session.title ?? "session"} />
+      {/* The header shows while the strokes load. */}
+      <Suspense fallback={<p className="text-sm text-muted-foreground">Loading strokes…</p>}>
+        <Seats sb={sb} members={members} title={session.title ?? "session"} />
+      </Suspense>
     </div>
   );
+}
+
+type Member = { id: string; seat_number: number | null; units: string | null };
+
+/** Every seat's strokes and curves file: the same three round trips for one seat or nine. */
+async function Seats({ sb, members, title }: { sb: Awaited<ReturnType<typeof supabaseServer>>; members: Member[]; title: string }) {
+  const ids = members.map((m) => m.id);
+  const [strokes, { data: files, error: filesError }] = await Promise.all([
+    seatStrokes(sb, ids),
+    sb.from("session_files").select("session_id, path").in("session_id", ids).eq("kind", "curves"),
+  ]);
+  if (filesError) throw await readFailed(filesError);
+
+  const paths = (files ?? []).map((f) => f.path as string);
+  const signed = paths.length ? await sb.storage.from("sessions").createSignedUrls(paths, 3600) : { data: [], error: null };
+  // Storage not answering is an error; a curves file it doesn't have shows as no curve.
+  if (signed.error) throw await readFailed(signed.error);
+  const urls = new Map(signed.data.map((u) => [u.path, u.signedUrl]));
+
+  const seats: SeatSource[] = members.map((m) => {
+    const file = files?.find((f) => f.session_id === m.id);
+    return {
+      id: m.id,
+      seat: m.seat_number ?? 0,
+      label: m.seat_number ? `seat ${m.seat_number}` : "seat ?",
+      units: m.units ?? "",
+      strokes: strokes.get(m.id) ?? [],
+      curvesUrl: (file && urls.get(file.path)) || null,
+    };
+  });
+
+  return <SessionViewer seats={seats} title={title} />;
 }

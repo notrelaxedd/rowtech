@@ -105,6 +105,30 @@ test("the membership check can't be called through the API", async () => {
   expect(error?.code).toBe("PGRST202"); // no such function exposed
 });
 
+test("reading strokes and tracks through the functions still keeps to your own team", async () => {
+  const { user, session } = await crewWithData();
+  const { error: strokeError } = await user.db.from("strokes").insert({
+    session_id: session, rec: 0, seq: 1, catch_ms: 1000, drive_ms: 700, recovery_ms: 1300, peak: 50, peak_pos_pct: 40,
+    impulse: 25, rise_rate: 200, third1: 8, third2: 12, third3: 5, curve_valid: true,
+  });
+  expect(strokeError).toBeNull();
+  const { error: gpsError } = await user.db.from("gps_points").insert({ session_id: session, t_ms: 0, lat: 51.5, lon: -0.1 });
+  expect(gpsError).toBeNull();
+
+  expect((await user.db.rpc("session_strokes", { p_sessions: [session] })).data).toEqual({ [session]: [[0, 1, 1000, 700, 1300, 50, 40, 25, 200, 8, 12, 5, true]] });
+  expect((await user.db.rpc("session_track", { p_session: session })).data).toEqual([[0, 51.5, -0.1, null, null]]);
+
+  const intruder = await makeUser();
+  expect((await intruder.db.rpc("session_strokes", { p_sessions: [session] })).data).toEqual({});
+  expect((await intruder.db.rpc("session_track", { p_session: session })).data).toEqual([]);
+
+  const anon = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  expect((await anon.rpc("session_strokes", { p_sessions: [session] })).error?.code).toBe("42501");
+  expect((await anon.rpc("session_track", { p_session: session })).error?.code).toBe("42501");
+});
+
 test("the publishable key on its own can't touch a dashboard table", async () => {
   const anon = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
     auth: { persistSession: false, autoRefreshToken: false },

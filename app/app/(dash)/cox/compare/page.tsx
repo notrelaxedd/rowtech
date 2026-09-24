@@ -4,53 +4,36 @@ import { readFailed, supabaseServer } from "@/lib/supabase/server";
 import { isUuid } from "@/lib/uuid";
 import { duration, fmt } from "@/lib/session/analyse";
 import { ComparePicker } from "./compare-picker";
-import { PieceMap, type TrackPoint } from "@/components/dash/piece-map";
+import { PieceMap } from "@/components/dash/piece-map";
+import { sessionTrack } from "@/lib/session/load";
+import { thinTrack } from "@/lib/session/track";
 
 export const metadata = { title: "Compare pieces" };
 
 type Crew = { id: string; title: string | null; recorded_at: string; boats: { name: string } | null };
 
-async function piece(id: string | undefined) {
+async function piece(sb: Awaited<ReturnType<typeof supabaseServer>>, id: string | undefined) {
   // A missing or malformed id in the URL is nothing picked, not a failed read.
   if (!isUuid(id)) return null;
-  const sb = await supabaseServer();
-  const { data: session, error } = await sb
-    .from("sessions")
-    .select("id, title, recorded_at, clock_source, boats(name)")
-    .eq("id", id)
-    .eq("kind", "crew")
-    .maybeSingle();
+  const [{ data: session, error }, { data: stats, error: statsError }, fullTrack] = await Promise.all([
+    sb.from("sessions").select("id, title, recorded_at, clock_source, boats(name)").eq("id", id).eq("kind", "crew").maybeSingle(),
+    sb
+      .from("session_stats")
+      .select("strokes, avg_peak, avg_impulse, avg_drive_ms, avg_recovery_ms, consistency_pct, span_ms, seat_number")
+      .eq("parent_id", id),
+    sessionTrack(sb, id),
+  ]);
   if (error) throw await readFailed(error);
   if (!session) return null;
-
-  const { data: stats, error: statsError } = await sb
-    .from("session_stats")
-    .select("strokes, avg_peak, avg_impulse, avg_drive_ms, avg_recovery_ms, consistency_pct, span_ms, seat_number")
-    .eq("parent_id", id);
   if (statsError) throw await readFailed(statsError);
-
-  const { data: gps, error: gpsError } = await sb
-    .from("gps_points")
-    .select("t_ms, lat, lon, speed_mps, heading_deg")
-    .eq("session_id", id)
-    .order("t_ms")
-    .limit(20000);
-  if (gpsError) throw await readFailed(gpsError);
 
   const seats = stats ?? [];
   const n = seats.length || 1;
   const avg = (get: (s: (typeof seats)[number]) => number | null) =>
     seats.reduce((a, s) => a + (get(s) ?? 0), 0) / n;
 
-  const track: TrackPoint[] = (gps ?? []).map((p) => ({
-    tMs: p.t_ms as number,
-    lat: p.lat as number,
-    lon: p.lon as number,
-    speedMps: p.speed_mps as number | null,
-    headingDeg: p.heading_deg as number | null,
-  }));
-
-  const splits = track.map((p) => (p.speedMps && p.speedMps > 0.2 ? 500 / p.speedMps : null)).filter((s): s is number => s !== null);
+  // The split is over every fix; the map gets a thinned track.
+  const splits = fullTrack.map((p) => (p.speedMps && p.speedMps > 0.2 ? 500 / p.speedMps : null)).filter((s): s is number => s !== null);
 
   return {
     session: session as unknown as Crew,
@@ -63,7 +46,7 @@ async function piece(id: string | undefined) {
     avgRecovery: avg((s) => s.avg_recovery_ms),
     consistency: avg((s) => s.consistency_pct),
     avgSplit: splits.length ? splits.reduce((a, b) => a + b, 0) / splits.length : null,
-    track,
+    track: thinTrack(fullTrack),
   };
 }
 
@@ -81,8 +64,10 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
   if (error) throw await readFailed(error);
   const crews = (data ?? []) as unknown as Crew[];
 
-  const a = await piece(typeof q.a === "string" ? q.a : crews[0]?.id);
-  const b = await piece(typeof q.b === "string" ? q.b : crews[1]?.id);
+  const [a, b] = await Promise.all([
+    piece(sb, typeof q.a === "string" ? q.a : crews[0]?.id),
+    piece(sb, typeof q.b === "string" ? q.b : crews[1]?.id),
+  ]);
 
   const rows: Array<[string, string, string]> = [
     ["Seats", a ? String(a.seats) : "—", b ? String(b.seats) : "—"],
