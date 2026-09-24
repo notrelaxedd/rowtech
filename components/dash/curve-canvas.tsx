@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { CURVE_POINTS } from "@/lib/session/format";
+import { gridTicks } from "@/lib/chart";
 import type { StrokeRow } from "@/lib/session/format";
 
 export type CurveLayer = {
@@ -43,29 +44,32 @@ export function CurveCanvas({ layers, height = 320 }: { layers: CurveLayer[]; he
       c.setTransform(dpr, 0, 0, dpr, 0, 0);
       c.clearRect(0, 0, w, h);
 
-      const plotW = w - PAD.l - PAD.r;
-      const plotH = h - PAD.t - PAD.b;
       const peaks = layers.map((l) => l.stroke.peak);
       const top = Math.max(1, ...peaks) * 1.12;
+      // A handful of round grid lines, kg or raw counts, and a left margin
+      // wide enough for the longest label.
+      c.font = "11px ui-monospace, monospace";
+      const ticks = gridTicks(top);
+      const left = Math.max(PAD.l, ...ticks.map((v) => Math.ceil(c.measureText(String(v)).width) + 16));
+      const plotW = w - left - PAD.r;
+      const plotH = h - PAD.t - PAD.b;
       const drives = layers.map((l) => l.stroke.driveMs);
       const span = Math.max(1, ...drives);
-      const X = (ms: number) => PAD.l + (ms / span) * plotW;
+      const X = (ms: number) => left + (ms / span) * plotW;
       const Y = (v: number) => PAD.t + plotH - (v / top) * plotH;
 
       // grid
       c.strokeStyle = "rgba(255,255,255,0.07)";
       c.fillStyle = "#8d9aa6";
-      c.font = "11px ui-monospace, monospace";
       c.lineWidth = 1;
-      const step = top > 40 ? 20 : top > 8 ? 5 : 1;
-      for (let v = 0; v <= top; v += step) {
+      for (const v of ticks) {
         const y = Math.round(Y(v)) + 0.5;
         c.beginPath();
-        c.moveTo(PAD.l, y);
+        c.moveTo(left, y);
         c.lineTo(w - PAD.r, y);
         c.stroke();
         c.textAlign = "right";
-        c.fillText(String(v), PAD.l - 8, y + 4);
+        c.fillText(String(v), left - 8, y + 4);
       }
       for (let f = 0; f <= 1.0001; f += 0.25) {
         const x = Math.round(X(span * f)) + 0.5;
@@ -84,7 +88,7 @@ export function CurveCanvas({ layers, height = 320 }: { layers: CurveLayer[]; he
         const third = main.stroke.driveMs / 3;
         for (let i = 0; i < 3; i++) {
           c.fillStyle = i === 1 ? "rgba(34,227,239,0.10)" : "rgba(34,227,239,0.05)";
-          c.fillRect(X(i * third), PAD.t, X(third) - PAD.l, plotH);
+          c.fillRect(X(i * third), PAD.t, X(third) - left, plotH);
         }
       }
 
