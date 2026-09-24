@@ -41,14 +41,14 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
     .select("id, kind, parent_id, seat_number, title, recorded_at, units, boats(name)")
     .eq("id", id)
     .maybeSingle();
-  if (error) throw readFailed(error);
+  if (error) throw await readFailed(error);
   if (!session) notFound();
 
   // A crew session shows its seats; a seat session shows itself.
   const { data: kids, error: kidsError } = session.kind === "crew"
     ? await sb.from("sessions").select("id, seat_number, units").eq("parent_id", id).order("seat_number")
     : { data: null, error: null };
-  if (kidsError) throw readFailed(kidsError);
+  if (kidsError) throw await readFailed(kidsError);
   const members = kids?.length ? kids : [{ id: session.id, seat_number: session.seat_number, units: session.units }];
 
   const seats: SeatSource[] = [];
@@ -58,12 +58,12 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
       .select("rec, seq, catch_ms, drive_ms, recovery_ms, peak, peak_pos_pct, impulse, rise_rate, third1, third2, third3, curve_valid")
       .eq("session_id", m.id)
       .order("rec");
-    if (rowsError) throw readFailed(rowsError);
+    if (rowsError) throw await readFailed(rowsError);
     const { data: file, error: fileError } = await sb.from("session_files").select("path").eq("session_id", m.id).eq("kind", "curves").maybeSingle();
-    if (fileError) throw readFailed(fileError);
+    if (fileError) throw await readFailed(fileError);
     const signed = file?.path ? await sb.storage.from("sessions").createSignedUrl(file.path, 3600) : null;
     // A curves file Storage doesn't have shows as no curve; Storage not answering is an error.
-    if (signed?.error && !(signed.error instanceof StorageApiError && signed.error.statusCode === "404")) throw readFailed(signed.error);
+    if (signed?.error && !(signed.error instanceof StorageApiError && signed.error.statusCode === "404")) throw await readFailed(signed.error);
     seats.push({
       id: m.id,
       seat: m.seat_number ?? 0,

@@ -2,6 +2,7 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { isAuthApiError, isAuthSessionMissingError, type AuthError } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { authCookieOptions, withSessionLifetime } from "./cookies";
 
 function env() {
@@ -39,8 +40,14 @@ export async function supabaseServer() {
  * For page reads: a failed query throws, so the nearest error.tsx says the
  * page didn't load instead of it rendering as if there were nothing there.
  * Only the code and message go into the error (and the logs), never details.
+ *
+ * Signed out, a read is refused too (anon holds nothing on the dashboard's
+ * tables, 42501; a token PostgREST won't take, PGRST30x). The layout's check
+ * doesn't re-run when someone clicks between dashboard pages, so a session
+ * that ended in another tab shows up here first: that goes to sign in.
  */
-export function readFailed(error: { code?: string; message: string }) {
+export async function readFailed(error: { code?: string; message: string }) {
+  if ((error.code === "42501" || error.code?.startsWith("PGRST30")) && (await getViewer()).state === "signed-out") redirect("/app/login");
   return new Error(`Supabase read failed: ${error.code || "no code"} ${error.message}`);
 }
 

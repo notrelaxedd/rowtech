@@ -20,14 +20,14 @@ async function piece(id: string | undefined) {
     .eq("id", id)
     .eq("kind", "crew")
     .maybeSingle();
-  if (error) throw readFailed(error);
+  if (error) throw await readFailed(error);
   if (!session) return null;
 
   const { data: stats, error: statsError } = await sb
     .from("session_stats")
     .select("strokes, avg_peak, avg_impulse, avg_drive_ms, avg_recovery_ms, consistency_pct, span_ms, seat_number")
     .eq("parent_id", id);
-  if (statsError) throw readFailed(statsError);
+  if (statsError) throw await readFailed(statsError);
 
   const { data: gps, error: gpsError } = await sb
     .from("gps_points")
@@ -35,7 +35,7 @@ async function piece(id: string | undefined) {
     .eq("session_id", id)
     .order("t_ms")
     .limit(20000);
-  if (gpsError) throw readFailed(gpsError);
+  if (gpsError) throw await readFailed(gpsError);
 
   const seats = stats ?? [];
   const n = seats.length || 1;
@@ -78,7 +78,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
     .eq("kind", "crew")
     .order("recorded_at", { ascending: false })
     .limit(100);
-  if (error) throw readFailed(error);
+  if (error) throw await readFailed(error);
   const crews = (data ?? []) as unknown as Crew[];
 
   const a = await piece(typeof q.a === "string" ? q.a : crews[0]?.id);

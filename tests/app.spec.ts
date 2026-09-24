@@ -183,6 +183,23 @@ test.describe("signed in", () => {
     }
   });
 
+  // The layout checks who is signed in, but a click inside the dashboard
+  // renders only the page, so a page read is the first to find out.
+  test("signed out in another tab, the next click in the dashboard goes to sign in", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    await page.goto("/app/force");
+
+    const other = await context.newPage();
+    await other.goto("/app/force");
+    await other.getByRole("button", { name: "Sign out" }).click();
+    await expect(other).toHaveURL(/\/app\/login$/);
+
+    await page.getByRole("link", { name: "Cox" }).click();
+    await expect(page).toHaveURL(/\/app\/login$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Sign in");
+  });
+
   test("port and starboard stay set on an outing with no boat", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);

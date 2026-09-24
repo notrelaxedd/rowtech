@@ -32,7 +32,7 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
     .select("id, kind, title, recorded_at, clock_source, clock_sync_ms, boat_id, boats(name)")
     .eq("id", id)
     .maybeSingle();
-  if (error) throw readFailed(error);
+  if (error) throw await readFailed(error);
   if (!crew || crew.kind !== "crew") notFound();
 
   const { data: kids, error: kidsError } = await sb
@@ -40,7 +40,7 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
     .select("id, seat_number, units, side")
     .eq("parent_id", id)
     .order("seat_number");
-  if (kidsError) throw readFailed(kidsError);
+  if (kidsError) throw await readFailed(kidsError);
 
   const seats = [];
   for (const k of kids ?? []) {
@@ -49,11 +49,11 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
       .select("rec, seq, catch_ms, drive_ms, recovery_ms, peak, peak_pos_pct, impulse, rise_rate, third1, third2, third3, curve_valid")
       .eq("session_id", k.id)
       .order("rec");
-    if (rowsError) throw readFailed(rowsError);
+    if (rowsError) throw await readFailed(rowsError);
     const { data: seat, error: seatError } = crew.boat_id
       ? await sb.from("seats").select("side").eq("boat_id", crew.boat_id).eq("seat_number", k.seat_number ?? -1).maybeSingle()
       : { data: null, error: null };
-    if (seatError) throw readFailed(seatError);
+    if (seatError) throw await readFailed(seatError);
     seats.push({
       id: k.id,
       seat: k.seat_number ?? 0,
@@ -69,7 +69,7 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
     .eq("session_id", id)
     .order("t_ms")
     .limit(20000);
-  if (gpsError) throw readFailed(gpsError);
+  if (gpsError) throw await readFailed(gpsError);
 
   const track = (gps ?? []).map((p) => ({
     tMs: p.t_ms as number,

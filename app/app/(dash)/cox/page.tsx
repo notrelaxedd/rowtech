@@ -22,7 +22,7 @@ export default async function CoxPage() {
     .eq("kind", "crew")
     .order("recorded_at", { ascending: false })
     .limit(100);
-  if (error) throw readFailed(error);
+  if (error) throw await readFailed(error);
   const crews = (data ?? []) as unknown as Row[];
 
   return (
