@@ -131,6 +131,36 @@ test("a required field says what's wrong as soon as it's left", async ({ page })
   await expect(page.locator("form").getByRole("alert")).toHaveCount(0);
 });
 
+test("a failed send takes focus to the first field to fix", async ({ page }) => {
+  await page.goto("/beta");
+  await page.getByLabel("Name").fill("Sam Rower");
+  // The email is left empty.
+  await page.getByLabel("Club, school or program").fill("Riverside RC");
+  await page.getByRole("button", { name: /apply for the beta/i }).focus();
+  await page.keyboard.press("Enter");
+
+  await expect(page.locator("#email-error")).toHaveText("We need an email address to reply to.");
+  await expect(page.getByLabel("Email")).toBeFocused();
+
+  // An error inside the details: they open, and focus goes in there.
+  await page.getByLabel("Email").fill("sam.rower@example.com");
+  await page.getByLabel("What do you want to see inside your boat?").evaluate((el) => {
+    (el as HTMLTextAreaElement).value = "x".repeat(2001);
+  });
+  await page.getByRole("button", { name: /apply for the beta/i }).click();
+  await expect(page.getByLabel("What do you want to see inside your boat?")).toBeFocused();
+
+  // No one field to point at (a choice that isn't one of the options): the message.
+  await page.getByLabel("What do you want to see inside your boat?").fill("");
+  await page.getByRole("radio", { name: "Coach" }).evaluate((el) => {
+    (el as HTMLInputElement).value = "captain";
+    (el as HTMLInputElement).checked = true;
+  });
+  await page.getByRole("button", { name: /apply for the beta/i }).click();
+  await expect(page.getByText("Pick one of the options.")).toBeVisible();
+  await expect(page.locator("form").getByRole("alert")).toBeFocused();
+});
+
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 

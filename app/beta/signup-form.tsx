@@ -114,6 +114,14 @@ export function SignupForm({ from }: { from: string }) {
     if (details.current && (x.role || x.boats || x.location || x.message)) details.current.open = true;
   }, [state]);
 
+  // A result with errors takes focus to the first field to fix, or to the
+  // message when no one field is at fault, rather than leaving it on the button.
+  const alert = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (state.status !== "error") return;
+    (form.current?.querySelector<HTMLElement>("[aria-invalid=true]") ?? alert.current)?.focus();
+  }, [state]);
+
   if (state.status === "ok") return <Done name={state.values.name} />;
 
   const here = checked.for === state ? checked.errors : {};
@@ -175,7 +183,7 @@ export function SignupForm({ from }: { from: string }) {
       }}
     >
       {state.message && (
-        <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[0.9375rem] text-foreground">
+        <p ref={alert} role="alert" tabIndex={-1} className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[0.9375rem] text-foreground outline-none">
           {state.message}
         </p>
       )}
