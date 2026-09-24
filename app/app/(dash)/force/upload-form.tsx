@@ -56,8 +56,8 @@ export function UploadForm() {
       <h2 className="type-h3 text-lg">Upload a session</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         The four files a node writes (<span className="readout">meta.json</span>, <span className="readout">strokes.csv</span>,{" "}
-        <span className="readout">curves.bin</span>, <span className="readout">events.csv</span>), or a zip. Pick several
-        seats at once and they become one outing.
+        <span className="readout">curves.bin</span>, <span className="readout">events.csv</span>), or a zip. For several
+        seats as one outing, upload one zip with each seat&rsquo;s files in a folder of its own.
       </p>
 
       {state.status === "error" && (
