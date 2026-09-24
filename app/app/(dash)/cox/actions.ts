@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { supabaseServer } from "@/lib/supabase/server";
+import { getViewer, supabaseServer } from "@/lib/supabase/server";
 
 export type SideResult = { ok: true } | { ok: false; message: string };
 
@@ -12,6 +12,8 @@ const FAILED: SideResult = { ok: false, message: "That side wasn't saved. Try ag
 export async function setSeatSide(sessionId: string, side: "port" | "starboard"): Promise<SideResult> {
   // The types above are gone at runtime; a hand-made request can send anything.
   if (!UUID.test(sessionId) || (side !== "port" && side !== "starboard")) return FAILED;
+  // RLS is the real gate; this keeps a removed beta user out even if it weren't.
+  if ((await getViewer()).state !== "allowed") return FAILED;
 
   const sb = await supabaseServer();
   const { data: session, error } = await sb.from("sessions").select("boat_id, seat_number").eq("id", sessionId).maybeSingle();

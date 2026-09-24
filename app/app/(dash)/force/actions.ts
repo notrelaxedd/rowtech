@@ -186,6 +186,8 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
 
 /** Removes a session, its seats if it is a crew session, and their files. */
 export async function deleteSession(id: string): Promise<void> {
+  // RLS is the real gate; this keeps a removed beta user out even if it weren't.
+  if ((await getViewer()).state !== "allowed") return;
   const sb = await supabaseServer();
   const { data: kids } = await sb.from("sessions").select("id").eq("parent_id", id);
   const ids = [id, ...(kids ?? []).map((k) => k.id)];
