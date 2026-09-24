@@ -3,6 +3,7 @@
 // between. Runs against a local Supabase only (tests/support/local-supabase.ts).
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
 import { addToTeam, localSupabaseMissing, makeUser, revoke, type TestUser } from "./support/local-supabase";
 
 test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
@@ -102,4 +103,14 @@ test("the membership check can't be called through the API", async () => {
   const { user, team } = await crewWithData();
   const { error } = await user.db.rpc("is_team_member", { team });
   expect(error?.code).toBe("PGRST202"); // no such function exposed
+});
+
+test("the publishable key on its own can't touch a dashboard table", async () => {
+  const anon = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  for (const table of ["allowed_users", "teams", "team_members", "boats", "seats", "sessions", "session_files", "strokes", "gps_points", "session_stats"]) {
+    const { error } = await anon.from(table).select("*").limit(1);
+    expect(error?.code, table).toBe("42501"); // permission denied, not merely zero rows
+  }
 });
