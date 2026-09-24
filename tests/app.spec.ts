@@ -140,6 +140,34 @@ test.describe("signed in", () => {
     expect(emptied).toEqual({ strokes: 0, avg_peak: null, span_ms: null });
   });
 
+  // An uncalibrated node writes raw counts, five or six digits before the
+  // point; the database keeps every digit the file has.
+  test("Export CSV gives back the node's strokes.csv, raw counts and all", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const [meta, csv] = await Promise.all(["meta.json", "strokes.csv"].map((f) => readFile(`public/demo/seat-1/${f}`)));
+    const [header, ...rows] = csv.toString().trim().split("\n");
+    const counts = rows.map((row) => {
+      const p = row.split(",");
+      const scale = (i: number, digits: number) => (p[i] = (Number(p[i]) * 2381.7 + 0.1234).toFixed(digits));
+      scale(5, 4); // peak
+      scale(7, 5); // impulse
+      scale(8, 4); // rise_rate
+      scale(9, 5); // third1..3
+      scale(10, 5);
+      scale(11, 5);
+      return p.join(",");
+    });
+    const strokes = [header, ...counts].join("\n") + "\n";
+    await upload(page, [
+      { name: "meta.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify({ ...JSON.parse(meta.toString()), units: "counts" })) },
+      { name: "strokes.csv", mimeType: "text/csv", buffer: Buffer.from(strokes) },
+    ]);
+
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Export CSV" }).click()]);
+    expect((await readFile(await download.path())).toString()).toBe(strokes);
+  });
+
   /** Seat n's demo session, stretched to `strokes` strokes (with curves), as a new session. */
   async function longSeat(n: number, strokes: number) {
     const [meta, csv, curves] = await Promise.all(
