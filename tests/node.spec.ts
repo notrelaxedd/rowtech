@@ -6,7 +6,7 @@ import { parseSession, parseStrokes, parseMeta, curveAt } from "../lib/session/p
 import { SessionFormatError, CURVE_BYTES, CURVE_POINTS } from "../lib/session/format";
 import { collectSessions, ZIP_LIMITS, ZipTooLargeError } from "../lib/session/collect";
 import { summarise, toCsv } from "../lib/session/analyse";
-import { thinTrack } from "../lib/session/track";
+import { fmtSplit, splitFromSpeed, thinTrack } from "../lib/session/track";
 
 const seatDir = (n: number) => path.join(process.cwd(), "public", "demo", `seat-${n}`);
 const read = (n: number, f: string) => readFile(path.join(seatDir(n), f));
@@ -148,4 +148,14 @@ test("a long GPS track is thinned for the map, from its first fix to its last", 
     // In time order, never the same fix twice.
     expect(thin.every((p, i) => i === 0 || p.tMs > thin[i - 1].tMs)).toBe(true);
   }
+});
+
+test("a split is read off the boat's speed, as m:ss.s per 500 m", () => {
+  expect(fmtSplit(splitFromSpeed(5))).toBe("1:40.0");
+  expect(fmtSplit(splitFromSpeed(4.1))).toBe("2:02.0");
+  expect(fmtSplit(splitFromSpeed(4.7))).toBe("1:46.4");
+  // Stopped, or no speed from the fix: no split.
+  expect(splitFromSpeed(0.2)).toBeNull();
+  expect(splitFromSpeed(null)).toBeNull();
+  expect(fmtSplit(null)).toBe("—");
 });

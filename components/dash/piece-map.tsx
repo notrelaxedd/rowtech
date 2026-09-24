@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { cn } from "@/lib/utils";
+import { chip } from "@/components/dash/chip";
+import { fmtSplit, splitFromSpeed } from "@/lib/session/track";
 
 export type TrackPoint = {
   tMs: number;
@@ -14,9 +16,6 @@ export type TrackPoint = {
 
 /** Seat forces at a moment, for the hover readout. */
 export type SeatForceAt = (tMs: number) => Array<{ seat: number; peak: number | null }>;
-
-const splitFromSpeed = (mps: number | null) => (mps && mps > 0.2 ? 500 / mps : null);
-const fmtSplit = (s: number | null) => (s === null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, "0")}`);
 
 /** Slow is dark, quick is bright: colour a segment by its split. */
 function splitColour(split: number | null, best: number, worst: number): string {
@@ -154,7 +153,7 @@ export function PieceMap({
           aria-pressed={headingUp}
           onClick={() => setHeadingUp((v) => !v)}
           className={cn(
-            "min-h-9 rounded-md border border-line px-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace",
+            chip,
             headingUp ? "border-trace/60 bg-trace/10 text-trace" : "text-muted-foreground hover:text-foreground"
           )}
         >

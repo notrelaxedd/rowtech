@@ -5,13 +5,13 @@ import Link from "next/link";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { readAttribution, UTM } from "@/components/site/attribution";
 import { ctaPrimary, ctaSecondary } from "@/components/site/cta";
+import { formField } from "@/components/ui/field";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { submitApplication } from "./actions";
 import { BOATS, EMAIL, EMPTY_STATE, LIMITS, REQUIRED, ROLES, type ApplyState, type Field } from "./fields";
 
-const input =
-  "block w-full rounded-md border border-input bg-[#0b0e11] px-3.5 text-base text-foreground placeholder:text-muted-foreground transition-[border-color,box-shadow] duration-150 focus:border-trace focus:outline-none focus:ring-3 focus:ring-trace/25 aria-[invalid=true]:border-destructive";
+const input = cn(formField, "placeholder:text-muted-foreground");
 const chip =
   "relative flex min-h-11 cursor-pointer items-center justify-center rounded-md border border-input px-4 text-[0.9375rem] text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground has-[:checked]:border-trace has-[:checked]:bg-trace/10 has-[:checked]:text-foreground has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-trace";
 const label = "text-[0.9375rem] font-semibold";

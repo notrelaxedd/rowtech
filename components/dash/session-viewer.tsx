@@ -8,6 +8,8 @@ import { METRICS, duration, fmt, rateAt, summarise, thirdsPct, toCsv, type Metri
 import { CurveCanvas, type CurveLayer } from "./curve-canvas";
 import { StrokeList, StrokeTimeline } from "./stroke-timeline";
 import { cn } from "@/lib/utils";
+import { picker } from "@/components/ui/field";
+import { chip } from "./chip";
 
 /** One node session: its strokes, and where to fetch its curves.bin. */
 export type SeatSource = {
@@ -18,9 +20,6 @@ export type SeatSource = {
   strokes: StrokeRow[];
   curvesUrl: string | null;
 };
-
-const chip =
-  "min-h-9 rounded-md border border-line px-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace";
 
 export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: string }) {
   const [seatId, setSeatId] = useState(seats[0]?.id ?? "");
@@ -130,7 +129,7 @@ export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: s
             <select
               value={overlaySeat ?? ""}
               onChange={(e) => setOverlaySeat(e.target.value || null)}
-              className="min-h-9 rounded-md border border-line bg-[#0b0e11] px-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace"
+              className={picker}
             >
               <option value="">none</option>
               {seats.filter((s) => s.id !== seat.id).map((s) => (

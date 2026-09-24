@@ -3,6 +3,8 @@
 import { useId } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { InlineScript, scriptValue } from "@/components/dash/local-time";
+import { picker } from "@/components/ui/field";
+import { cn } from "@/lib/utils";
 
 /** "Title · date", with the date in the viewer's zone and locale. */
 const optionText = (label: string, at: string) => `${label} · ${new Date(at).toLocaleDateString()}`;
@@ -36,7 +38,7 @@ export function ComparePicker({
         id={`${selectId}${which}`}
         value={value ?? ""}
         onChange={(e) => pick(which, e.target.value)}
-        className="min-h-9 max-w-[22rem] rounded-md border border-line bg-[#0b0e11] px-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace"
+        className={cn(picker, "max-w-[22rem]")}
       >
         <option value="">none</option>
         {crews.map((c) => (

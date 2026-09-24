@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { chip } from "@/components/dash/chip";
 import type { SessionStats } from "@/lib/supabase/types";
 
 /** A seat session's row of session_stats: one with a seat. */
@@ -118,7 +119,7 @@ export function HistoryPanel({ points }: { points: HistoryPoint[] }) {
             aria-pressed={s.id === seriesId}
             onClick={() => setSeriesId(s.id)}
             className={cn(
-              "min-h-9 rounded-md border border-line px-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace",
+              chip,
               s.id === seriesId ? "border-trace/60 bg-trace/10 text-trace" : "text-muted-foreground hover:text-foreground"
             )}
           >

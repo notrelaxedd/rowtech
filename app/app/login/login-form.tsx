@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { ArrowRight, LoaderCircle, Mail } from "lucide-react";
 import { ctaPrimary, ctaSecondary } from "@/components/site/cta";
 import { cn } from "@/lib/utils";
+import { formField } from "@/components/ui/field";
 import { sendMagicLink, signInWithGoogle, type LoginState } from "./actions";
 
 const EMPTY: LoginState = { status: "idle", message: "", email: "" };
@@ -61,7 +62,7 @@ export function LoginForm({ error }: { error?: string }) {
           required
           defaultValue={state.email}
           aria-invalid={state.status === "error" || undefined}
-          className="block h-12 w-full rounded-md border border-input bg-[#0b0e11] px-3.5 text-base text-foreground transition-[border-color,box-shadow] duration-150 focus:border-trace focus:outline-none focus:ring-3 focus:ring-trace/25 aria-[invalid=true]:border-destructive"
+          className={cn(formField, "h-12")}
         />
         <button type="submit" disabled={pending} className={cn(ctaPrimary, "w-full disabled:cursor-wait disabled:opacity-70")}>
           {pending ? (

@@ -6,7 +6,7 @@ import { duration, fmt } from "@/lib/session/analyse";
 import { ComparePicker } from "./compare-picker";
 import { PieceMap } from "@/components/dash/piece-map";
 import { sessionTrack } from "@/lib/session/load";
-import { thinTrack } from "@/lib/session/track";
+import { fmtSplit, splitFromSpeed, thinTrack } from "@/lib/session/track";
 
 export const metadata = { title: "Compare pieces" };
 
@@ -34,7 +34,7 @@ async function piece(sb: Awaited<ReturnType<typeof supabaseServer>>, id: string 
     seats.reduce((a, s) => a + (get(s) ?? 0), 0) / n;
 
   // The split is over every fix; the map gets a thinned track.
-  const splits = fullTrack.map((p) => (p.speedMps && p.speedMps > 0.2 ? 500 / p.speedMps : null)).filter((s): s is number => s !== null);
+  const splits = fullTrack.map((p) => splitFromSpeed(p.speedMps)).filter((s): s is number => s !== null);
 
   return {
     session,
@@ -50,8 +50,6 @@ async function piece(sb: Awaited<ReturnType<typeof supabaseServer>>, id: string 
     track: thinTrack(fullTrack),
   };
 }
-
-const split = (s: number | null) => (s === null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, "0")}`);
 
 export default async function ComparePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const q = await searchParams;
@@ -75,7 +73,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
     ["Seats", a ? String(a.seats) : "—", b ? String(b.seats) : "—"],
     ["Strokes", a ? String(a.strokes) : "—", b ? String(b.strokes) : "—"],
     ["Time", a ? duration(a.spanMs) : "—", b ? duration(b.spanMs) : "—"],
-    ["Avg split", a ? split(a.avgSplit) : "—", b ? split(b.avgSplit) : "—"],
+    ["Avg split", a ? fmtSplit(a.avgSplit) : "—", b ? fmtSplit(b.avgSplit) : "—"],
     ["Avg peak", a ? fmt(a.avgPeak) : "—", b ? fmt(b.avgPeak) : "—"],
     ["Avg impulse", a ? fmt(a.avgImpulse) : "—", b ? fmt(b.avgImpulse) : "—"],
     ["Drive : recovery", a ? `1 : ${fmt(a.avgRecovery / (a.avgDrive || 1), 2)}` : "—", b ? `1 : ${fmt(b.avgRecovery / (b.avgDrive || 1), 2)}` : "—"],

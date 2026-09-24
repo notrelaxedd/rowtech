@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SitePage } from "@/components/site/site-page";
+import { SitePage, wrap } from "@/components/site/site-page";
 import { BetaLink } from "@/components/site/cta";
 import { DeviceDiagram3D } from "@/components/site/device-diagram-3d";
 import { FORCE_DEFAULT_VIEW, FORCE_NOTES } from "@/components/site/device-notes";
@@ -14,8 +14,6 @@ export const metadata: Metadata = {
     "The Force node sits on each seat's rigger backstay, records the force curve of every stroke and shows it to the rower live. Specifications and parts.",
   alternates: { canonical: "/force" },
 };
-
-const wrap = "mx-auto w-full max-w-7xl px-5 sm:px-8";
 
 const BOATHOUSE = [
   {

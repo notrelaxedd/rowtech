@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
+import { wrap } from "@/components/site/site-page";
 import { BetaLink, SectionEnd } from "@/components/site/cta";
 import { Hero } from "@/components/site/hero";
 import { CrewLanes } from "@/components/site/crew-lanes";
@@ -13,8 +14,6 @@ import { SessionFiles } from "@/components/site/session-files";
 import { ForceMount } from "@/components/device/force-mount";
 import { siteUrl } from "@/lib/site";
 import { cn } from "@/lib/utils";
-
-const wrap = "mx-auto w-full max-w-7xl px-5 sm:px-8";
 
 const STEPS = [
   {

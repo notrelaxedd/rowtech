@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SitePage } from "@/components/site/site-page";
+import { SitePage, wrap } from "@/components/site/site-page";
 import { BetaLink } from "@/components/site/cta";
 import { DeviceDiagram3D } from "@/components/site/device-diagram-3d";
 import { VIEVE_DEFAULT_VIEW, VIEVE_NOTES } from "@/components/site/device-notes";
@@ -15,8 +15,6 @@ export const metadata: Metadata = {
     "Vieve, the RowTech cox box, is in development: the cox's voice to the boat's speakers, and the hub every seat node reports to. Specifications and parts.",
   alternates: { canonical: "/vieve" },
 };
-
-const wrap = "mx-auto w-full max-w-7xl px-5 sm:px-8";
 
 export default function VievePage() {
   return (

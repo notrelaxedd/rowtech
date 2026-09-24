@@ -4,12 +4,12 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircle, Upload } from "lucide-react";
 import { ctaPrimary } from "@/components/site/cta";
+import { field as textField } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import { uploadSession, type UploadState } from "./actions";
 
 const EMPTY: UploadState = { status: "idle", message: "" };
-const field =
-  "block w-full rounded-md border border-input bg-[#0b0e11] px-3 py-2 text-sm text-foreground focus:border-trace focus:outline-none focus:ring-3 focus:ring-trace/25";
+const field = cn(textField, "px-3 py-2 text-sm");
 
 /** Local time, formatted for datetime-local. */
 function nowLocal() {
