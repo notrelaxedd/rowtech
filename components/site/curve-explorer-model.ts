@@ -47,13 +47,13 @@ export const METRICS: ReadonlyArray<{ id: MetricId; label: string; value: string
   {
     id: "peak",
     label: "Peak & position",
-    value: `${f1(M.peakKg)} kg · ${M.peakPct.toFixed(0)}%`,
+    value: `${f1(M.peakKg)} kg at ${M.peakPct.toFixed(0)}%`,
     body: `The peak, and where it falls in the drive: ${M.peakPct.toFixed(0)}% of the way through here. The shape of the curve says as much about technique as its height.`,
   },
   {
     id: "thirds",
     label: "Work by thirds",
-    value: `${M.thirds.map((v) => Math.round((v / M.impulse) * 100)).join(" · ")} %`,
+    value: `${M.thirds.map((v) => Math.round((v / M.impulse) * 100)).join(" / ")} %`,
     body: `Impulse (force × time, ${f1(M.impulse)} kg·s for this stroke) split across the front, middle and finish of the drive, in kg·s on the chart. It shows where the work actually happens.`,
   },
   {
@@ -100,14 +100,14 @@ export function liveMetric(id: MetricId, L: LiveSummary): { value: string; body:
     case "peak":
       return s
         ? {
-            value: `${f1(s.peakKg)} kg · ${s.peakPct.toFixed(0)}%`,
+            value: `${f1(s.peakKg)} kg at ${s.peakPct.toFixed(0)}%`,
             body: `Your peak, and where it fell: ${s.peakPct.toFixed(0)}% of the way through your drive. The shape of the curve says as much as its height.`,
           }
         : { value: "—", body: "The highest force in the drive, and how far through the drive it landed." };
     case "thirds":
       return s
         ? {
-            value: `${s.thirds.map((v) => Math.round((v / s.impulse) * 100)).join(" · ")} %`,
+            value: `${s.thirds.map((v) => Math.round((v / s.impulse) * 100)).join(" / ")} %`,
             body: `Impulse (force × time, ${f1(s.impulse)} kg·s for this stroke) split across the front, middle and finish of your drive, in kg·s on the chart.`,
           }
         : { value: "—", body: "Impulse split across the front, middle and finish of the drive: where the work actually happens." };
@@ -135,11 +135,11 @@ export function liveMetric(id: MetricId, L: LiveSummary): { value: string; body:
 }
 
 export const STATE: Record<LiveState, { text: string; lamp: string; tone: string }> = {
-  ready: { text: "READY", lamp: "bg-white/45", tone: "text-foreground" },
-  drive: { text: "DRIVE", lamp: "bg-trace shadow-[0_0_10px_rgb(34_227_239/0.8)]", tone: "text-trace" },
-  recovery: { text: "RECOVERY", lamp: "bg-ok shadow-[0_0_10px_rgb(61_220_110/0.7)]", tone: "text-ok" },
-  idle: { text: "IDLE", lamp: "bg-white/25", tone: "text-muted-foreground" },
-  short: { text: "TOO SHORT", lamp: "bg-warn shadow-[0_0_10px_rgb(255_166_48/0.7)]", tone: "text-warn" },
+  ready: { text: "Ready", lamp: "bg-white/45", tone: "text-foreground" },
+  drive: { text: "Drive", lamp: "bg-trace", tone: "text-trace" },
+  recovery: { text: "Recovery", lamp: "bg-ok", tone: "text-ok" },
+  idle: { text: "Idle", lamp: "bg-white/25", tone: "text-muted-foreground" },
+  short: { text: "Too short", lamp: "bg-warn", tone: "text-warn" },
 };
 
 export const IDLE_INPUT: Input = { src: "none", kg: 0, since: 0 };

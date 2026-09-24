@@ -38,7 +38,8 @@ export function ScreenAnimator({ target = "hero" }: { target?: string }) {
     const frame = (now: number) => {
       raf = 0;
       if (!visible || document.hidden) return;
-      t0 ||= now;
+      // Start at the end of a drive, so the first frame shows a full stroke.
+      t0 ||= now - DRIVE;
       const t = (now - t0) % PERIOD;
 
       if (t < DRIVE) {

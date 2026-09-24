@@ -31,5 +31,5 @@ export const FORCE_PANEL = { w: 480, h: 320 } as const;
 /** Vieve's panel (4.3" IPS). */
 export const VIEVE_PANEL = { w: 800, h: 480 } as const;
 
-export const mono = "var(--font-geist-mono), ui-monospace, monospace";
+export const mono = "var(--font-chivo-mono), ui-monospace, monospace";
 export const sans = "var(--font-archivo), ui-sans-serif, system-ui, sans-serif";

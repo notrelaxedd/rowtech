@@ -43,7 +43,7 @@ export function ForceDevice({
     <svg
       viewBox={`0 0 ${W} ${H}`}
       role="img"
-      aria-label={`The Force seat node: a 3.5 inch screen, a snap-in seat badge reading ${seat}, and three sealed keys down its right edge. On the screen: ${
+      aria-label={`The Force seat node, concept design: a 3.5 inch screen, a seat badge reading ${seat}, and three keys down its right edge. On the screen: ${
         screen ? "the stroke being taken." : forceScreenLabel(seat, FORCE_SCREEN_DEFAULTS.peakKg, FORCE_SCREEN_DEFAULTS.avgKg)
       }`}
       className={className}

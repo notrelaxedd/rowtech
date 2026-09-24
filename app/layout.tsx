@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Archivo, Geist_Mono } from "next/font/google";
+import { Archivo, Chivo_Mono } from "next/font/google";
 import "./globals.css";
 import { AttributionCapture } from "@/components/site/attribution";
 import { Analytics as ProductAnalytics } from "@/components/site/analytics";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { siteUrl } from "@/lib/site";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -12,31 +13,38 @@ const archivo = Archivo({
   axes: ["wdth"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Device output only: the numbers and file names the node shows or writes.
+const chivoMono = Chivo_Mono({
+  variable: "--font-chivo-mono",
   subsets: ["latin"],
 });
 
-const siteUrl =
-  process.env.SITE_URL ||
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : "http://localhost:3000");
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "RowTech — force from every seat in the boat",
-    template: "%s · RowTech",
+    default: "RowTech: the force curve from every seat in the boat",
+    template: "%s | RowTech",
   },
   description:
-    "See who's carrying the boat. A force sensor on the rigger of every seat measures every stroke, live on the seat and stroke by stroke afterwards. Vieve, the RowTech cox box, is on the way. Now choosing beta crews.",
+    "A Force node on each seat's rigger backstay records the force curve of every stroke and shows it to the rower live. Vieve, the RowTech cox box, is in development. Coaches: apply for the beta.",
+  applicationName: "RowTech",
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "RowTech — force from every seat in the boat",
+    title: "RowTech: the force curve from every seat in the boat",
     description:
-      "Every seat, every stroke, measured. Now recruiting coaches and crews for the beta.",
-    images: [{ url: "/og.png", width: 1200, height: 630 }],
+      "Seat-by-seat force measurement for rowing. Coaches: apply for the beta.",
+    url: "/",
+    siteName: "RowTech",
+    locale: "en_US",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "RowTech: the force curve from every seat in the boat" }],
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RowTech: the force curve from every seat in the boat",
+    description: "Seat-by-seat force measurement for rowing. Coaches: apply for the beta.",
+    images: ["/og.png"],
   },
 };
 
@@ -48,7 +56,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${archivo.variable} ${geistMono.variable} h-full antialiased`}
+      className={`dark ${archivo.variable} ${chivoMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <AttributionCapture />

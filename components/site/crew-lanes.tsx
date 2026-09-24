@@ -1,5 +1,4 @@
 import { EXAMPLE, driveShape, toPath } from "@/lib/stroke";
-import { InView } from "./in-view";
 
 // Illustration of the crew view in development: eight seats, one stroke, drawn
 // as a ridgeline from the catch to the peak. Each ridge rises into the lane
@@ -44,19 +43,13 @@ function ridge(off: number, k: number, y0: number) {
   return { line, fill: `${line}L${X1} ${y0}L${X0} ${y0}Z` };
 }
 
-// The catch dots land in the crew's real order, bow first, spaced in
-// proportion to their real timing (1 ms of catch = 30 ms of animation), once
-// every ridge has risen.
-const EARLIEST = Math.min(...SEATS.map((s) => s.off));
-const land = (off: number) => ({ "--d": `${900 + (off - EARLIEST) * 30}ms` }) as React.CSSProperties;
-
 export function CrewLanes() {
   const late = SEATS.reduce((a, s) => (s.off > a.off ? s : a));
   const early = SEATS.reduce((a, s) => (s.off < a.off ? s : a));
   const ms = (v: number) => Math.abs(Math.round(v - MEAN));
   return (
     <figure className="m-0">
-      <InView className="overflow-x-auto rounded-lg border border-line bg-panel">
+      <div role="region" className="instrument overflow-x-auto rounded-lg" tabIndex={0} aria-label="Crew view illustration, scrolls sideways on narrow screens">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           role="img"
@@ -66,7 +59,7 @@ export function CrewLanes() {
           {TICKS.map((t) => (
             <g key={t}>
               <line x1={x(t)} x2={x(t)} y1={28} y2={H - 6} stroke="rgb(255 255 255 / 0.05)" />
-              <text x={x(t)} y={20} textAnchor="middle" className="fill-muted-foreground font-mono text-[11px]">
+              <text x={x(t)} y={20} textAnchor="middle" className="fill-muted-foreground text-[12px] tabular-nums">
                 {t === 0 ? "catch" : `+${Math.round(t * 1000)} ms`}
               </text>
             </g>
@@ -78,8 +71,7 @@ export function CrewLanes() {
             return (
               <g key={s.seat}>
                 <line x1={X0} x2={X1} y1={y0} y2={y0} stroke="rgb(255 255 255 / 0.1)" />
-                {/* Rises out of its own baseline, bow first. */}
-                <g className="ridge" style={{ "--i": SEATS.length - 1 - i } as React.CSSProperties}>
+                <g>
                   <path d={r.fill} fill="var(--panel)" />
                   <path d={r.line} fill="none" stroke="var(--trace)" strokeWidth={1.6} strokeLinejoin="round" />
                 </g>
@@ -103,22 +95,20 @@ export function CrewLanes() {
             const far = Math.abs(rel) > 7;
             return (
               <g key={s.seat}>
-                <g style={land(s.off)}>
-                  {far && <circle cx={x(s.off / 1000)} cy={y0} r={3.5} fill="none" stroke="var(--warn)" strokeWidth={1.5} className="pulse-once" />}
+                <g>
                   <circle
                     cx={x(s.off / 1000)}
                     cy={y0}
                     r={far ? 3.5 : 2.5}
                     fill={far ? "var(--warn)" : "white"}
                     fillOpacity={far ? 1 : 0.7}
-                    className="land"
                   />
                 </g>
                 <text x={14} y={y0 - 3} className="fill-foreground text-[13px] font-semibold">
                   {s.seat}
                   <tspan className="fill-muted-foreground font-normal"> {s.name}</tspan>
                 </text>
-                <text x={W - 14} y={y0 - 3} textAnchor="end" className={`font-mono text-[12px] ${far ? "fill-warn" : "fill-muted-foreground"}`}>
+                <text x={W - 14} y={y0 - 3} textAnchor="end" className={`text-[13px] tabular-nums ${far ? "fill-warn" : "fill-muted-foreground"}`}>
                   {rel >= 0 ? "+" : "−"}
                   {Math.abs(Math.round(rel))} ms
                 </text>
@@ -126,9 +116,10 @@ export function CrewLanes() {
             );
           })}
         </svg>
-      </InView>
-      <figcaption className="mt-3 text-sm text-muted-foreground">
-        Illustration of the crew view. Each ridge is one seat from catch to peak; dots mark each catch, amber when more
+      </div>
+      <figcaption className="mt-3 max-w-[70ch] text-sm text-muted-foreground">
+        <span className="sm:hidden">Swipe the chart sideways to see every seat&rsquo;s offset. </span>
+        Illustration of the crew view. Each ridge is one seat from catch to peak; dots mark each catch, yellow when more
         than 7 ms off the crew average (dotted line). Catch spread here: {SPREAD} ms.
       </figcaption>
     </figure>

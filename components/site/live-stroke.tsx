@@ -34,7 +34,7 @@ function median(xs: number[]) {
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const f1 = (n: number) => n.toFixed(1);
-const label = "fill-muted-foreground font-mono text-[10px] max-sm:text-[17px]";
+const label = "fill-muted-foreground tabular-nums text-[10px] max-sm:text-[17px]";
 
 export function LiveChart({
   input,
@@ -328,7 +328,7 @@ export function LiveChart({
 
       {/* catch threshold: 5x noise until the first stroke, then 15% of the recent peak */}
       <line x1={PX0} x2={PX1} y1={y(thr)} y2={y(thr)} stroke="var(--warn)" strokeOpacity={on("catch") ? 0.8 : 0.4} strokeDasharray="4 4" />
-      <text x={PX1} y={y(thr) - 6} textAnchor="end" className="rt-halo fill-warn font-mono text-[10px] max-sm:text-[17px]" fillOpacity={on("catch") ? 1 : 0.7}>
+      <text x={PX1} y={y(thr) - 6} textAnchor="end" className="rt-halo fill-warn tabular-nums text-[10px] max-sm:text-[17px]" fillOpacity={on("catch") ? 1 : 0.7}>
         catch threshold
       </text>
       {cur && on("release") && (
@@ -372,7 +372,7 @@ export function LiveChart({
             strokeWidth={1.5}
           />
           {on("release") && (
-            <text x={X(cur.releaseT) + 8} y={y(thr / 2) - 10} className="rt-halo fill-warn font-mono text-[10px] max-sm:text-[17px]">
+            <text x={X(cur.releaseT) + 8} y={y(thr / 2) - 10} className="rt-halo fill-warn tabular-nums text-[10px] max-sm:text-[17px]">
               release
             </text>
           )}
@@ -384,7 +384,7 @@ export function LiveChart({
                 .map(([t, v]) => (
                   <circle key={t} cx={X(t)} cy={y(v)} r={3} fill="var(--background)" stroke="white" strokeWidth={1.25} />
                 ))}
-              <text x={X(cur.catchT) + 8} y={y(thr) - 22} className="rt-halo fill-warn font-mono text-[11px] max-sm:text-[18px]">
+              <text x={X(cur.catchT) + 8} y={y(thr) - 22} className="rt-halo fill-warn tabular-nums text-[11px] max-sm:text-[18px]">
                 +{f1(cur.catchLagMs)} ms
               </text>
             </>
@@ -402,7 +402,7 @@ export function LiveChart({
                 strokeOpacity={0.6}
                 strokeDasharray="3 3"
               />
-              <text x={X(cur.catchT + 100) + 8} y={y(valueAt(cur.trace, cur.catchT + 100)) + 4} className="rt-halo fill-foreground font-mono text-[11px] max-sm:text-[18px]">
+              <text x={X(cur.catchT + 100) + 8} y={y(valueAt(cur.trace, cur.catchT + 100)) + 4} className="rt-halo fill-foreground tabular-nums text-[11px] max-sm:text-[18px]">
                 100 ms
               </text>
             </>
@@ -416,7 +416,7 @@ export function LiveChart({
                 x={X(cur.peakT) + (X(cur.peakT) > PX1 - 150 ? -10 : 10)}
                 y={y(cur.peakKg) + 4}
                 textAnchor={X(cur.peakT) > PX1 - 150 ? "end" : "start"}
-                className="rt-halo fill-foreground font-mono text-[11px] max-sm:text-[18px]"
+                className="rt-halo fill-foreground tabular-nums text-[11px] max-sm:text-[18px]"
               >
                 {f1(cur.peakKg)} kg at {cur.peakPct.toFixed(0)}%
               </text>
@@ -427,7 +427,7 @@ export function LiveChart({
             cur.thirds.map((v, i) => {
               const third = (cur.releaseT - cur.catchT) / 3;
               return (
-                <text key={i} x={X(cur.catchT + (i + 0.5) * third)} y={y(4)} textAnchor="middle" className="rt-halo fill-foreground font-mono text-[11px] max-sm:text-[18px]">
+                <text key={i} x={X(cur.catchT + (i + 0.5) * third)} y={y(4)} textAnchor="middle" className="rt-halo fill-foreground tabular-nums text-[11px] max-sm:text-[18px]">
                   {f1(v)}
                 </text>
               );

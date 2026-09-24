@@ -39,7 +39,7 @@ export function VieveDevice({
     <svg
       viewBox={`0 0 ${W} ${H}`}
       role="img"
-      aria-label={`Vieve V1, the RowTech cox box: a 4.3 inch screen and the START, MODE and volume keys. On the screen: ${vieveScreenLabel(
+      aria-label={`Vieve V1, the RowTech cox box, concept design: a screen and the START, MODE and volume keys. On the screen: ${vieveScreenLabel(
         "1:52.4",
         32
       )}`}

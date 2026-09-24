@@ -85,7 +85,7 @@ export function CurveExplorerView({
     <div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[18.5rem_minmax(0,1fr)] lg:gap-10">
         <div className="min-w-0">
-          <div role="group" aria-label="Which stroke to measure" className="mb-4 grid grid-cols-2 gap-1 rounded-lg border border-line bg-panel p-1">
+          <div role="group" aria-label="Which stroke to measure" className="mb-4 grid grid-cols-2 gap-1 rounded-lg border border-line bg-card p-1">
             {(["example", "live"] as const).map((m) => (
               <button
                 key={m}
@@ -94,12 +94,11 @@ export function CurveExplorerView({
                 onClick={on?.go && (() => on.go!(m))}
                 className={cn(
                   "flex min-h-10 items-center justify-center gap-2 rounded-md px-3 text-sm font-semibold whitespace-nowrap transition-colors",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace",
-                  mode !== m && "text-muted-foreground hover:text-foreground",
-                  mode === m && (m === "live" ? "bg-trace/[0.12] text-trace" : "bg-white/[0.08] text-foreground")
+                                    mode !== m && "text-muted-foreground hover:text-foreground",
+                  mode === m && (m === "live" ? "bg-trace/[0.12] text-trace" : "bg-foreground/[0.08] text-foreground")
                 )}
               >
-                {m === "live" && <span aria-hidden className={cn("size-1.5 rounded-full bg-trace", !isLive && "rt-blink")} />}
+                {m === "live" && <span aria-hidden className="size-1.5 rounded-full bg-trace" />}
                 {m === "example" ? "Example stroke" : "Row it yourself"}
               </button>
             ))}
@@ -120,10 +119,9 @@ export function CurveExplorerView({
                   onClick={on?.setActive && (() => on.setActive!(m.id))}
                   className={cn(
                     "group flex min-h-11 shrink-0 items-baseline justify-between gap-6 rounded-md border px-3.5 py-2.5 text-left transition-colors lg:rounded-none lg:border-x-0 lg:border-t-0 lg:border-b lg:px-1 lg:py-3.5",
-                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace",
                     active === m.id
                       ? "border-trace/50 bg-trace/[0.07] lg:border-line lg:bg-transparent"
-                      : "border-line hover:border-white/25 lg:hover:border-line"
+                      : "border-line hover:border-foreground/30 lg:hover:border-line"
                   )}
                 >
                   <span
@@ -136,7 +134,7 @@ export function CurveExplorerView({
                   </span>
                   <span
                     key={isLive ? value : "example"}
-                    className={cn("readout hidden text-sm whitespace-nowrap text-muted-foreground sm:inline", isLive && "rt-tick")}
+                    className={cn("hidden text-sm whitespace-nowrap tabular-nums text-muted-foreground sm:inline", isLive && "rt-tick")}
                   >
                     {value}
                   </span>
@@ -147,29 +145,29 @@ export function CurveExplorerView({
         </div>
 
         <div className="min-w-0">
-          <div data-reveal="" className="overflow-hidden rounded-lg border border-line bg-panel">
+          <div className="instrument overflow-hidden rounded-lg">
             {/* status strip, after the node's own LIVE header */}
             <div className="flex h-12 items-center justify-between gap-3 border-b border-line px-4">
-              <p className="readout flex min-w-0 items-center gap-2 text-xs sm:text-sm">
+              <p className="flex min-w-0 items-center gap-2 text-xs sm:text-sm">
                 <span aria-hidden className={cn("size-2 shrink-0 rounded-full transition-colors duration-150", isLive ? st.lamp : "bg-white/25")} />
-                <span className={cn("shrink-0", isLive ? st.tone : "text-muted-foreground")}>{isLive ? st.text : "EXAMPLE"}</span>
+                <span className={cn("shrink-0 font-semibold", isLive ? st.tone : "text-muted-foreground")}>{isLive ? st.text : "Example"}</span>
                 <span className="truncate text-muted-foreground">
                   {isLive
                     ? live.strokes.length
                       ? <>
-                          {" · "}
+                          {", "}
                           <span className="max-sm:hidden">stroke </span>
                           <span className="sm:hidden">#</span>
                           {live.strokes[0].seq}
-                          {live.spm ? ` · ${f1(live.spm)} spm` : ""}
+                          {live.spm ? `, ${f1(live.spm)} spm` : ""}
                         </>
-                      : " · waiting for a catch"
-                    : ` · stroke ${EXAMPLE.strokes} · ${EXAMPLE.spm} spm`}
+                      : ", waiting for a catch"
+                    : ` stroke ${EXAMPLE.strokes}, ${EXAMPLE.spm} spm`}
                 </span>
               </p>
-              <p className="readout flex shrink-0 items-baseline gap-1.5 text-xs text-muted-foreground">
+              <p className="flex shrink-0 items-baseline gap-1.5 text-xs text-muted-foreground">
                 {!isLive && <span>peak</span>}
-                <span key={mode} ref={readoutRef} className="min-w-[4ch] text-right text-xl text-foreground sm:text-2xl">
+                <span key={mode} ref={readoutRef} className="readout min-w-[4ch] text-right text-xl text-foreground sm:text-2xl">
                   {isLive ? "0.0" : f1(EXAMPLE.peakKg)}
                 </span>
                 kg
@@ -201,16 +199,16 @@ export function CurveExplorerView({
                   {KG_GRID.map((kg) => (
                     <g key={kg}>
                       <line x1={PX0} x2={PX1} y1={y(kg)} y2={y(kg)} stroke={kg === 0 ? "rgb(255 255 255 / 0.22)" : "rgb(255 255 255 / 0.06)"} />
-                      <text x={PX0 - 8} y={y(kg) + 4} textAnchor="end" className="fill-muted-foreground font-mono text-[10px] max-sm:text-[17px]">
+                      <text x={PX0 - 8} y={y(kg) + 4} textAnchor="end" className="fill-muted-foreground tabular-nums text-[10px] max-sm:text-[17px]">
                         {kg}
                       </text>
                     </g>
                   ))}
-                  <text x={PX0 - 8} y={PY1 - 4} textAnchor="end" className="fill-muted-foreground font-mono text-[10px] max-sm:text-[17px]">
+                  <text x={PX0 - 8} y={PY1 - 4} textAnchor="end" className="fill-muted-foreground tabular-nums text-[10px] max-sm:text-[17px]">
                     kg
                   </text>
                   {[0, 0.25, 0.5, 0.75, 1].map((s) => (
-                    <text key={s} x={x(M.catchT + s)} y={H - 16} textAnchor="middle" className="fill-muted-foreground font-mono text-[10px] max-sm:text-[17px]">
+                    <text key={s} x={x(M.catchT + s)} y={H - 16} textAnchor="middle" className="fill-muted-foreground tabular-nums text-[10px] max-sm:text-[17px]">
                       {s === 0 ? "catch" : `+${s * 1000} ms`}
                     </text>
                   ))}
@@ -226,7 +224,7 @@ export function CurveExplorerView({
                         stroke={lit("consistency") ? "var(--trace)" : "white"}
                         strokeOpacity={lit("consistency") ? 0.4 : 0.14}
                         strokeWidth={1.25}
-                        className="draw"
+                       
                         style={{ "--i": i + 3 } as React.CSSProperties}
                       />
                     ))}
@@ -238,18 +236,18 @@ export function CurveExplorerView({
                       <path key={i} d={d} fill="var(--trace)" fillOpacity={i === 1 ? 0.26 : 0.13} />
                     ))}
                     {M.thirds.map((v, i) => (
-                      <text key={i} x={x(M.catchT + (i + 0.5) * third)} y={y(4)} textAnchor="middle" className="fill-foreground font-mono text-[11px] max-sm:text-[18px]">
+                      <text key={i} x={x(M.catchT + (i + 0.5) * third)} y={y(4)} textAnchor="middle" className="fill-foreground tabular-nums text-[11px] max-sm:text-[18px]">
                         {f1(v)}
                       </text>
                     ))}
                   </g>
 
-                  <path d={MAIN} pathLength={1} fill="none" stroke="var(--trace)" strokeWidth={2.25} strokeLinejoin="round" className="draw" />
+                  <path d={MAIN} pathLength={1} fill="none" stroke="var(--trace)" strokeWidth={2.25} strokeLinejoin="round" />
 
                   {/* catch: threshold, raw samples, interpolated crossing */}
                   <g className={fade} style={{ opacity: lit("catch") }}>
                     <line x1={PX0} x2={PX1} y1={y(M.threshold)} y2={y(M.threshold)} stroke="var(--warn)" strokeOpacity={0.7} strokeDasharray="4 4" />
-                    <text x={PX1} y={y(M.threshold) - 6} textAnchor="end" className="fill-warn font-mono text-[10px] max-sm:text-[17px]">
+                    <text x={PX1} y={y(M.threshold) - 6} textAnchor="end" className="fill-warn tabular-nums text-[10px] max-sm:text-[17px]">
                       catch threshold
                     </text>
                     {NEAR_CATCH.map(([t, kg]) => (
@@ -262,7 +260,7 @@ export function CurveExplorerView({
                   <g className={fade} style={{ opacity: lit("rise") }}>
                     <path d={curve(STROKES[0], M.catchT, RISE_END)} fill="none" stroke="var(--warn)" strokeWidth={4} strokeLinecap="round" />
                     <line x1={x(M.catchT)} x2={x(RISE_END)} y1={y(M.threshold)} y2={y(strokeForce(RISE_END))} stroke="white" strokeOpacity={0.6} strokeDasharray="3 3" />
-                    <text x={x(RISE_END) + 8} y={y(strokeForce(RISE_END)) + 4} className="fill-foreground font-mono text-[11px] max-sm:text-[18px]">
+                    <text x={x(RISE_END) + 8} y={y(strokeForce(RISE_END)) + 4} className="fill-foreground tabular-nums text-[11px] max-sm:text-[18px]">
                       100 ms
                     </text>
                   </g>
@@ -271,7 +269,7 @@ export function CurveExplorerView({
                   <g className={fade} style={{ opacity: lit("peak") }}>
                     <line x1={x(M.peakT)} x2={x(M.peakT)} y1={y(M.peakKg)} y2={y(0)} stroke="white" strokeOpacity={0.35} strokeDasharray="3 3" />
                     <circle cx={x(M.peakT)} cy={y(M.peakKg)} r={5} fill="var(--warn)" />
-                    <text x={x(M.peakT) + 10} y={y(M.peakKg) + 4} className="fill-foreground font-mono text-[11px] max-sm:text-[18px]">
+                    <text x={x(M.peakT) + 10} y={y(M.peakKg) + 4} className="fill-foreground tabular-nums text-[11px] max-sm:text-[18px]">
                       {f1(M.peakKg)} kg at {M.peakPct.toFixed(0)}%
                     </text>
                   </g>
@@ -280,7 +278,7 @@ export function CurveExplorerView({
                   <g className={fade} style={{ opacity: lit("release") }}>
                     <line x1={PX0} x2={PX1} y1={y(M.threshold / 2)} y2={y(M.threshold / 2)} stroke="var(--warn)" strokeOpacity={0.7} strokeDasharray="4 4" />
                     <line x1={x(M.releaseT)} x2={x(M.releaseT)} y1={y(M.threshold / 2) - 24} y2={y(0) + 6} stroke="var(--warn)" strokeWidth={1.5} />
-                    <text x={x(M.releaseT) + 8} y={y(M.threshold / 2) - 10} className="fill-warn font-mono text-[10px] max-sm:text-[17px]">
+                    <text x={x(M.releaseT) + 8} y={y(M.threshold / 2) - 10} className="fill-warn tabular-nums text-[10px] max-sm:text-[17px]">
                       release
                     </text>
                   </g>
@@ -292,10 +290,9 @@ export function CurveExplorerView({
               {!isLive && (
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute top-3 right-3 inline-flex items-center gap-2 rounded-full border border-trace/30 bg-panel/90 px-3 py-1 text-xs text-trace transition-colors duration-200 group-hover/chart:border-trace/70 sm:text-sm"
+                  className="pointer-events-none absolute top-3 right-3 inline-flex items-center gap-2 rounded-md border border-trace/40 bg-panel/90 px-2.5 py-1 text-xs text-trace transition-colors duration-200 group-hover/chart:border-trace/80 sm:text-sm"
                 >
-                  <span className="rt-blink size-1.5 rounded-full bg-trace" />
-                  <span className="[@media(pointer:coarse)]:hidden">Press and hold to row your own</span>
+                                    <span className="[@media(pointer:coarse)]:hidden">Press and hold to row your own</span>
                   <span className="hidden [@media(pointer:coarse)]:inline">Tap to row your own</span>
                 </span>
               )}
@@ -310,7 +307,7 @@ export function CurveExplorerView({
             </div>
 
             {/* where in the stroke the cursor (or the live detector) is */}
-            <ol aria-label="Phases of the stroke" className="readout flex justify-between gap-2 border-t border-line px-4 py-2.5 text-xs sm:text-[0.8125rem]">
+            <ol aria-label="Phases of the stroke" className="flex justify-between gap-2 border-t border-line px-4 py-2.5 text-xs sm:text-[0.8125rem]">
               {PHASES.map((p) => (
                 <li
                   key={p}
@@ -324,7 +321,7 @@ export function CurveExplorerView({
                     aria-hidden
                     className={cn(
                       "size-1.5 rounded-full transition-[background-color,box-shadow,transform] duration-200",
-                      phase === p ? "scale-125 bg-trace shadow-[0_0_8px_rgb(34_227_239/0.8)]" : "bg-white/35"
+                      phase === p ? "scale-125 bg-trace" : "bg-white/35"
                     )}
                   />
                   {p}
@@ -344,7 +341,7 @@ export function CurveExplorerView({
                 <div className="bg-trace transition-[flex-grow] duration-500 ease-out" style={{ flexGrow: rhythm.drive }} />
                 <div className="bg-white/15 transition-[flex-grow] duration-500 ease-out" style={{ flexGrow: rhythm.recovery }} />
               </div>
-              <div className="readout mt-2 flex justify-between text-xs text-muted-foreground">
+              <div className="mt-2 flex justify-between text-xs tabular-nums text-muted-foreground">
                 <span>drive {rhythm.drive ? rhythm.drive.toFixed(0) : "—"} ms</span>
                 <span>recovery {rhythm.recovery ? rhythm.recovery.toFixed(0) : "—"} ms</span>
               </div>
@@ -367,7 +364,7 @@ export function CurveExplorerView({
               <button
                 type="button"
                 onClick={on?.clear}
-                className="ml-auto min-h-11 px-1 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace sm:ml-0"
+                className="ml-auto min-h-11 px-1 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline sm:ml-0"
               >
                 Clear
               </button>
@@ -376,7 +373,7 @@ export function CurveExplorerView({
 
           <div aria-live={isLive ? undefined : "polite"} className="mt-5 min-h-[7.5rem] bg-background">
             <p className="type-h3">
-              {current.label} <span className="readout ml-2 text-base font-normal text-trace">{shown.value}</span>
+              {current.label} <span className="ml-2 text-base font-semibold tabular-nums text-trace">{shown.value}</span>
             </p>
             <p className="type-body mt-2 max-w-[62ch] text-muted-foreground">{shown.body}</p>
           </div>

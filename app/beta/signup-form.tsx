@@ -20,7 +20,6 @@ const optional = <span className="font-normal text-muted-foreground">(optional)<
 export const NEXT_STEPS = [
   { t: "We read your application.", d: "Every one, properly." },
   { t: "We get in touch by email.", d: "To talk through your boat, your rigging, your schedule and what you want to see." },
-  { t: "We fit the nodes, and you row.", d: "Then you tell us what's useful, and help shape what RowTech becomes." },
 ];
 
 function Err({ id, msg }: { id: string; msg?: string }) {
@@ -37,18 +36,15 @@ function Done({ name }: { name?: string }) {
   useEffect(() => heading.current?.focus(), []);
   return (
     <div>
-      <p className="readout inline-flex items-center gap-2.5 text-sm text-muted-foreground">
-        <span aria-hidden className="size-2 rounded-full bg-ok shadow-[0_0_10px_rgb(61_220_110/0.7)]" />
-        <span className="text-ok">SAVED</span>
-      </p>
+      <p className="text-sm font-semibold text-muted-foreground">Application saved</p>
       <h1 ref={heading} tabIndex={-1} className="type-h2 mt-4 outline-none">
-        {`${name ? `Thanks, ${name.split(" ")[0]}.` : "Thanks."} You’re in.`}
+        {`${name ? `Thanks, ${name.split(" ")[0]}.` : "Thanks."} We have your application.`}
       </h1>
       <p className="type-lead mt-5 text-muted-foreground">Here&rsquo;s what happens next.</p>
       <ol className="mt-8 space-y-6 border-t border-line pt-8">
         {NEXT_STEPS.map((s, i) => (
           <li key={s.t} className="grid grid-cols-[1.75rem_1fr] gap-3">
-            <span className="readout pt-0.5 text-sm text-trace">{i + 1}</span>
+            <span className="pt-0.5 text-sm font-semibold tabular-nums text-trace">{i + 1}</span>
             <div>
               <p className="font-semibold">{s.t}</p>
               <p className="mt-1 text-[0.9375rem] leading-relaxed text-muted-foreground">{s.d}</p>
@@ -104,7 +100,7 @@ export function SignupForm({ from }: { from: string }) {
     <>
     <h1 className="type-h2">Apply for the beta.</h1>
     <p className="type-lead mt-5 text-muted-foreground">
-      Three things and you&rsquo;re in. Tell us more about your boat if you like: we want crews of every size and level.
+      Three fields are required: your name, email and program. Tell us more about your boats if you like.
     </p>
     <form
       ref={form}
@@ -240,7 +236,7 @@ export function SignupForm({ from }: { from: string }) {
             </>
           )}
         </button>
-        <p className="text-sm text-muted-foreground">Two minutes, no commitment. We&rsquo;ll only use this to talk to you about the RowTech beta.</p>
+        <p className="text-sm text-muted-foreground">We&rsquo;ll only use this to talk to you about the RowTech beta.</p>
       </div>
     </form>
     </>
