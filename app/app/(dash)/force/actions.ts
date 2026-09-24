@@ -12,20 +12,13 @@ export type UploadState = { status: "idle" | "error" | "ok"; message: string; se
 const decode = (b: Uint8Array) => new TextDecoder().decode(b);
 
 /** Everything a beta user needs before they can upload: a team of their own. */
-async function teamId(): Promise<string> {
-  const viewer = await getViewer();
-  if (viewer.state !== "allowed") throw new Error("not allowed");
+async function teamId(viewer: { email: string }): Promise<string> {
   const sb = await supabaseServer();
-
-  const { data: mine } = await sb.from("team_members").select("team_id").limit(1).maybeSingle();
-  if (mine?.team_id) return mine.team_id;
-
-  const name = `${viewer.email.split("@")[0]}'s crew`;
-  const { data: team, error } = await sb.from("teams").insert({ name, created_by: viewer.id }).select("id").single();
-  if (error || !team) throw new Error(error?.message ?? "could not create a team");
-  const { error: joinError } = await sb.from("team_members").insert({ team_id: team.id, user_id: viewer.id, role: "owner" });
-  if (joinError) throw new Error(joinError.message);
-  return team.id;
+  // Finds the team, or makes it, in one call that is safe to run twice at once
+  // (supabase/migrations/*_own_team.sql).
+  const { data, error } = await sb.rpc("ensure_own_team", { p_name: `${viewer.email.split("@")[0]}'s crew` });
+  if (error || typeof data !== "string") throw new Error(error?.message ?? "could not set up a team");
+  return data;
 }
 
 async function collect(fd: FormData): Promise<Map<string, SessionFolder>> {
@@ -96,7 +89,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
   const sb = await supabaseServer();
   let team: string;
   try {
-    team = await teamId();
+    team = await teamId(viewer);
   } catch (e) {
     console.error("team setup failed", e);
     return { status: "error", message: "We couldn't set your team up. Try again in a minute." };
