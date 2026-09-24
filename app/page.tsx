@@ -10,7 +10,7 @@ import { ForceScreen } from "@/components/device/force-screen";
 import { DevicePlaceholder } from "@/components/device/device-placeholder";
 import { CurveExplorerView } from "@/components/site/curve-explorer-view";
 import { SessionFiles } from "@/components/site/session-files";
-import { PhotoSlot } from "@/components/site/photo-slot";
+import { ForceMount } from "@/components/device/force-mount";
 import { siteUrl } from "@/lib/site";
 import { TEAM } from "@/lib/team";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,7 @@ const wrap = "mx-auto w-full max-w-7xl px-5 sm:px-8";
 
 const STEPS = [
   {
-    art: "photo",
+    art: "mount",
     t: "Fit a node to each seat",
     d: "The load cell goes in the rigger backstay. In the concept design, the node clamps to the stay in front of the rower.",
   },
@@ -162,13 +162,10 @@ export default function Home() {
               {STEPS.map((s, i) => (
                 <li key={s.t}>
                   <div className="flex h-64 items-center justify-center lg:h-72">
-                    {s.art === "photo" ? (
-                      <PhotoSlot
-                        label="node on backstay"
-                        shows="A Force node on a real rigger, with the load cell visible in the backstay."
-                        ratio="auto"
-                        className="h-full w-full [&>div]:h-full"
-                      />
+                    {s.art === "mount" ? (
+                      <div className="instrument h-full w-full rounded-md p-3">
+                        <ForceMount className="m-0 h-full w-full" />
+                      </div>
                     ) : s.art === "device" ? (
                       <div className="instrument w-full rounded-md p-2">
                         <ForceScreen idPrefix="step" />
@@ -323,7 +320,7 @@ export default function Home() {
 
         {/* ------------------------------------------------------- closing */}
         <section data-section="closing" className="below-fold border-t border-line">
-          <div className={cn(wrap, "grid grid-cols-1 items-center gap-12 py-24 sm:py-32 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)] lg:gap-16")}>
+          <div className={cn(wrap, "py-24 sm:py-32")}>
             <div>
               <h2 className="type-h2 max-w-[16ch]">Tell us about your crew.</h2>
               <p className="type-lead mt-6 max-w-[44ch] text-muted-foreground">
@@ -333,7 +330,6 @@ export default function Home() {
                 <BetaLink from="closing" className="h-14 px-7 text-base max-sm:w-full" />
               </div>
             </div>
-            <PhotoSlot label="boat on the water" shows="A crew rowing with Force nodes fitted, ideally at dawn practice." />
           </div>
         </section>
       </main>

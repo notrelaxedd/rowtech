@@ -4,7 +4,6 @@ import { BetaLink } from "@/components/site/cta";
 import { DeviceDiagram3D } from "@/components/site/device-diagram-3d";
 import { FORCE_DEFAULT_VIEW, FORCE_NOTES } from "@/components/site/device-notes";
 import { DevicePlaceholder } from "@/components/device/device-placeholder";
-import { PhotoSlot } from "@/components/site/photo-slot";
 import { SpecTable } from "@/components/site/spec-table";
 import { FORCE_SPECS } from "@/lib/specs";
 import { siteUrl } from "@/lib/site";
@@ -76,11 +75,6 @@ export default function ForcePage() {
               }
             />
           </div>
-          <PhotoSlot
-            className="mt-12 max-w-md"
-            label="rower's-eye view of screen"
-            shows="The node's screen from the seat, mid-outing, as the rower sees it."
-          />
         </div>
       </section>
 
@@ -103,14 +97,7 @@ export default function ForcePage() {
       <section id="specs" className="border-t border-line py-24 sm:py-28">
         <div className={wrap}>
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-16">
-            <div>
-              <h2 className="type-h2">Specifications.</h2>
-              <PhotoSlot
-                className="mt-10"
-                label="PCB"
-                shows="The RowTech carrier board with the Feather ESP32-S3 and HX711 breakout fitted."
-              />
-            </div>
+            <h2 className="type-h2">Specifications.</h2>
             <SpecTable specs={FORCE_SPECS} note="The case is a concept design." />
           </div>
         </div>
