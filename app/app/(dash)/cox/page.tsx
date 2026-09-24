@@ -24,15 +24,15 @@ export default async function CoxPage({ searchParams }: { searchParams: Promise<
       <div className="max-w-3xl">
         <h1 className="type-h3 text-2xl">Cox</h1>
         <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
-          Outings with the whole crew in them. Upload several seats at once on the Force tab and they land here as one
-          piece. Vieve, the RowTech cox box, will add the GPS track and put every seat on one clock; its session format
+          Outings with the whole crew in them. Upload several seats on the Force tab as one zip, each seat&rsquo;s files
+          in a folder of its own, and they land here as one piece. Vieve, the RowTech cox box, will add the GPS track and put every seat on one clock; its session format
           isn&rsquo;t final yet, so the dashboard can&rsquo;t read a Vieve bundle today.
         </p>
       </div>
 
       {crews.length === 0 ? (
         <p className="rounded-lg border border-dashed border-line px-4 py-10 text-center text-sm text-muted-foreground">
-          {before ? "No older outings." : "No crew outings yet. Upload more than one seat together and they become one."}
+          {before ? "No older outings." : "No crew outings yet. Upload a zip with each seat\u2019s files in a folder of its own and they become one."}
         </p>
       ) : (
         <>

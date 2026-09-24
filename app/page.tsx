@@ -246,8 +246,8 @@ export default function Home() {
                 </p>
                 <h3 className="type-h3 mt-10">The team dashboard</h3>
                 <p className="type-body mt-3 max-w-[52ch]">
-                  Upload a node&rsquo;s four session files, or several seats at once as one outing, and go through it
-                  stroke by stroke. So far it has only run on a made-up sample session.
+                  Upload a node&rsquo;s four session files, or several seats as one outing in a zip with a folder per
+                  seat, and go through it stroke by stroke. So far it has only run on a made-up sample session.
                 </p>
               </div>
               <div className="lg:pl-12">
