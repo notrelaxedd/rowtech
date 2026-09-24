@@ -1,14 +1,14 @@
 import { test, expect } from "@playwright/test";
 
-test("the marketing page renders, and every section offers the beta", async ({ page }) => {
+test("the marketing page renders, with the beta offered in four places", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Every seat.");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("seat by seat");
   // The node and its screen are drawn by the server, not fetched as a picture.
   await expect(page.getByRole("img", { name: /Force seat node/i }).first()).toBeVisible();
   await expect(page.locator("#hero-peak")).toHaveCount(1);
 
-  for (const id of ["crew", "how", "stroke", "screens", "vieve", "boathouse", "beta-scope", "faq", "beta"]) {
+  for (const id of ["crew", "how", "stroke", "products", "beta-scope", "faq", "beta"]) {
     await expect(page.locator(`#${id}`)).toHaveCount(1);
   }
 
@@ -16,55 +16,65 @@ test("the marketing page renders, and every section offers the beta", async ({ p
   await expect(page.locator("#crew")).toContainText("Vieve, the RowTech cox box");
   await expect(page.locator("#faq")).toContainText("Vieve");
 
-  // Every section ends on a way into the beta.
-  const applyLinks = page.getByRole("link", { name: /apply for the beta/i });
-  expect(await applyLinks.count()).toBeGreaterThanOrEqual(8);
+  // The beta is offered in the nav, the hero, once mid-page and at the close.
+  const froms = await page
+    .getByRole("link", { name: /apply for the beta/i })
+    .evaluateAll((els) => els.map((e) => e.getAttribute("data-cta")));
+  expect(froms.sort()).toEqual(["closing", "hero", "nav", "stroke"]);
 
-  // Nothing is hidden when the reveals never fire.
-  await expect(page.locator("#beta-scope")).toContainText("Working today");
+  // Built and planned are kept apart.
+  await expect(page.locator("#beta-scope")).toContainText("In the node’s firmware now");
 });
 
-test("the sticky CTA appears after the hero and stands aside at the closing CTA", async ({ page }) => {
+test("specifications live on the product pages, not the home page", async ({ page }) => {
   await page.goto("/");
-  const sticky = page.getByRole("link", { name: /apply for the beta/i }).last();
+  await expect(page.locator("main")).not.toContainText("3000 mAh");
+  await expect(page.locator("main")).not.toContainText("$499");
+  await expect(page.locator("#products").getByRole("link", { name: /Force/ })).toHaveAttribute("href", "/force");
+  await expect(page.locator("#products").getByRole("link", { name: /Vieve/ })).toHaveAttribute("href", "/vieve");
 
-  await page.locator("#how").scrollIntoViewIfNeeded();
-  await page.waitForTimeout(600);
-  // The phone gets the bottom button, the desktop the slim bar under the header.
-  const bar = page.locator('[data-cta="sticky"]:visible, [data-cta="topbar"]:visible').first();
-  await expect(bar).toBeVisible();
-
-  await page.locator('[data-section="closing"]').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(600);
-  await expect(sticky).toBeVisible(); // the closing CTA itself
+  await page.goto("/force");
+  await expect(page.locator("#specs")).toContainText("3000 mAh");
+  await page.goto("/vieve");
+  await expect(page.locator("#specs")).toContainText("$499");
 });
 
-test("reduced motion leaves the page in its finished state", async ({ page }) => {
+test("reduced motion leaves the pages in their finished state", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page.locator("#crew").scrollIntoViewIfNeeded();
-  await expect(page.locator('[data-reveal="armed"]')).toHaveCount(0);
-  await expect(page.locator("#vieve")).toContainText("8/8");
+  await expect(page.locator(".rt-stroke-cursor")).toBeHidden();
+  await page.goto("/vieve");
+  await expect(page.locator("#clock")).toContainText("8 of 8");
 });
 
-test("the node's keys light their key on the device", async ({ page }) => {
-  await page.goto("/");
-  await page.locator("#screens").scrollIntoViewIfNeeded();
-
-  const view = page.getByRole("button", { name: /^VIEW/ });
-  await expect(view).toBeVisible();
-  // The device is drawn in the markup, with the screen the keys drive.
-  await expect(page.locator("#screens").getByRole("img", { name: /Force seat node/i })).toBeVisible({ timeout: 15000 });
-
-  await view.hover();
-  await expect(page.locator("#screens")).toContainText("Cycles what the screen shows");
+test("the Force page shows the node as a 3D model with its notes around it", async ({ page }) => {
+  await page.goto("/force");
+  const model = page.getByRole("group", { name: "3D model: Parts of the Force node" });
+  await model.scrollIntoViewIfNeeded();
+  await expect(model.locator("canvas")).toBeVisible({ timeout: 15000 });
+  await expect(page.locator("#parts")).toContainText("Steps through the rower’s screens");
 });
 
-test("Vieve is shown as well as described", async ({ page }) => {
+test("the team has its own page, and the home page links to it", async ({ page }) => {
   await page.goto("/");
-  // The drawing is an island, so scroll to the figure itself, not the heading:
-  // on a phone the section is taller than the trigger margin.
-  await page.locator("#vieve figure").first().scrollIntoViewIfNeeded();
-  await expect(page.locator("#vieve").getByRole("img", { name: /Vieve V1/i })).toBeVisible({ timeout: 15000 });
-  await expect(page.locator("#vieve")).toContainText("Vieve specs");
+  await expect(page.locator("#team")).toHaveCount(0);
+  await page.goto("/team");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Who’s building this");
+  await expect(page.locator("main")).toContainText("Saint Edward crew");
+});
+
+test("the diagrams light the part a note describes", async ({ page }) => {
+  await page.goto("/force");
+  await page.locator("#parts figure").first().scrollIntoViewIfNeeded();
+  const note = page.getByRole("list", { name: "Parts of the Force node" }).getByRole("button", { name: /TARE/ });
+  await note.click();
+  await expect(note).toHaveAttribute("aria-pressed", "true");
+});
+
+test("the Vieve page shows it as a 3D model too", async ({ page }) => {
+  await page.goto("/vieve");
+  const model = page.getByRole("group", { name: "3D model: Parts of Vieve" });
+  await model.scrollIntoViewIfNeeded();
+  await expect(model.locator("canvas")).toBeVisible({ timeout: 15000 });
+  await expect(page.locator("#parts")).toContainText("concept design");
 });

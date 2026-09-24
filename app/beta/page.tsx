@@ -6,7 +6,7 @@ import { SignupForm } from "./signup-form";
 export const metadata: Metadata = {
   title: "Apply for the beta",
   description:
-    "Apply to be a RowTech beta crew: seat-by-seat force measurement for coaches, clubs and programs. Two minutes, no commitment.",
+    "Apply to be a RowTech beta crew: seat-by-seat force measurement for rowing coaches and programs.",
 };
 
 export default async function BetaPage({
@@ -19,7 +19,7 @@ export default async function BetaPage({
   const from = raw.replace(/[^a-z0-9_-]/gi, "").slice(0, 40) || "direct";
 
   return (
-    <>
+    <div className="site flex min-h-full flex-col">
       <SiteHeader cta={false} />
       <main id="main" className="flex-1">
         <div className="mx-auto w-full max-w-xl px-5 pt-12 pb-24 sm:px-8 sm:pt-16">
@@ -27,6 +27,6 @@ export default async function BetaPage({
         </div>
       </main>
       <SiteFooter />
-    </>
+    </div>
   );
 }

@@ -11,12 +11,12 @@ test("the beta form submits and says what happens next", async ({ page }) => {
   await page.getByLabel("Club, school or program").fill("Riverside RC");
 
   // The optional details open by themselves once the required three are in.
-  await expect(page.locator("details")).toHaveAttribute("open", "", { timeout: 3000 });
+  await expect(page.locator("form details")).toHaveAttribute("open", "", { timeout: 3000 });
 
   await page.getByText("8+", { exact: true }).click();
   await page.getByRole("button", { name: /apply for the beta/i }).click();
 
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("You’re in");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
   await expect(page.getByText("We read your application.")).toBeVisible();
 });
 

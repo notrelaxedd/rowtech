@@ -2,9 +2,9 @@
 // the way the node computes it. Pure, so the server-rendered static view and
 // the interactive client share it.
 import { EXAMPLE, impulseCv, measureStroke, recentStrokes, strokeForce, toPath } from "@/lib/stroke";
-import { NODE } from "@/lib/stroke-detector";
-import type { Input, LiveState, LiveSummary, MetricId } from "./stroke-live-types";
 import { PX0, PX1, y } from "./stroke-frame";
+
+export type MetricId = "catch" | "rise" | "peak" | "thirds" | "release" | "rhythm" | "consistency";
 
 export const STROKES = recentStrokes();
 export const M = measureStroke();
@@ -47,13 +47,13 @@ export const METRICS: ReadonlyArray<{ id: MetricId; label: string; value: string
   {
     id: "peak",
     label: "Peak & position",
-    value: `${f1(M.peakKg)} kg · ${M.peakPct.toFixed(0)}%`,
+    value: `${f1(M.peakKg)} kg at ${M.peakPct.toFixed(0)}%`,
     body: `The peak, and where it falls in the drive: ${M.peakPct.toFixed(0)}% of the way through here. The shape of the curve says as much about technique as its height.`,
   },
   {
     id: "thirds",
     label: "Work by thirds",
-    value: `${M.thirds.map((v) => Math.round((v / M.impulse) * 100)).join(" · ")} %`,
+    value: `${M.thirds.map((v) => Math.round((v / M.impulse) * 100)).join(" / ")} %`,
     body: `Impulse (force × time, ${f1(M.impulse)} kg·s for this stroke) split across the front, middle and finish of the drive, in kg·s on the chart. It shows where the work actually happens.`,
   },
   {
@@ -75,74 +75,6 @@ export const METRICS: ReadonlyArray<{ id: MetricId; label: string; value: string
     body: "How much impulse varies over the last eight strokes, shown faintly behind this one. Lower is more repeatable.",
   },
 ];
-
-/** The same seven measures, read off the visitor's own strokes. */
-export function liveMetric(id: MetricId, L: LiveSummary): { value: string; body: string } {
-  const s = L.strokes[0];
-  const done = L.strokes.find((k) => k.recoveryMs !== null);
-  const n = L.strokes.length;
-  switch (id) {
-    case "catch":
-      return s
-        ? {
-            value: `+${f1(s.catchLagMs)} ms`,
-            body: `Your catch crossed ${f1(s.threshold)} kg ${f1(s.catchLagMs)} ms after the sample before it. Samples arrive every 12.5 ms; the node interpolates between two of them to place the catch, and that is what makes crew timing possible.`,
-          }
-        : {
-            value: "—",
-            body: `The dashed line is where a catch is called. Until your first stroke it sits at five times the sensor's noise (${f1(L.threshold)} kg), so an idle node can't trigger itself. After that it's 15% of your recent peak.`,
-          };
-    case "rise":
-      return {
-        value: s ? `${s.rise.toFixed(0)} kg/s` : "—",
-        body: "How fast force built in the first 100 ms after your catch. Start low and snap upward for a sharp catch, or ease in and watch the number fall.",
-      };
-    case "peak":
-      return s
-        ? {
-            value: `${f1(s.peakKg)} kg · ${s.peakPct.toFixed(0)}%`,
-            body: `Your peak, and where it fell: ${s.peakPct.toFixed(0)}% of the way through your drive. The shape of the curve says as much as its height.`,
-          }
-        : { value: "—", body: "The highest force in the drive, and how far through the drive it landed." };
-    case "thirds":
-      return s
-        ? {
-            value: `${s.thirds.map((v) => Math.round((v / s.impulse) * 100)).join(" · ")} %`,
-            body: `Impulse (force × time, ${f1(s.impulse)} kg·s for this stroke) split across the front, middle and finish of your drive, in kg·s on the chart.`,
-          }
-        : { value: "—", body: "Impulse split across the front, middle and finish of the drive: where the work actually happens." };
-    case "release":
-      return {
-        value: s ? `${f1(s.threshold / 2)} kg` : "½ threshold",
-        body: `Release is called when force falls through half the catch threshold. Tap and let go quickly: anything under ${NODE.minDriveMs} ms of drive is thrown away, because a knock on the rigger isn't a stroke.`,
-      };
-    case "rhythm":
-      return done && done.recoveryMs !== null
-        ? {
-            value: `1 : ${(done.recoveryMs / done.driveMs).toFixed(2)}`,
-            body: `Drive ${done.driveMs.toFixed(0)} ms, recovery ${done.recoveryMs.toFixed(0)} ms${L.spm ? `, at ${f1(L.spm)} strokes a minute` : ""}. Recovery only exists once the next catch lands.`,
-          }
-        : { value: "—", body: "Take a second stroke. Recovery, and so rhythm, only exists once the next catch lands." };
-    case "consistency":
-      return {
-        value: L.cv !== null ? `CV ${f1(L.cv)}%` : `${n}/3 strokes`,
-        body:
-          L.cv !== null
-            ? `How much impulse varies over your last ${Math.min(n, NODE.cvWindow)} strokes, drawn faintly behind the current one. Lower is more repeatable. Try to make them match.`
-            : "How much impulse varies from stroke to stroke. The node wants three strokes before it will say.",
-      };
-  }
-}
-
-export const STATE: Record<LiveState, { text: string; lamp: string; tone: string }> = {
-  ready: { text: "READY", lamp: "bg-white/45", tone: "text-foreground" },
-  drive: { text: "DRIVE", lamp: "bg-trace shadow-[0_0_10px_rgb(34_227_239/0.8)]", tone: "text-trace" },
-  recovery: { text: "RECOVERY", lamp: "bg-ok shadow-[0_0_10px_rgb(61_220_110/0.7)]", tone: "text-ok" },
-  idle: { text: "IDLE", lamp: "bg-white/25", tone: "text-muted-foreground" },
-  short: { text: "TOO SHORT", lamp: "bg-warn shadow-[0_0_10px_rgb(255_166_48/0.7)]", tone: "text-warn" },
-};
-
-export const IDLE_INPUT: Input = { src: "none", kg: 0, since: 0 };
 
 // -----------------------------------------------------------------------------
 // Phases of the example stroke, for the strip under the chart and the cursor
