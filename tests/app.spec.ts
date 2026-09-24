@@ -183,6 +183,22 @@ test.describe("signed in", () => {
     }
   });
 
+  test("a seat whose curves file Storage doesn't have still shows, without the curve", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const id = await upload(page, seatFiles(1));
+
+    const { data: files } = await user.db.from("session_files").select("path").eq("session_id", id).eq("kind", "curves");
+    expect(files).toHaveLength(1);
+    const { data: removed, error } = await user.db.storage.from("sessions").remove(files!.map((f) => f.path));
+    expect(error).toBeNull();
+    expect(removed).toHaveLength(1);
+
+    await page.reload();
+    await expect(page.getByRole("slider", { name: "Stroke" })).toBeVisible();
+    await expect(page.getByText("This page didn’t load.")).toHaveCount(0);
+  });
+
   // The layout checks who is signed in, but a click inside the dashboard
   // renders only the page, so a page read is the first to find out.
   test("signed out in another tab, the next click in the dashboard goes to sign in", async ({ page, context, baseURL }) => {

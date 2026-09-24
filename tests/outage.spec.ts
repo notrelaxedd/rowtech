@@ -40,6 +40,21 @@ test("a failed read shows an error inside the dashboard, not an empty one", asyn
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("This page didn’t load.");
 });
 
+test("when Storage doesn't answer, a session page says it didn't load instead of showing no curve", async ({ page, context }, info) => {
+  const user = await makeUser({ prefix: "storage-down" });
+  // Uploaded through the site that works; the session cookie is the same on both.
+  const site = info.project.use.baseURL!;
+  await signInBrowser(context, user, site);
+  await page.goto(`${site}/app/force`);
+  await page.getByLabel("Files").setInputFiles(["meta.json", "strokes.csv", "curves.bin", "events.csv"].map((f) => `public/demo/seat-1/${f}`));
+  await page.getByRole("button", { name: "Upload" }).click();
+  await expect(page).toHaveURL(/\/app\/force\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  const id = page.url().split("/").pop()!;
+
+  await page.goto(`/app/force/${id}`);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("This page didn’t load.");
+});
+
 test("when the beta list can't be checked, it says so instead of asking you to apply", async ({ page, context }) => {
   const user = await makeUser({ prefix: "db-down" });
   await signInBrowser(context, user, outage!.app);
