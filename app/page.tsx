@@ -127,7 +127,7 @@ export default function Home() {
         <Hero />
 
         {/* ------------------------------------------------------- crew view */}
-        <section id="crew" data-section="crew" className="below-fold py-24 sm:py-32">
+        <section id="crew" data-section="crew" className="py-24 sm:py-32">
           <div className={cn(wrap, "grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-16")}>
             <div>
               <Status>In development</Status>
@@ -147,7 +147,7 @@ export default function Home() {
         </section>
 
         {/* ---------------------------------------------------- how it works */}
-        <section id="how" data-section="how" className="below-fold border-t border-line py-24 sm:py-28">
+        <section id="how" data-section="how" className="border-t border-line py-24 sm:py-28">
           <div className={wrap}>
             <div className="max-w-2xl">
               <h2 className="type-h2">How an outing gets from the rigger to your phone.</h2>
@@ -181,7 +181,7 @@ export default function Home() {
         </section>
 
         {/* ------------------------------------------------------ one stroke */}
-        <section id="stroke" data-section="stroke" className="below-fold border-t border-line py-24 sm:py-32">
+        <section id="stroke" data-section="stroke" className="border-t border-line py-24 sm:py-32">
           <div className={wrap}>
             <div className="max-w-3xl">
               <h2 className="type-h2">One stroke, taken apart.</h2>
@@ -202,7 +202,7 @@ export default function Home() {
         </section>
 
         {/* -------------------------------------------------------- products */}
-        <section id="products" data-section="products" className="below-fold border-t border-line py-24 sm:py-28">
+        <section id="products" data-section="products" className="border-t border-line py-24 sm:py-28">
           <div className={wrap}>
             <h2 className="type-h2 max-w-3xl">Two products, one system.</h2>
             <ul className="mt-12 grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-10">
@@ -226,7 +226,7 @@ export default function Home() {
         </section>
 
         {/* ----------------------------------------------- what's in the beta */}
-        <section id="beta-scope" data-section="beta-scope" className="below-fold border-t border-line py-24 sm:py-28">
+        <section id="beta-scope" data-section="beta-scope" className="border-t border-line py-24 sm:py-28">
           <div className={wrap}>
             <h2 className="type-h2 max-w-3xl">Where the build stands.</h2>
             <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-line">
@@ -266,7 +266,7 @@ export default function Home() {
         </section>
 
         {/* ------------------------------------------------------------- FAQ */}
-        <section id="faq" data-section="faq" className="below-fold border-t border-line py-24 sm:py-28">
+        <section id="faq" data-section="faq" className="border-t border-line py-24 sm:py-28">
           <div className={wrap}>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-16">
               <h2 className="type-h2">Questions a coach might ask.</h2>
@@ -289,7 +289,7 @@ export default function Home() {
         </section>
 
         {/* ------------------------------------------------ the beta, plainly */}
-        <section id="beta" data-section="beta" className="below-fold border-t border-line py-24 sm:py-28">
+        <section id="beta" data-section="beta" className="border-t border-line py-24 sm:py-28">
           <div className={wrap}>
             <h2 className="type-h2 max-w-3xl">Applying for the beta.</h2>
             <div className="mt-12 grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-10">
@@ -316,7 +316,7 @@ export default function Home() {
         </section>
 
         {/* ------------------------------------------------------- closing */}
-        <section data-section="closing" className="below-fold border-t border-line">
+        <section data-section="closing" className="border-t border-line">
           <div className={cn(wrap, "py-24 sm:py-32")}>
             <div>
               <h2 className="type-h2 max-w-[16ch]">Tell us about your crew.</h2>

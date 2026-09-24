@@ -105,3 +105,40 @@ test("no page can be framed, and responses carry the basic security headers", as
     expect(h["x-powered-by"], path).toBeUndefined();
   }
 });
+
+// The home page's sections must have their real height from the start, or a
+// link to one of them lands where the section would have been (UX-001).
+test("links to the FAQ land on the FAQ", async ({ page, isMobile }) => {
+  const faq = page.locator("#faq");
+  // Distance between the section's top and the header's offset, once the
+  // scroll has stopped moving (smooth scrolling passes through on its way).
+  const offTarget = () =>
+    faq.evaluate(async (el) => {
+      const pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop);
+      const a = el.getBoundingClientRect().top;
+      await new Promise((r) => setTimeout(r, 300));
+      const b = el.getBoundingClientRect().top;
+      return a === b ? Math.abs(b - pad) : Infinity;
+    });
+  const landsOnFaq = async () => {
+    await expect.poll(offTarget, { timeout: 10000 }).toBeLessThanOrEqual(2);
+    await expect(faq.getByRole("heading", { level: 2 })).toBeInViewport();
+  };
+  const clickFaq = async () => {
+    const header = page.locator("header");
+    if (isMobile) await header.getByText("Menu", { exact: true }).click();
+    await header.getByRole("link", { name: "FAQ", exact: true }).filter({ visible: true }).click();
+    await expect(page).toHaveURL(/\/#faq$/);
+  };
+
+  await page.goto("/#faq");
+  await landsOnFaq();
+
+  await page.goto("/");
+  await clickFaq();
+  await landsOnFaq();
+
+  await page.goto("/force");
+  await clickFaq();
+  await landsOnFaq();
+});
