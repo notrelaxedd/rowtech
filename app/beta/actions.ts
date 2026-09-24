@@ -27,6 +27,18 @@ function text(fd: FormData, key: string) {
 const clip = (v: string, n: number) => v.slice(0, n) || null;
 
 /**
+ * What's safe to log from a failure. A Postgres error's `details` can quote
+ * the failing row, which here is the applicant's name, email and message.
+ */
+function loggable(e: unknown) {
+  if (e && typeof e === "object") {
+    const { code, message } = e as { code?: unknown; message?: unknown };
+    return { code, message };
+  }
+  return { message: String(e) };
+}
+
+/**
  * Confirmation email to the applicant. No provider is set up yet, so this does
  * nothing; the on-page confirmation carries "what happens next" for now.
  */
@@ -100,11 +112,11 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
       try {
         await sendConfirmation(application);
       } catch (e) {
-        console.error("beta confirmation email failed", e);
+        console.error("beta confirmation email failed", loggable(e));
       }
     }
   } catch (e) {
-    console.error("beta application failed", e);
+    console.error("beta application failed", loggable(e));
     return {
       status: "error",
       errors: {},
