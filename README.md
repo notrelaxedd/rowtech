@@ -59,6 +59,10 @@ Schema changes go in `supabase/migrations`, named for the version Supabase
 records. `beta_signups` holds beta applications (it predates the revamp and
 was extended, not replaced).
 
+After a schema change, apply it to the local stack and run `npm run db:types`:
+it rewrites `lib/supabase/database.types.ts` from the local database, and the
+type checker holds every query to it. Don't edit that file by hand.
+
 ### Dashboard access
 
 `/app` is open to emails in `public.allowed_users`. Signing in never creates

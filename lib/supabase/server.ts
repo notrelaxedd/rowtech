@@ -4,6 +4,7 @@ import { isAuthApiError, isAuthSessionMissingError, type AuthError } from "@supa
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { authCookieOptions, withSessionLifetime } from "./cookies";
+import type { Database } from "./types";
 
 function env() {
   const url = process.env.SUPABASE_URL;
@@ -21,7 +22,7 @@ function env() {
 export async function supabaseServer() {
   const { url, key } = env();
   const jar = await cookies();
-  return createServerClient(url, key, {
+  return createServerClient<Database>(url, key, {
     cookieOptions: authCookieOptions,
     cookies: {
       getAll: () => jar.getAll(),

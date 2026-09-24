@@ -2,19 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import type { SessionStats } from "@/lib/supabase/types";
 
-export type HistoryPoint = {
-  session_id: string;
-  seat_number: number;
-  recorded_at: string;
-  avg_peak: number | null;
-  avg_rise_rate: number | null;
-  avg_peak_pos_pct: number | null;
-  avg_drive_ms: number | null;
-  avg_recovery_ms: number | null;
-  consistency_pct: number | null;
-  strokes: number;
-};
+/** A seat session's row of session_stats: one with a seat. */
+export type HistoryPoint = Pick<
+  SessionStats,
+  "session_id" | "recorded_at" | "avg_peak" | "avg_rise_rate" | "avg_peak_pos_pct" | "avg_drive_ms" | "avg_recovery_ms" | "consistency_pct" | "strokes"
+> & { seat_number: number };
 
 const SERIES = [
   { id: "avg_peak", label: "Peak", get: (p: HistoryPoint) => p.avg_peak },

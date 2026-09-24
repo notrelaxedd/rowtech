@@ -7,6 +7,7 @@ import { SessionFormatError, type ParsedSession } from "@/lib/session/format";
 import { collectSessions, ZipTooLargeError, type NamedFile, type SessionFolder } from "@/lib/session/collect";
 import { looksLikeVieve, VieveNotSupportedError } from "@/lib/session/vieve";
 import { isUuid } from "@/lib/uuid";
+import type { Json } from "@/lib/supabase/database.types";
 
 export type UploadState = { status: "idle" | "error" | "ok"; message: string; sessionId?: string };
 
@@ -160,7 +161,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     console.error("upload: session lookup failed", { code: lookupError.code, message: lookupError.message });
     return { status: "error", message: "The upload couldn't be saved. Try again in a minute." };
   }
-  const idOf = new Map((known ?? []).map((r) => [`${r.device_id}/${r.session_uuid}`, r.id as string]));
+  const idOf = new Map((known ?? []).map((r) => [`${r.device_id}/${r.session_uuid}`, r.id]));
   const seats = parsed.map(({ session, raw }) => {
     const id = idOf.get(`${session.meta.deviceId}/${session.meta.uuid}`);
     return { session, raw, id: id ?? crypto.randomUUID(), isNew: !id, files: [] as Array<{ kind: string; path: string; bytes: number }> };
@@ -237,7 +238,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
       curve_points: session.meta.curvePoints,
       curve_scale: session.meta.curveScale,
       duration_ms: session.meta.elapsedMs,
-      meta: JSON.parse(decode(raw.meta!)) as Record<string, unknown>,
+      meta: JSON.parse(decode(raw.meta!)) as Json,
       strokes: session.strokes.map((s) => [
         s.rec, s.seq, s.catchMs, s.driveMs, s.recoveryMs, s.peak, s.peakPosPct,
         s.impulse, s.riseRate, s.thirds[0], s.thirds[1], s.thirds[2], s.curveValid,

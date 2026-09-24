@@ -10,8 +10,6 @@ import { thinTrack } from "@/lib/session/track";
 
 export const metadata = { title: "Compare pieces" };
 
-type Crew = { id: string; title: string | null; recorded_at: string; boats: { name: string } | null };
-
 /** Most outings the pickers list. */
 const CREWS = 100;
 
@@ -39,7 +37,7 @@ async function piece(sb: Awaited<ReturnType<typeof supabaseServer>>, id: string 
   const splits = fullTrack.map((p) => (p.speedMps && p.speedMps > 0.2 ? 500 / p.speedMps : null)).filter((s): s is number => s !== null);
 
   return {
-    session: session as unknown as Crew,
+    session,
     seats: seats.length,
     strokes: Math.max(...seats.map((s) => s.strokes ?? 0), 0),
     spanMs: Math.max(...seats.map((s) => s.span_ms ?? 0), 0),
@@ -66,7 +64,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
     .limit(CREWS + 1);
   if (error) throw await readFailed(error);
   const more = (data ?? []).length > CREWS;
-  const crews = (data ?? []).slice(0, CREWS) as unknown as Crew[];
+  const crews = (data ?? []).slice(0, CREWS);
 
   const [a, b] = await Promise.all([
     piece(sb, typeof q.a === "string" ? q.a : crews[0]?.id),

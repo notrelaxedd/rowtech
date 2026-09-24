@@ -4,26 +4,13 @@ import { duration, fmt } from "@/lib/session/analyse";
 import { LocalTime } from "@/components/dash/local-time";
 import { beforeParam, newestFirstPage } from "@/lib/session/older";
 import { UploadForm } from "./upload-form";
-import { HistoryPanel, type HistoryPoint } from "./history-panel";
+import { HistoryPanel } from "./history-panel";
 
 export const metadata = { title: "Force" };
 
 /** Most session rows a page of the list shows, and the history chart. */
 const LISTED = 200;
 const CHARTED = 500;
-
-type SessionRow = {
-  id: string;
-  kind: "node" | "crew";
-  parent_id: string | null;
-  seat_number: number | null;
-  title: string | null;
-  recorded_at: string;
-  units: string | null;
-  stroke_count: number;
-  duration_ms: number | null;
-  boats: { name: string } | null;
-};
 
 export default async function ForcePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   // ?before= pages back through older sessions; a malformed one is the newest page.
@@ -35,7 +22,7 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
   if (before) query = query.lt("recorded_at", before);
   const { data, error } = await query.order("recorded_at", { ascending: false }).limit(LISTED + 1);
   if (error) throw await readFailed(error);
-  const { rows: sessions, older } = newestFirstPage((data ?? []) as unknown as SessionRow[], LISTED);
+  const { rows: sessions, older } = newestFirstPage(data ?? [], LISTED);
 
   // The newest seat sessions with strokes, back in time order for the chart.
   // Crew rows and empty seats are left out in the query, so the cap and the
@@ -49,9 +36,13 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
     .limit(CHARTED + 1);
   if (statsError) throw await readFailed(statsError);
   const moreHistory = (statsData ?? []).length > CHARTED;
-  const history = (statsData ?? []).slice(0, CHARTED).reverse() as HistoryPoint[];
+  const history = (statsData ?? [])
+    .slice(0, CHARTED)
+    .reverse()
+    // The query already left these out; this tells the type checker.
+    .filter((p): p is typeof p & { seat_number: number } => p.seat_number !== null);
 
-  const children = new Map<string, SessionRow[]>();
+  const children = new Map<string, typeof sessions>();
   for (const s of sessions) {
     if (!s.parent_id) continue;
     children.set(s.parent_id, [...(children.get(s.parent_id) ?? []), s]);

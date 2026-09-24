@@ -9,15 +9,6 @@ export const metadata = { title: "Cox" };
 /** Most outings a page of the list shows. */
 const LISTED = 100;
 
-type Row = {
-  id: string;
-  title: string | null;
-  recorded_at: string;
-  clock_source: string;
-  duration_ms: number | null;
-  boats: { name: string } | null;
-};
-
 export default async function CoxPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   // ?before= pages back through older outings; a malformed one is the newest page.
   const before = beforeParam((await searchParams).before);
@@ -26,7 +17,7 @@ export default async function CoxPage({ searchParams }: { searchParams: Promise<
   if (before) query = query.lt("recorded_at", before);
   const { data, error } = await query.order("recorded_at", { ascending: false }).limit(LISTED + 1);
   if (error) throw await readFailed(error);
-  const { rows: crews, older } = newestFirstPage((data ?? []) as unknown as Row[], LISTED);
+  const { rows: crews, older } = newestFirstPage(data ?? [], LISTED);
 
   return (
     <div className="mx-auto w-full max-w-[110rem] space-y-8 px-4 py-8 sm:px-6">

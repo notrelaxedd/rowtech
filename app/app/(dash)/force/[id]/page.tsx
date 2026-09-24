@@ -7,6 +7,7 @@ import { isUuid } from "@/lib/uuid";
 import { seatStrokes } from "@/lib/session/load";
 import { SessionViewer, type SeatSource } from "@/components/dash/session-viewer";
 import { LocalTime } from "@/components/dash/local-time";
+import type { TableRow } from "@/lib/supabase/types";
 
 export const metadata = { title: "Session" };
 
@@ -31,7 +32,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
   // A crew session shows its seats; a seat session shows itself.
   const members = kids?.length ? kids : [{ id: session.id, seat_number: session.seat_number, units: session.units }];
 
-  const boat = (session.boats as unknown as { name: string } | null)?.name;
+  const boat = session.boats?.name;
 
   return (
     <div className="mx-auto w-full max-w-[110rem] space-y-6 px-4 py-8 sm:px-6">
@@ -58,7 +59,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
   );
 }
 
-type Member = { id: string; seat_number: number | null; units: string | null };
+type Member = Pick<TableRow<"sessions">, "id" | "seat_number" | "units">;
 
 /** Every seat's strokes and curves file: the same three round trips for one seat or nine. */
 async function Seats({ sb, members, title }: { sb: Awaited<ReturnType<typeof supabaseServer>>; members: Member[]; title: string }) {
@@ -69,7 +70,7 @@ async function Seats({ sb, members, title }: { sb: Awaited<ReturnType<typeof sup
   ]);
   if (filesError) throw await readFailed(filesError);
 
-  const paths = (files ?? []).map((f) => f.path as string);
+  const paths = (files ?? []).map((f) => f.path);
   const signed = paths.length ? await sb.storage.from("sessions").createSignedUrls(paths, 3600) : { data: [], error: null };
   // Storage not answering is an error; a curves file it doesn't have shows as no curve.
   if (signed.error) throw await readFailed(signed.error);

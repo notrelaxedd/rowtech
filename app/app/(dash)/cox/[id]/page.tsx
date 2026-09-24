@@ -6,6 +6,7 @@ import { readFailed, supabaseServer } from "@/lib/supabase/server";
 import { isUuid } from "@/lib/uuid";
 import { seatStrokes, sessionTrack } from "@/lib/session/load";
 import { thinTrack } from "@/lib/session/track";
+import type { TableRow } from "@/lib/supabase/types";
 import { LocalTime } from "@/components/dash/local-time";
 import { CrewView } from "./crew-view";
 
@@ -29,7 +30,7 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
   if (!crew || crew.kind !== "crew") notFound();
   if (kidsError) throw await readFailed(kidsError);
 
-  const boat = (crew.boats as unknown as { name: string } | null)?.name;
+  const boat = crew.boats?.name;
 
   return (
     <div className="mx-auto w-full max-w-[110rem] space-y-6 px-4 py-8 sm:px-6">
@@ -50,17 +51,17 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
         <Crew
           sb={sb}
           crewId={id}
-          boatId={crew.boat_id as string | null}
+          boatId={crew.boat_id}
           kids={kids ?? []}
           clockSource={crew.clock_source === "gps" ? "gps" : "boot_ms"}
-          clockSyncMs={(crew.clock_sync_ms as number | null) ?? null}
+          clockSyncMs={crew.clock_sync_ms}
         />
       </Suspense>
     </div>
   );
 }
 
-type Kid = { id: string; seat_number: number | null; units: string | null; side: string | null };
+type Kid = Pick<TableRow<"sessions">, "id" | "seat_number" | "units" | "side">;
 
 /** Every seat's strokes, the boat's seats and the track, together. */
 async function Crew({
@@ -89,7 +90,7 @@ async function Crew({
     id: k.id,
     seat: k.seat_number ?? 0,
     label: k.seat_number ? `seat ${k.seat_number}` : "seat ?",
-    side: (boatSeats?.find((s) => s.seat_number === k.seat_number)?.side ?? k.side ?? null) as "port" | "starboard" | "scull" | "cox" | null,
+    side: boatSeats?.find((s) => s.seat_number === k.seat_number)?.side ?? k.side ?? null,
     strokes: strokes.get(k.id) ?? [],
   }));
 
