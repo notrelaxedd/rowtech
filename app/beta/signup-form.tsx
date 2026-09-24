@@ -160,6 +160,10 @@ export function SignupForm() {
     <p className="type-lead mt-5 text-muted-foreground">
       Three fields are required: your name, email and program. Tell us more about your boats if you like.
     </p>
+    {/* Outside the form: a busy region's announcements can wait until it isn't. */}
+    <p aria-live="polite" className="sr-only">
+      {pending ? "Sending your application…" : ""}
+    </p>
     {/* React resets the form once the action returns. By then each field's
         default is what was sent (state.values), so the reset keeps what
         people typed, without remounting the form. */}
@@ -167,7 +171,13 @@ export function SignupForm() {
       ref={form}
       action={action}
       noValidate
+      aria-busy={pending}
       className="mt-10 space-y-7"
+      // The button stays focusable while sending (aria-disabled, not
+      // disabled), so this is what stops a second send.
+      onSubmit={(ev) => {
+        if (pending) ev.preventDefault();
+      }}
       onFocus={() => {
         if (started.current) return;
         started.current = true;
@@ -296,7 +306,7 @@ export function SignupForm() {
       <input type="hidden" name="from" value={from} />
 
       <div className="flex flex-col gap-4 pt-1">
-        <button type="submit" disabled={pending} className={cn(ctaPrimary, "h-13 w-full px-7 text-base disabled:cursor-wait disabled:opacity-70 sm:w-auto sm:self-start")}>
+        <button type="submit" aria-disabled={pending || undefined} className={cn(ctaPrimary, "h-13 w-full px-7 text-base aria-disabled:cursor-wait aria-disabled:opacity-70 sm:w-auto sm:self-start")}>
           {pending ? (
             <>
               <LoaderCircle aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />

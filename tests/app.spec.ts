@@ -6,6 +6,7 @@ import { addToTeam, allow, emailedLink, hasAccount, localSupabaseMissing, mailpi
 import { parseStrokes } from "../lib/session/parse";
 import { duration, fmt, summarise, type SessionSummary } from "../lib/session/analyse";
 import { expectSkipLink } from "./support/skip-link";
+import { sendWhileHeld } from "./support/pending";
 
 test("the dashboard is closed to people who aren't signed in", async ({ page }) => {
   await page.goto("/app/force");
@@ -42,8 +43,11 @@ test.describe("signing in", () => {
     const email = `nobody-${Date.now()}@example.com`;
     await page.goto("/app/login");
     await page.getByLabel("Email").fill(email);
-    await page.getByRole("button", { name: /email me a link/i }).click();
+    // While it sends, a screen reader hears so, and focus stays on the button.
+    const form = page.locator("form").filter({ has: page.getByLabel("Email") });
+    const sent = await sendWhileHeld(page, form, page.getByRole("button", { name: /email me a link/i }), "Sending your sign-in link…");
     await expect(page.getByRole("heading", { name: "Check your email." })).toBeVisible();
+    expect(sent.posts()).toBe(1);
     expect(await hasAccount(email)).toBe(false);
   });
 
@@ -527,6 +531,17 @@ test.describe("signed in", () => {
 
   // React resets the form after every submit, error or not, which blanks the
   // time; what's stored is what the field shows when the form is sent.
+  test("while an upload is read, a screen reader hears so and focus stays put", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    await page.goto("/app/force");
+    await page.getByLabel("Files").setInputFiles(seatFiles(1));
+    const form = page.locator("form").filter({ has: page.getByLabel("Files") });
+    const sent = await sendWhileHeld(page, form, page.getByRole("button", { name: "Upload" }), "Reading the session…");
+    await expect(page).toHaveURL(/\/app\/force\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+    expect(sent.posts()).toBe(1);
+  });
+
   test("after a refused upload, a blank time is now, not the time typed before", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);

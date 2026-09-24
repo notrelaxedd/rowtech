@@ -49,7 +49,21 @@ export function LoginForm({ error }: { error?: string }) {
         <span className="h-px flex-1 bg-line" />
       </div>
 
-      <form action={action} noValidate className="space-y-3">
+      {/* Outside the form: a busy region's announcements can wait until it isn't. */}
+      <p aria-live="polite" className="sr-only">
+        {pending ? "Sending your sign-in link…" : ""}
+      </p>
+      <form
+        action={action}
+        noValidate
+        aria-busy={pending}
+        className="space-y-3"
+        // The button stays focusable while sending (aria-disabled), so this
+        // is what stops a second send.
+        onSubmit={(e) => {
+          if (pending) e.preventDefault();
+        }}
+      >
         <label htmlFor="email" className="block text-[0.9375rem] font-semibold">
           Email
         </label>
@@ -64,7 +78,7 @@ export function LoginForm({ error }: { error?: string }) {
           aria-invalid={state.status === "error" || undefined}
           className={cn(formField, "h-12")}
         />
-        <button type="submit" disabled={pending} className={cn(ctaPrimary, "w-full disabled:cursor-wait disabled:opacity-70")}>
+        <button type="submit" aria-disabled={pending || undefined} className={cn(ctaPrimary, "w-full aria-disabled:cursor-wait aria-disabled:opacity-70")}>
           {pending ? (
             <>
               <LoaderCircle aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />

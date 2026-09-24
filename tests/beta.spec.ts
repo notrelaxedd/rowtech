@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { sendWhileHeld } from "./support/pending";
 
 // The server runs with BETA_DRY_RUN=1: the whole path runs, nothing is written.
 test("the beta form submits and says what happens next", async ({ page }) => {
@@ -208,6 +209,16 @@ test("the bot trap is nothing a browser would fill in, and a bot that fills it i
   await trap.evaluate((el) => ((el as HTMLInputElement).value = "https://spam.example"));
   await page.getByRole("button", { name: /apply for the beta/i }).click();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
+});
+
+test("while it sends, a screen reader hears so and focus stays on the button", async ({ page }) => {
+  await page.goto("/beta");
+  await page.getByLabel("Name").fill("Sam Rower");
+  await page.getByLabel("Email").fill("sam.rower@example.com");
+  await page.getByLabel("Club, school or program").fill("Riverside RC");
+  const sent = await sendWhileHeld(page, page.locator("form"), page.getByRole("button", { name: /apply for the beta/i }), "Sending your application…");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
+  expect(sent.posts()).toBe(1);
 });
 
 test.describe("without JavaScript", () => {

@@ -62,7 +62,22 @@ export function UploadForm() {
   }, [state, router]);
 
   return (
-    <form ref={form} action={action} className="rounded-lg border border-line bg-panel p-4 sm:p-5">
+    <>
+    {/* Outside the form: a busy region's announcements can wait until it isn't. */}
+    <p aria-live="polite" className="sr-only">
+      {pending ? "Reading the session…" : ""}
+    </p>
+    <form
+      ref={form}
+      action={action}
+      aria-busy={pending}
+      className="rounded-lg border border-line bg-panel p-4 sm:p-5"
+      // The button stays focusable while sending (aria-disabled), so this is
+      // what stops a second upload.
+      onSubmit={(e) => {
+        if (pending) e.preventDefault();
+      }}
+    >
       <h2 className="type-h3 text-lg">Upload a session</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         The four files a node writes (<span className="readout">meta.json</span>, <span className="readout">strokes.csv</span>,{" "}
@@ -110,7 +125,7 @@ export function UploadForm() {
         </label>
       </div>
 
-      <button type="submit" disabled={pending} className={cn(ctaPrimary, "mt-4 h-11 disabled:cursor-wait disabled:opacity-70")}>
+      <button type="submit" aria-disabled={pending || undefined} className={cn(ctaPrimary, "mt-4 h-11 aria-disabled:cursor-wait aria-disabled:opacity-70")}>
         {pending ? (
           <>
             <LoaderCircle aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />
@@ -124,5 +139,6 @@ export function UploadForm() {
         )}
       </button>
     </form>
+    </>
   );
 }
