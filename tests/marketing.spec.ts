@@ -87,5 +87,6 @@ test("no page can be framed, and responses carry the basic security headers", as
     expect(h["x-content-type-options"], path).toBe("nosniff");
     expect(h["referrer-policy"], path).toBe("strict-origin-when-cross-origin");
     expect(h["permissions-policy"], path).toContain("camera=()");
+    expect(h["strict-transport-security"], path).toBe("max-age=63072000; includeSubDomains; preload");
   }
 });
