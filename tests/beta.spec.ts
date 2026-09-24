@@ -100,3 +100,33 @@ test("a ?ref= link is sent with the application as its source", async ({ page })
   expect((await sent).postData()).toMatch(/utm_source"\s+newsletter/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
 });
+
+test("a required field says what's wrong as soon as it's left", async ({ page }) => {
+  await page.goto("/beta");
+  const email = page.getByLabel("Email");
+
+  // Tabbing past an empty field says nothing yet.
+  await page.getByLabel("Name").focus();
+  await page.keyboard.press("Tab");
+  await expect(page.getByLabel("Name")).not.toHaveAttribute("aria-invalid");
+
+  await email.fill("not-an-email");
+  await email.blur();
+  await expect(email).toHaveAttribute("aria-invalid", "true");
+  await expect(email).toHaveAttribute("aria-describedby", "email-error");
+  await expect(page.locator("#email-error")).toHaveText("That doesn't look like an email address. Check for a typo.");
+
+  // Put right, it clears while typing.
+  await email.fill("sam.rower@example.com");
+  await expect(email).not.toHaveAttribute("aria-invalid");
+  await expect(page.locator("#email-error")).toHaveCount(0);
+
+  // Typed and then emptied, a field asks for itself.
+  const org = page.getByLabel("Club, school or program");
+  await org.fill("Riverside RC");
+  await org.fill("");
+  await org.blur();
+  await expect(page.locator("#organization-error")).toHaveText("Which club, school or program do you row with?");
+  // Only the field says so; the form-wide alert is for a sent form.
+  await expect(page.locator("form").getByRole("alert")).toHaveCount(0);
+});

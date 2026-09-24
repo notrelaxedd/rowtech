@@ -35,3 +35,25 @@ export type ApplyState = {
 export const EMPTY_STATE: ApplyState = { status: "idle", errors: {}, message: "", values: {} };
 
 export const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/**
+ * What's wrong with one of the three required fields, if anything. The action
+ * decides with this, and the form uses it to say so as soon as a field is left.
+ */
+export function requiredError(f: "name" | "email" | "organization", value: string): string | undefined {
+  const v = value.trim();
+  if (f === "name") {
+    if (!v) return "Tell us your name.";
+    if (v.length > LIMITS.name) return `Keep it under ${LIMITS.name} characters.`;
+  } else if (f === "email") {
+    if (!v) return "We need an email address to reply to.";
+    if (v.length > LIMITS.email || !EMAIL.test(v)) return "That doesn't look like an email address. Check for a typo.";
+  } else if (f === "organization") {
+    if (!v) return "Which club, school or program do you row with?";
+    if (v.length > LIMITS.organization) return `Keep it under ${LIMITS.organization} characters.`;
+  }
+  return undefined;
+}
+
+/** Which link someone came in on (`from_cta`): a short tag, letters, digits, - and _. */
+export const cleanFrom = (v: string) => v.replace(/[^a-z0-9_-]/gi, "").slice(0, LIMITS.from);

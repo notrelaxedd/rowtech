@@ -9,13 +9,16 @@ import { formField } from "@/components/ui/field";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { submitApplication } from "./actions";
-import { BOATS, EMAIL, EMPTY_STATE, LIMITS, REQUIRED, ROLES, type ApplyState, type Field } from "./fields";
+import { BOATS, EMAIL, EMPTY_STATE, LIMITS, REQUIRED, requiredError, ROLES, type ApplyState, type Field } from "./fields";
 
 const input = cn(formField, "placeholder:text-muted-foreground");
 const chip =
   "relative flex min-h-11 cursor-pointer items-center justify-center rounded-md border border-input px-4 text-[0.9375rem] text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground has-[:checked]:border-trace has-[:checked]:bg-trace/10 has-[:checked]:text-foreground has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-trace";
 const label = "text-[0.9375rem] font-semibold";
 const optional = <span className="font-normal text-muted-foreground">(optional)</span>;
+
+type Required = "name" | "email" | "organization";
+const isRequired = (n: string): n is Required => (REQUIRED as readonly string[]).includes(n);
 
 const NEXT_STEPS = [
   { t: "We read your application.", d: "Every one, properly." },
@@ -83,6 +86,11 @@ export function SignupForm({ from }: { from: string }) {
   const [open, setOpen] = useState(false);
   const form = useRef<HTMLFormElement>(null);
   const details = useRef<HTMLDetailsElement>(null);
+  // The required fields are checked as they're left, with the action's own
+  // messages. A result from the action starts over from what it found; null
+  // means checked here and fine, which clears the action's error for it.
+  const typed = useRef(new Set<string>());
+  const [checked, setChecked] = useState<{ for: ApplyState; errors: Partial<Record<Required, string | null>> }>({ for: state, errors: {} });
 
   // A result with an error in an optional field opens the details, even ones
   // the user closed after an earlier result (the form isn't remounted).
@@ -93,10 +101,14 @@ export function SignupForm({ from }: { from: string }) {
 
   if (state.status === "ok") return <Done name={state.values.name} />;
 
-  const e = state.errors;
+  const here = checked.for === state ? checked.errors : {};
+  const e: ApplyState["errors"] = { ...state.errors };
+  for (const f of REQUIRED.filter(isRequired)) if (f in here) e[f] = here[f] ?? undefined;
   const v = state.values;
   const invalid = (f: Field) => (e[f] ? true : undefined);
   const describe = (f: Field) => (e[f] ? `${f}-error` : undefined);
+  const check = (f: Required, value: string) =>
+    setChecked((c) => ({ for: state, errors: { ...(c.for === state ? c.errors : {}), [f]: requiredError(f, value) ?? null } }));
 
   // Progressive disclosure: the optional details open by themselves once the
   // three required fields hold something plausible.
@@ -129,13 +141,23 @@ export function SignupForm({ from }: { from: string }) {
       onBlur={(ev) => {
         const t = ev.target;
         if (!(t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement)) return;
+        // Tabbing past an empty field doesn't count as getting it wrong.
+        if (isRequired(t.name) && (t.value.trim() || typed.current.has(t.name) || e[t.name])) check(t.name, t.value);
         if (!t.name || completed.current.has(t.name)) return;
         const done = t instanceof HTMLInputElement && (t.type === "radio" || t.type === "checkbox") ? t.checked : t.value.trim() !== "";
         if (!done) return;
         completed.current.add(t.name);
         track("beta_field_complete", { field: t.name, from });
       }}
-      onInput={checkRequired}
+      onInput={(ev) => {
+        const t = ev.target;
+        if (t instanceof HTMLInputElement && isRequired(t.name)) {
+          typed.current.add(t.name);
+          // Once a field shows an error, it clears as soon as it's right.
+          if (e[t.name]) check(t.name, t.value);
+        }
+        checkRequired();
+      }}
     >
       {state.message && (
         <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[0.9375rem] text-foreground">

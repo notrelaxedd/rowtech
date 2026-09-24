@@ -1,7 +1,7 @@
 "use server";
 
 import { supabaseAnon } from "@/lib/supabase/anon";
-import { BOATS, EMAIL, LIMITS, ROLES, type ApplyState, type Values } from "./fields";
+import { BOATS, LIMITS, requiredError, ROLES, type ApplyState, type Values } from "./fields";
 
 type Application = {
   name: string;
@@ -81,14 +81,10 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
   if (text(fd, "website")) return { status: "ok", errors: {}, message: "", values };
 
   const errors: ApplyState["errors"] = {};
-  if (!values.name) errors.name = "Tell us your name.";
-  else if (values.name.length > LIMITS.name) errors.name = `Keep it under ${LIMITS.name} characters.`;
-  if (!values.email) errors.email = "We need an email address to reply to.";
-  else if (values.email.length > LIMITS.email || !EMAIL.test(values.email))
-    errors.email = "That doesn't look like an email address. Check for a typo.";
-  if (!values.organization) errors.organization = "Which club, school or program do you row with?";
-  else if (values.organization.length > LIMITS.organization)
-    errors.organization = `Keep it under ${LIMITS.organization} characters.`;
+  for (const f of ["name", "email", "organization"] as const) {
+    const msg = requiredError(f, values[f] ?? "");
+    if (msg) errors[f] = msg;
+  }
   if (values.role && !ROLES.some((r) => r.value === values.role)) errors.role = "Pick one of the options.";
   if (boats.some((b) => !(BOATS as readonly string[]).includes(b))) errors.boats = "Pick from the boats listed.";
   if (values.location && values.location.length > LIMITS.location) errors.location = `Keep it under ${LIMITS.location} characters.`;
