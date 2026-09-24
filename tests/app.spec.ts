@@ -169,6 +169,16 @@ test.describe("signed in", () => {
     expect((await user.db.from("strokes").delete().eq("session_id", seat)).error).toBeNull();
     const { data: emptied } = await user.db.from("session_stats").select("strokes, avg_peak, span_ms").eq("session_id", seat).single();
     expect(emptied).toEqual({ strokes: 0, avg_peak: null, span_ms: null });
+    // A seat with no figures is left out of the outing's, not counted as 0.
+    await page.reload();
+    await expect(cell("Avg peak")).toHaveText(fmt(summaries[1].avgPeak));
+    await expect(cell("Drive : recovery")).toHaveText(`1 : ${fmt(summaries[1].avgRecoveryMs / summaries[1].avgDriveMs, 2)}`);
+    await expect(cell("Consistency")).toHaveText(`CV ${fmt(summaries[1].consistencyPct!)}%`);
+    // Two strokes have no CV; with no seat left that has one, it's a dash.
+    const other = rows![1].session_id;
+    expect((await user.db.from("strokes").delete().eq("session_id", other).gt("rec", 1)).error).toBeNull();
+    await page.reload();
+    await expect(cell("Consistency")).toHaveText("—");
 
     // Writes to one session at the same time each wait for the one before, so
     // none of them leaves the others' strokes out of the figures.

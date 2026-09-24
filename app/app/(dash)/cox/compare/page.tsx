@@ -29,9 +29,12 @@ async function piece(sb: Awaited<ReturnType<typeof supabaseServer>>, id: string 
   if (statsError) throw await readFailed(statsError);
 
   const seats = stats ?? [];
-  const n = seats.length || 1;
-  const avg = (get: (s: (typeof seats)[number]) => number | null) =>
-    seats.reduce((a, s) => a + (get(s) ?? 0), 0) / n;
+  // Over the seats that have the figure: a seat with no strokes has none, and
+  // fewer than 3 strokes have no CV. None at all is null, shown as a dash.
+  const avg = (get: (s: (typeof seats)[number]) => number | null) => {
+    const vals = seats.map(get).filter((v): v is number => v !== null);
+    return vals.length ? vals.reduce((a, v) => a + v, 0) / vals.length : null;
+  };
 
   // The split is over every fix; the map gets a thinned track.
   const splits = fullTrack.map((p) => splitFromSpeed(p.speedMps)).filter((s): s is number => s !== null);
@@ -69,15 +72,19 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
     piece(sb, typeof q.b === "string" ? q.b : crews[1]?.id),
   ]);
 
+  const avgOf = (v: number | null) => (v === null ? "—" : fmt(v));
+  const ratio = (p: typeof a) =>
+    p && p.avgRecovery !== null && p.avgDrive !== null ? `1 : ${fmt(p.avgRecovery / (p.avgDrive || 1), 2)}` : "—";
+  const cv = (p: typeof a) => (p && p.consistency !== null ? `CV ${fmt(p.consistency)}%` : "—");
   const rows: Array<[string, string, string]> = [
     ["Seats", a ? String(a.seats) : "—", b ? String(b.seats) : "—"],
     ["Strokes", a ? String(a.strokes) : "—", b ? String(b.strokes) : "—"],
     ["Time", a ? duration(a.spanMs) : "—", b ? duration(b.spanMs) : "—"],
     ["Avg split", a ? fmtSplit(a.avgSplit) : "—", b ? fmtSplit(b.avgSplit) : "—"],
-    ["Avg peak", a ? fmt(a.avgPeak) : "—", b ? fmt(b.avgPeak) : "—"],
-    ["Avg impulse", a ? fmt(a.avgImpulse) : "—", b ? fmt(b.avgImpulse) : "—"],
-    ["Drive : recovery", a ? `1 : ${fmt(a.avgRecovery / (a.avgDrive || 1), 2)}` : "—", b ? `1 : ${fmt(b.avgRecovery / (b.avgDrive || 1), 2)}` : "—"],
-    ["Consistency", a ? `CV ${fmt(a.consistency)}%` : "—", b ? `CV ${fmt(b.consistency)}%` : "—"],
+    ["Avg peak", a ? avgOf(a.avgPeak) : "—", b ? avgOf(b.avgPeak) : "—"],
+    ["Avg impulse", a ? avgOf(a.avgImpulse) : "—", b ? avgOf(b.avgImpulse) : "—"],
+    ["Drive : recovery", ratio(a), ratio(b)],
+    ["Consistency", cv(a), cv(b)],
   ];
 
   return (
