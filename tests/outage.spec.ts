@@ -99,3 +99,17 @@ test("when Supabase Auth can't say who you are, it says so instead of signing yo
   await expect(page).toHaveURL(/\/app\/force$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Something went wrong.");
 });
+
+// This server runs as production with BETA_DRY_RUN=1 (playwright.config.ts).
+// The flag is ignored there, so the write is tried, fails, and the applicant
+// is told, rather than being told a dropped application was saved.
+test("in production a stray BETA_DRY_RUN doesn't skip saving an application", async ({ page }) => {
+  await page.goto("/beta");
+  await page.getByLabel("Name").fill("Sam Rower");
+  await page.getByLabel("Email").fill("sam.rower@example.com");
+  await page.getByLabel("Club, school or program").fill("Riverside RC");
+  await page.getByRole("button", { name: /apply for the beta/i }).click();
+
+  await expect(page.getByRole("alert").filter({ hasText: "your application wasn't saved" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).not.toContainText("We have your application");
+});

@@ -48,6 +48,20 @@ async function sendConfirmation(application: Application): Promise<void> {
   void application;
 }
 
+/**
+ * Test runs (Playwright) exercise the whole path except the write. Never in
+ * production: a stray BETA_DRY_RUN there would drop every application while
+ * telling each applicant it was saved, so it is ignored, loudly.
+ */
+function dryRun() {
+  if (process.env.BETA_DRY_RUN !== "1") return false;
+  if (process.env.VERCEL_ENV === "production") {
+    console.error("BETA_DRY_RUN is set in production; ignoring it and saving the application");
+    return false;
+  }
+  return true;
+}
+
 /** The single submit path for beta applications. */
 export async function submitApplication(_prev: ApplyState, fd: FormData): Promise<ApplyState> {
   const boats = [...new Set(fd.getAll("boats").filter((b): b is string => typeof b === "string"))];
@@ -101,8 +115,7 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
     referrer: clip(text(fd, "referrer"), LIMITS.referrer),
   };
 
-  // Test runs (Playwright) exercise the whole path except the write.
-  if (process.env.BETA_DRY_RUN === "1") return { status: "ok", errors: {}, message: "", values };
+  if (dryRun()) return { status: "ok", errors: {}, message: "", values };
 
   try {
     const { error } = await supabaseAnon().from("beta_signups").insert(application);

@@ -38,11 +38,13 @@ export default defineConfig({
             reuseExistingServer: !process.env.CI,
             env: { UPSTREAM_SUPABASE_URL: process.env.SUPABASE_URL!, PORT: new URL(outage.supabase).port },
           },
+          // VERCEL_ENV: this one runs as production, where a stray
+          // BETA_DRY_RUN is ignored (app/beta/actions.ts).
           {
             command: `npx next start -p ${new URL(outage.app).port}`,
             port: Number(new URL(outage.app).port),
             reuseExistingServer: !process.env.CI,
-            env: { BETA_DRY_RUN: "1", SITE_URL: outage.app, TZ: "UTC", SUPABASE_URL: outage.supabase },
+            env: { BETA_DRY_RUN: "1", VERCEL_ENV: "production", SITE_URL: outage.app, TZ: "UTC", SUPABASE_URL: outage.supabase },
           },
         ]
       : []),
