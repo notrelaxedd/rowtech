@@ -2,10 +2,11 @@ import Link from "next/link";
 import { readFailed, supabaseServer } from "@/lib/supabase/server";
 import { duration } from "@/lib/session/analyse";
 import { LocalTime } from "@/components/dash/local-time";
+import { beforeParam, newestFirstPage } from "@/lib/session/older";
 
 export const metadata = { title: "Cox" };
 
-/** Most outings the list shows. */
+/** Most outings a page of the list shows. */
 const LISTED = 100;
 
 type Row = {
@@ -17,17 +18,15 @@ type Row = {
   boats: { name: string } | null;
 };
 
-export default async function CoxPage() {
+export default async function CoxPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  // ?before= pages back through older outings; a malformed one is the newest page.
+  const before = beforeParam((await searchParams).before);
   const sb = await supabaseServer();
-  const { data, error } = await sb
-    .from("sessions")
-    .select("id, title, recorded_at, clock_source, duration_ms, boats(name)")
-    .eq("kind", "crew")
-    .order("recorded_at", { ascending: false })
-    .limit(LISTED + 1);
+  let query = sb.from("sessions").select("id, title, recorded_at, clock_source, duration_ms, boats(name)").eq("kind", "crew");
+  if (before) query = query.lt("recorded_at", before);
+  const { data, error } = await query.order("recorded_at", { ascending: false }).limit(LISTED + 1);
   if (error) throw await readFailed(error);
-  const more = (data ?? []).length > LISTED;
-  const crews = (data ?? []).slice(0, LISTED) as unknown as Row[];
+  const { rows: crews, older } = newestFirstPage((data ?? []) as unknown as Row[], LISTED);
 
   return (
     <div className="mx-auto w-full max-w-[110rem] space-y-8 px-4 py-8 sm:px-6">
@@ -42,7 +41,7 @@ export default async function CoxPage() {
 
       {crews.length === 0 ? (
         <p className="rounded-lg border border-dashed border-line px-4 py-10 text-center text-sm text-muted-foreground">
-          No crew outings yet. Upload more than one seat together and they become one.
+          {before ? "No older outings." : "No crew outings yet. Upload more than one seat together and they become one."}
         </p>
       ) : (
         <>
@@ -68,7 +67,20 @@ export default async function CoxPage() {
               </li>
             ))}
           </ul>
-          {more && <p className="text-sm text-muted-foreground">Only the {LISTED} most recent outings are listed; older ones aren&rsquo;t shown here.</p>}
+          {(older || before) && (
+            <p className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {before && (
+                <Link href="/app/cox" className="text-trace underline-offset-4 hover:underline">
+                  ← Newest outings
+                </Link>
+              )}
+              {older && (
+                <Link href={`/app/cox?before=${encodeURIComponent(older)}`} className="text-trace underline-offset-4 hover:underline">
+                  Older outings →
+                </Link>
+              )}
+            </p>
+          )}
           {crews.length > 1 && (
             <Link href="/app/cox/compare" className="inline-block text-sm text-trace underline-offset-4 hover:underline">
               Compare two pieces →

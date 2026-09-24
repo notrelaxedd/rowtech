@@ -165,7 +165,7 @@ test.describe("signed in", () => {
     }
   });
 
-  test("the history chart keeps the newest sessions, and the lists say when they stop short", async ({ page, context, baseURL }) => {
+  test("the history chart keeps the newest sessions, and the lists page back to the oldest", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);
     const { data: team } = await user.db.rpc("ensure_own_team", { p_name: "test crew" });
@@ -185,16 +185,30 @@ test.describe("signed in", () => {
     expect((await user.db.from("strokes").insert(strokes)).error).toBeNull();
 
     await page.goto("/app/force");
-    await expect(page.getByText("Only the most recent sessions are listed; older ones aren’t shown here.")).toBeVisible();
     await expect(page.getByText(/The most recent sessions, by seat; older ones aren’t in the chart/)).toBeVisible();
     await expect(page.getByRole("img", { name: /across 500 sessions/ })).toBeVisible();
-    // The oldest seat session is past the list and, now, past the chart too.
+    // The oldest seat session is past the first page of the list and, now, past the chart too.
     const html = await (await page.request.get("/app/force")).text();
     expect(html).toContain(seats[500].id);
     expect(html).not.toContain(seats[0].id);
+    await expect(page.getByRole("link", { name: "← Newest sessions" })).toHaveCount(0);
+    // Older pages reach it, and the oldest crew outing past it.
+    await page.getByRole("link", { name: "Older sessions →" }).click();
+    await expect(page.locator(`a[href="/app/force/${seats[300].id}"]`)).toBeVisible();
+    await page.getByRole("link", { name: "Older sessions →" }).click();
+    await expect(page.locator(`a[href="/app/force/${seats[0].id}"]`)).toBeVisible();
+    await page.getByRole("link", { name: "Older sessions →" }).click();
+    await expect(page.locator(`a[href="/app/force/${crews[0].id}"]`)).toBeVisible();
+    await expect(page.getByRole("link", { name: "Older sessions →" })).toHaveCount(0);
+    await page.getByRole("link", { name: "← Newest sessions" }).click();
+    await expect(page.locator(`a[href="/app/force/${seats[500].id}"]`)).toBeVisible();
 
     await page.goto("/app/cox");
-    await expect(page.getByText("Only the 100 most recent outings are listed; older ones aren’t shown here.")).toBeVisible();
+    await expect(page.locator(`a[href="/app/cox/${crews[0].id}"]`)).toHaveCount(0);
+    await page.getByRole("link", { name: "Older outings →" }).click();
+    await expect(page.locator(`a[href="/app/cox/${crews[0].id}"]`)).toBeVisible();
+    await expect(page.getByRole("link", { name: "Older outings →" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "← Newest outings" })).toBeVisible();
     await page.goto("/app/cox/compare");
     await expect(page.getByText("The lists hold the 100 most recent outings; older ones aren’t in them.")).toBeVisible();
   });
@@ -227,6 +241,29 @@ test.describe("signed in", () => {
     await page.goto("/app/force");
     await expect(page.getByRole("img", { name: /across 500 sessions/ })).toBeVisible();
     await expect(page.getByText(/Every session so far, by seat\./)).toBeVisible();
+  });
+
+  test("an outing and its seats stay on one page of the list", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const { data: team } = await user.db.rpc("ensure_own_team", { p_name: "test crew" });
+    const at = (hours: number) => new Date(Date.UTC(2026, 0, 1) + hours * 3_600_000).toISOString();
+    const seat = (n: number, recorded_at: string, parent_id?: string) => ({
+      id: randomUUID(), team_id: team, kind: "node", parent_id: parent_id ?? null, seat_number: n, recorded_at, stroke_count: 0,
+      device_id: `node-${n}`, session_uuid: randomUUID(), units: "kg", created_by: user.id,
+    });
+    // 199 newer seat sessions, so the page's 200-row cut falls inside the crew.
+    const crew = { id: randomUUID(), team_id: team, kind: "crew", recorded_at: at(0), created_by: user.id };
+    expect((await user.db.from("sessions").insert(crew)).error).toBeNull();
+    const rows = [seat(1, at(0), crew.id), seat(2, at(0), crew.id), ...Array.from({ length: 199 }, (_, i) => seat(1, at(1 + i)))];
+    expect((await user.db.from("sessions").insert(rows)).error).toBeNull();
+
+    await page.goto("/app/force");
+    await expect(page.locator(`a[href="/app/force/${rows[2].id}"]`)).toBeVisible();
+    await expect(page.locator(`a[href="/app/force/${crew.id}"]`)).toHaveCount(0);
+    await page.getByRole("link", { name: "Older sessions →" }).click();
+    await expect(page.locator(`a[href="/app/force/${crew.id}"]`)).toContainText("2 seats");
+    await expect(page.getByRole("link", { name: "Older sessions →" })).toHaveCount(0);
   });
 
   test("an upload bigger than any outing is refused, and says why", async ({ page, context, baseURL }) => {

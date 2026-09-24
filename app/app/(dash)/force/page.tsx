@@ -2,12 +2,13 @@ import Link from "next/link";
 import { readFailed, supabaseServer } from "@/lib/supabase/server";
 import { duration, fmt } from "@/lib/session/analyse";
 import { LocalTime } from "@/components/dash/local-time";
+import { beforeParam, newestFirstPage } from "@/lib/session/older";
 import { UploadForm } from "./upload-form";
 import { HistoryPanel, type HistoryPoint } from "./history-panel";
 
 export const metadata = { title: "Force" };
 
-/** Most session rows the list reads, and the history chart. */
+/** Most session rows a page of the list shows, and the history chart. */
 const LISTED = 200;
 const CHARTED = 500;
 
@@ -24,16 +25,17 @@ type SessionRow = {
   boats: { name: string } | null;
 };
 
-export default async function ForcePage() {
+export default async function ForcePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  // ?before= pages back through older sessions; a malformed one is the newest page.
+  const before = beforeParam((await searchParams).before);
   const sb = await supabaseServer();
-  const { data, error } = await sb
+  let query = sb
     .from("sessions")
-    .select("id, kind, parent_id, seat_number, title, recorded_at, units, stroke_count, duration_ms, boats(name)")
-    .order("recorded_at", { ascending: false })
-    .limit(LISTED + 1);
+    .select("id, kind, parent_id, seat_number, title, recorded_at, units, stroke_count, duration_ms, boats(name)");
+  if (before) query = query.lt("recorded_at", before);
+  const { data, error } = await query.order("recorded_at", { ascending: false }).limit(LISTED + 1);
   if (error) throw await readFailed(error);
-  const moreSessions = (data ?? []).length > LISTED;
-  const sessions = (data ?? []).slice(0, LISTED) as unknown as SessionRow[];
+  const { rows: sessions, older } = newestFirstPage((data ?? []) as unknown as SessionRow[], LISTED);
 
   // The newest seat sessions with strokes, back in time order for the chart.
   // Crew rows and empty seats are left out in the query, so the cap and the
@@ -63,7 +65,7 @@ export default async function ForcePage() {
           <h1 className="type-h3 text-2xl">Sessions</h1>
           {top.length === 0 ? (
             <p className="mt-4 rounded-lg border border-dashed border-line px-4 py-10 text-center text-sm text-muted-foreground">
-              Nothing here yet. Upload a session from a node and it lands here.
+              {before ? "No older sessions." : "Nothing here yet. Upload a session from a node and it lands here."}
             </p>
           ) : (
             <ul className="mt-4 divide-y divide-line rounded-lg border border-line bg-panel">
@@ -95,7 +97,20 @@ export default async function ForcePage() {
               })}
             </ul>
           )}
-          {moreSessions && <p className="mt-3 text-sm text-muted-foreground">Only the most recent sessions are listed; older ones aren&rsquo;t shown here.</p>}
+          {(older || before) && (
+            <p className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {before && (
+                <Link href="/app/force" className="text-trace underline-offset-4 hover:underline">
+                  ← Newest sessions
+                </Link>
+              )}
+              {older && (
+                <Link href={`/app/force?before=${encodeURIComponent(older)}`} className="text-trace underline-offset-4 hover:underline">
+                  Older sessions →
+                </Link>
+              )}
+            </p>
+          )}
         </section>
 
         <UploadForm />
