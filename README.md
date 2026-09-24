@@ -80,6 +80,20 @@ an account, so letting someone in takes two steps:
 To take someone out, delete their `allowed_users` row: their team's data is
 closed to them at once, even with a live session.
 
+Each user's first upload makes their own team, with them as `owner`. To add
+someone to an existing team (after the two steps above), in the SQL editor:
+
+```sql
+insert into public.team_members (team_id, user_id, role)
+select t.id, u.id, 'coach'   -- or 'member': can't delete sessions or boats
+from public.teams t, auth.users u
+where t.created_by = (select id from auth.users where email = 'owner@example.com')
+  and u.email = 'new-coach@example.com';
+```
+
+Owners can delete the team and remove members; owners and coaches can delete
+sessions and boats; anyone can leave.
+
 ### Auth setup, still to do in the Supabase dashboard
 
 These can't be set from migrations:

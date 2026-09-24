@@ -53,6 +53,12 @@ export async function allow(email: string) {
   if (error) throw error;
 }
 
+/** Adds someone to a team by hand, as README says members are added for now. */
+export async function addToTeam(team: string, user: TestUser, role: "owner" | "coach" | "member") {
+  const { error } = await admin().from("team_members").insert({ team_id: team, user_id: user.id, role });
+  if (error) throw error;
+}
+
 /** Whether Supabase Auth has an account for this address. */
 export async function hasAccount(email: string) {
   const { data, error } = await admin().auth.admin.listUsers({ perPage: 1000 });

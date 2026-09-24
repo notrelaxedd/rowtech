@@ -3,7 +3,7 @@
 // between. Runs against a local Supabase only (tests/support/local-supabase.ts).
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
-import { localSupabaseMissing, makeUser, revoke, type TestUser } from "./support/local-supabase";
+import { addToTeam, localSupabaseMissing, makeUser, revoke, type TestUser } from "./support/local-supabase";
 
 test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
 
@@ -63,4 +63,24 @@ test("the sessions bucket won't hold a file a browser would render as a page", a
   const page = new Blob(["<script>alert(1)</script>"], { type: "text/html" });
   const { error } = await user.db.storage.from("sessions").upload(`${team}/${randomUUID()}/page.html`, page);
   expect(error?.message).toMatch(/mime type/i);
+});
+
+test("roles: members can't delete sessions, anyone can leave, only owners delete the team", async () => {
+  const { user: owner, team, session } = await crewWithData();
+  const member = await makeUser();
+  await addToTeam(team, member, "member");
+  expect(await sessionsSeenBy(member)).toEqual([{ id: session }]);
+
+  const { data: notDeleted } = await member.db.from("sessions").delete().eq("id", session).select("id");
+  expect(notDeleted).toEqual([]);
+  const { data: teamKept } = await member.db.from("teams").delete().eq("id", team).select("id");
+  expect(teamKept).toEqual([]);
+
+  const { data: left } = await member.db.from("team_members").delete().eq("team_id", team).eq("user_id", member.id).select("user_id");
+  expect(left).toEqual([{ user_id: member.id }]);
+  expect(await sessionsSeenBy(member)).toEqual([]);
+
+  const { data: gone } = await owner.db.from("teams").delete().eq("id", team).select("id");
+  expect(gone).toEqual([{ id: team }]);
+  expect(await sessionsSeenBy(owner)).toEqual([]);
 });
