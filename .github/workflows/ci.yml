@@ -39,6 +39,11 @@ jobs:
             -e 's/^PUBLISHABLE_KEY="(.*)"$/SUPABASE_PUBLISHABLE_KEY=\1/p' \
             -e 's/^SECRET_KEY="(.*)"$/SUPABASE_SECRET_KEY=\1/p' >> "$GITHUB_ENV"
 
+      # Without all three the signed-in tests skip themselves and the job
+      # would still pass, so stop here instead.
+      - name: Check the tests can reach it
+        run: test -n "$SUPABASE_URL" && test -n "$SUPABASE_PUBLISHABLE_KEY" && test -n "$SUPABASE_SECRET_KEY"
+
       - run: npx playwright install --with-deps chromium
 
       - run: npm run lint
