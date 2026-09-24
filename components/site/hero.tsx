@@ -10,10 +10,12 @@ import { ScreenAnimator } from "@/components/device/screen-animator";
 export function Hero() {
   return (
     <section data-section="hero" className="river relative overflow-hidden">
-      <div className="mx-auto w-full max-w-7xl px-5 pt-10 sm:px-8 sm:pt-14 lg:pt-12">
-        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
+      {/* The headline and the node fill the first screen under the header,
+          centred in it on every device; the curve starts just below. */}
+      <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-7xl flex-col justify-center px-5 py-16 sm:px-8 sm:py-20">
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
           <div>
-            <h1 className="type-h1 max-w-[14ch]">The force curve from every seat, stroke by stroke.</h1>
+            <h1 className="type-h1 max-w-[16ch]">Making imperative data available to everyone, seat by seat.</h1>
             <p className="type-lead mt-6 max-w-[36rem] text-muted-foreground">
               A Force node on each seat&rsquo;s rigger backstay records the force curve of every stroke, shows it to the
               rower live on its 3.5&Prime; screen, and saves the session to a microSD card for you to download at the dock.
@@ -34,7 +36,7 @@ export function Hero() {
       </div>
 
       {/* The curve runs the full width of the screen, edge to edge. */}
-      <div className="mt-10 pb-10 sm:mt-12 sm:pb-14">
+      <div className="pb-10 sm:pb-14">
         <ScopeStrip />
       </div>
       <ScreenAnimator target="hero" />

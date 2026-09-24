@@ -14,9 +14,11 @@ import { FORCE_CURVE_GEOMETRY as G } from "./force-screen";
 // reduced motion.
 
 const M = measureStroke();
-const PERIOD = (60 / EXAMPLE.spm) * 1000;
-const DRIVE = M.driveMs;
-const WIPE = 90; // ms of blank between the release and the next catch
+// Played back 1.8x slower than real time, so the eye can follow the drive.
+const SLOW = 1.8;
+const PERIOD = (60 / EXAMPLE.spm) * 1000 * SLOW;
+const DRIVE = M.driveMs * SLOW;
+const WIPE = 90 * SLOW; // blank between the release and the next catch
 
 /** Force in kg at a point on the drawn curve. */
 const kgAt = (y: number) => ((y - G.y0) / (G.y1 - G.y0)) * G.kgTop;

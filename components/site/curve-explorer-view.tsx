@@ -39,6 +39,21 @@ export type CurveExplorerViewProps = {
   };
 };
 
+const clampX = (v: number) => Math.min(PX1 - 58, Math.max(PX0 + 58, v));
+const at = (t: number, kg = strokeForce(t, STROKES[0])): [number, number] => [x(t), y(kg)];
+const RHYTHM_T = Math.min(M.releaseT + 0.24, 1.1);
+
+/** Each measure's point on the curve, and where its label sits (viewBox). */
+const PINS: ReadonlyArray<{ id: MetricId; at: [number, number]; chip: [number, number] }> = [
+  { id: "catch", at: at(M.catchT, M.threshold), chip: [clampX(x(M.catchT) - 4), y(50)] },
+  { id: "rise", at: at(M.catchT + 0.05), chip: [clampX(x(M.catchT) - 4), y(24)] },
+  { id: "peak", at: at(M.peakT, M.peakKg), chip: [clampX(x(M.peakT) + 118), y(64)] },
+  { id: "consistency", at: at(M.peakT + 0.24), chip: [clampX(x(M.peakT + 0.24) + 110), y(47)] },
+  { id: "thirds", at: at((M.catchT + M.releaseT) / 2, 14), chip: [x((M.catchT + M.releaseT) / 2), y(24)] },
+  { id: "release", at: at(M.releaseT, M.threshold / 2), chip: [clampX(x(M.releaseT) + 70), y(36)] },
+  { id: "rhythm", at: at(RHYTHM_T, 0), chip: [clampX(x(RHYTHM_T)), y(20)] },
+];
+
 export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }: CurveExplorerViewProps) {
   const lit = (id: MetricId) => (active === id ? 1 : 0);
   const current = METRICS.find((m) => m.id === active)!;
@@ -46,42 +61,7 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
 
   return (
     <div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[18.5rem_minmax(0,1fr)] lg:gap-10">
-        <div className="min-w-0">
-          <div
-            role="group"
-            aria-label="Stroke metrics"
-            className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 lg:mx-0 lg:flex-col lg:gap-0 lg:overflow-visible lg:px-0 lg:pb-0"
-          >
-            {METRICS.map((m) => {
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  aria-pressed={active === m.id}
-                  onClick={on?.setActive && (() => on.setActive!(m.id))}
-                  className={cn(
-                    "group flex min-h-11 shrink-0 items-baseline justify-between gap-6 rounded-md border px-3.5 py-2.5 text-left transition-colors lg:rounded-none lg:border-x-0 lg:border-t-0 lg:border-b lg:px-1 lg:py-3.5",
-                    active === m.id
-                      ? "border-trace/50 bg-trace/[0.07] lg:border-line lg:bg-transparent"
-                      : "border-line hover:border-foreground/30 lg:hover:border-line"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "text-[0.9375rem] font-semibold whitespace-nowrap transition-colors",
-                      active === m.id ? "text-trace" : "text-foreground group-hover:text-trace"
-                    )}
-                  >
-                    {m.label}
-                  </span>
-                  <span className="hidden text-sm whitespace-nowrap tabular-nums text-muted-foreground sm:inline">{m.value}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
+      <div className="mx-auto max-w-4xl">
         <div className="min-w-0">
           <div className="instrument overflow-hidden rounded-lg">
             <div className="flex h-12 items-center justify-between gap-3 border-b border-line px-4">
@@ -97,6 +77,33 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
             </div>
 
             <div ref={chartRef} onPointerMove={on?.move} onPointerLeave={on?.leave} className="relative select-none">
+              {/* each measure, pinned to the part of the curve it's read from */}
+              {PINS.map((p, i) => {
+                const m = METRICS.find((k) => k.id === p.id)!;
+                const lit_ = active === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    aria-pressed={lit_}
+                    aria-label={`${m.label}: ${m.value}`}
+                    onClick={on?.setActive && (() => on.setActive!(p.id))}
+                    onPointerEnter={on?.setActive && (() => on.setActive!(p.id))}
+                    className={cn(
+                      "absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-md border text-left transition-colors duration-200",
+                      "flex size-7 items-center justify-center text-xs font-bold tabular-nums sm:block sm:size-auto sm:px-2.5 sm:py-1.5 sm:font-normal",
+                      lit_ ? "border-trace bg-[#0b3a44] text-foreground" : "border-line bg-panel/95 text-muted-foreground hover:border-trace/60 hover:text-foreground"
+                    )}
+                    style={{ left: `${(p.chip[0] / W) * 100}%`, top: `${(p.chip[1] / H) * 100}%` }}
+                  >
+                    <span className="sm:hidden">{i + 1}</span>
+                    <span className="hidden whitespace-nowrap sm:block">
+                      <span className="block text-xs font-semibold text-foreground">{m.label}</span>
+                      <span className="block text-xs tabular-nums text-trace">{m.value}</span>
+                    </span>
+                  </button>
+                );
+              })}
             <svg
               viewBox={`0 0 ${W} ${H}`}
               role="img"
@@ -190,6 +197,12 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
                 </text>
               </g>
 
+              {PINS.map((p) => (
+                <g key={p.id} aria-hidden className={fade} style={{ opacity: active === p.id ? 1 : 0.55 }}>
+                  <line x1={p.at[0]} y1={p.at[1]} x2={p.chip[0]} y2={p.chip[1]} stroke="var(--foreground)" strokeOpacity={0.45} strokeWidth={1} />
+                  <circle cx={p.at[0]} cy={p.at[1]} r={3.5} fill="var(--panel)" stroke={active === p.id ? "var(--trace)" : "var(--foreground)"} strokeWidth={1.5} />
+                </g>
+              ))}
               {cursor}
             </svg>
             </div>
@@ -236,6 +249,28 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
             </div>
           </div>
 
+          <ol aria-label="Stroke metrics" className="mt-4 grid grid-cols-2 gap-2 sm:hidden">
+            {PINS.map((p, i) => {
+              const m = METRICS.find((k) => k.id === p.id)!;
+              return (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    aria-pressed={active === p.id}
+                    onClick={on?.setActive && (() => on.setActive!(p.id))}
+                    className={cn(
+                      "flex min-h-11 w-full items-baseline gap-2 rounded-md border px-3 py-2 text-left text-sm",
+                      active === p.id ? "border-trace text-foreground" : "border-line text-muted-foreground"
+                    )}
+                  >
+                    <span className="font-bold tabular-nums">{i + 1}</span>
+                    <span>{m.label}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+
           <div aria-live="polite" className="mt-5 min-h-[7.5rem]">
             <p className="type-h3">
               {current.label} <span className="ml-2 text-base font-semibold tabular-nums text-trace">{current.value}</span>
@@ -245,7 +280,7 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
         </div>
       </div>
 
-      <p className="mt-8 max-w-[70ch] text-sm text-muted-foreground">Example data.</p>
+      <p className="mx-auto mt-8 max-w-4xl text-sm text-muted-foreground">Example data.</p>
     </div>
   );
 }

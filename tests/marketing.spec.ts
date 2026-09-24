@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test("the marketing page renders, with the beta offered in four places", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("every seat");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("seat by seat");
   // The node and its screen are drawn by the server, not fetched as a picture.
   await expect(page.getByRole("img", { name: /Force seat node/i }).first()).toBeVisible();
   await expect(page.locator("#hero-peak")).toHaveCount(1);
@@ -33,18 +33,11 @@ test("reduced motion leaves the page in its finished state", async ({ page }) =>
   await expect(page.locator("#vieve")).toContainText("8 of 8");
 });
 
-test("the node's keys light their key on the device", async ({ page }) => {
+test("the Force node is shown as a 3D model with its notes around it", async ({ page }) => {
   await page.goto("/");
-  // Scroll to the drawing itself: on a phone the section is taller than the
-  // island's trigger margin.
-  await page.locator("#screens figure").first().scrollIntoViewIfNeeded();
-
-  const view = page.getByRole("button", { name: /^VIEW/ });
-  await expect(view).toBeVisible();
-  // The device is drawn in the markup, with the screen the keys drive.
-  await expect(page.locator("#screens").getByRole("img", { name: /Force seat node/i })).toBeVisible({ timeout: 15000 });
-
-  await view.hover();
+  const model = page.getByRole("group", { name: "3D model: Parts of the Force node" });
+  await model.scrollIntoViewIfNeeded();
+  await expect(model.locator("canvas")).toBeVisible({ timeout: 15000 });
   await expect(page.locator("#screens")).toContainText("Steps through the rower’s screens");
 });
 
@@ -64,11 +57,10 @@ test("the diagrams light the part a note describes", async ({ page }) => {
   await expect(note).toHaveAttribute("aria-pressed", "true");
 });
 
-test("Vieve is shown as well as described", async ({ page }) => {
+test("Vieve is shown as a 3D model too", async ({ page }) => {
   await page.goto("/");
-  // The drawing is an island, so scroll to the figure itself, not the heading:
-  // on a phone the section is taller than the trigger margin.
-  await page.locator("#vieve figure").first().scrollIntoViewIfNeeded();
-  await expect(page.locator("#vieve").getByRole("img", { name: /Vieve V1/i })).toBeVisible({ timeout: 15000 });
+  const model = page.getByRole("group", { name: "3D model: Parts of Vieve" });
+  await model.scrollIntoViewIfNeeded();
+  await expect(model.locator("canvas")).toBeVisible({ timeout: 15000 });
   await expect(page.locator("#vieve")).toContainText("concept design");
 });

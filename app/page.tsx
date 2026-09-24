@@ -3,9 +3,9 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { BetaLink, SectionEnd } from "@/components/site/cta";
 import { Hero } from "@/components/site/hero";
 import { CrewLanes } from "@/components/site/crew-lanes";
-import { CurveExplorerIsland, ForceDeviceIsland, VieveShowcaseIsland } from "@/components/site/islands";
-import { AnnotatedDiagram } from "@/components/site/annotated-diagram";
-import { FORCE_NOTES, FORCE_RATIO, VIEVE_NOTES, VIEVE_RATIO } from "@/components/site/device-notes";
+import { CurveExplorerIsland } from "@/components/site/islands";
+import { DeviceDiagram3D } from "@/components/site/device-diagram-3d";
+import { FORCE_DEFAULT_VIEW, FORCE_NOTES, VIEVE_DEFAULT_VIEW, VIEVE_NOTES } from "@/components/site/device-notes";
 import { ForceScreen } from "@/components/device/force-screen";
 import { DevicePlaceholder } from "@/components/device/device-placeholder";
 import { CurveExplorerView } from "@/components/site/curve-explorer-view";
@@ -41,8 +41,8 @@ const STEPS = [
   },
   {
     art: "files",
-    t: "Review",
-    d: "At the dock, join the node’s WiFi from a phone and download the session: every stroke, every force curve.",
+    t: "Download the practice",
+    d: "At the dock, connect your phone to the node’s own WiFi and download the practice. You get the numbers for every stroke, the force curve of every stroke, and the timing of everything that happened.",
   },
 ] as const;
 
@@ -230,12 +230,13 @@ export default function Home() {
               </p>
             </div>
             <div className="mt-12">
-              <AnnotatedDiagram
+              <DeviceDiagram3D
+                kind="force"
                 label="Parts of the Force node"
-                ratio={FORCE_RATIO}
                 notes={FORCE_NOTES}
+                defaultView={FORCE_DEFAULT_VIEW}
                 caption="Force node, concept design. It's wired to a 50 kg load cell in series on the rigger backstay."
-                drawing={<ForceDeviceIsland idPrefix="tour" className="block h-auto w-full" fallback={<DevicePlaceholder ratio={FORCE_RATIO} name="FORCE" />} />}
+                poster={<div className="flex h-full items-center justify-center p-6"><DevicePlaceholder ratio={1180 / 800} name="FORCE" /></div>}
               />
             </div>
             <PhotoSlot
@@ -263,12 +264,13 @@ export default function Home() {
               <CoxBoxView lit={8} />
             </div>
             <div className="mt-14">
-              <AnnotatedDiagram
+              <DeviceDiagram3D
+                kind="vieve"
                 label="Parts of Vieve"
-                ratio={VIEVE_RATIO}
                 notes={VIEVE_NOTES}
+                defaultView={VIEVE_DEFAULT_VIEW}
                 caption="Vieve V1, concept design."
-                drawing={<VieveShowcaseIsland fallback={<DevicePlaceholder ratio={VIEVE_RATIO} name="VIEVE" />} />}
+                poster={<div className="flex h-full items-center justify-center p-6"><DevicePlaceholder ratio={1320 / 760} name="VIEVE" /></div>}
               />
             </div>
           </div>
