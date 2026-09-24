@@ -62,6 +62,27 @@ test("there is no team page for now", async ({ page }) => {
   expect(res?.status()).toBe(404);
 });
 
+test("an address the site doesn't have gets the site's own 404", async ({ page }) => {
+  const res = await page.goto("/no-such-page");
+  expect(res?.status()).toBe(404);
+  // One title, and it says what happened.
+  await expect(page.locator("title")).toHaveCount(1);
+  await expect(page).toHaveTitle("Page not found | RowTech");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  // The site's header, a main landmark and ways back in.
+  await expect(page.getByRole("banner").getByRole("link", { name: "RowTech home" })).toBeVisible();
+  await expect(page.getByRole("contentinfo")).toHaveCount(1);
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { level: 1 })).toHaveText("Page not found.");
+  for (const [name, href] of [["Home", "/"], ["Force", "/force"], ["Vieve", "/vieve"]]) {
+    await expect(main.getByRole("link", { name, exact: true })).toHaveAttribute("href", href);
+  }
+  await expect(main.getByRole("link", { name: /apply for the beta/i })).toHaveAttribute("href", "/beta?from=not-found");
+  // Dark, like the rest of the site, not the framework's white default.
+  const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  expect(bg).not.toBe("rgb(255, 255, 255)");
+});
+
 test("the diagrams light the part a note describes", async ({ page }) => {
   await page.goto("/force");
   await page.locator("#parts figure").first().scrollIntoViewIfNeeded();
