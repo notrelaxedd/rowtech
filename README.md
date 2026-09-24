@@ -11,6 +11,25 @@ npm run lint
 npx playwright test
 ```
 
+### Signed-in tests
+
+The dashboard tests (upload, crews, seat sides) sign in as a throwaway user
+on a **local** Supabase, never the `rowtech` project:
+
+```bash
+npx supabase init    # once, if there is no supabase/config.toml yet
+npx supabase start   # Docker; applies supabase/migrations
+SUPABASE_URL=http://127.0.0.1:54321 \
+SUPABASE_PUBLISHABLE_KEY=<publishable key from supabase start> \
+SUPABASE_SECRET_KEY=<secret key from supabase start> \
+npx playwright test
+```
+
+Without those three variables they are skipped. They refuse any
+`SUPABASE_URL` that isn't this machine (`TEST_SUPABASE_ALLOW_REMOTE=1` allows
+a throwaway Supabase branch database). `SUPABASE_SECRET_KEY` is for the tests
+only: the app never reads it, and it must never be set on Vercel.
+
 ## Environment
 
 Copy `.env.example` to `.env.local`.

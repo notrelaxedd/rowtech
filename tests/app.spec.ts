@@ -1,4 +1,7 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { zipSync } from "fflate";
+import { localSupabaseMissing, makeUser, signInBrowser } from "./support/local-supabase";
 
 test("the dashboard is closed to people who aren't signed in", async ({ page }) => {
   await page.goto("/app/force");
@@ -13,44 +16,76 @@ test("a stale magic link says so instead of failing quietly", async ({ page }) =
   await expect(page.getByRole("alert").first()).toContainText(/expired|already used/i);
 });
 
-// Uploading needs a signed-in beta account, which CI doesn't have. Set
-// TEST_USER_EMAIL and TEST_USER_PASSWORD (a user on allowed_users, with
-// password sign-in enabled in Supabase) to run it.
-const email = process.env.TEST_USER_EMAIL;
-const password = process.env.TEST_USER_PASSWORD;
-
+// Uploading needs a signed-in beta account, so these run against a local
+// Supabase (see README, "Tests"). Each test makes its own user; nothing here
+// can reach the production project (tests/support/local-supabase.ts).
 test.describe("signed in", () => {
-  test.skip(!email || !password, "set TEST_USER_EMAIL and TEST_USER_PASSWORD to run the upload test");
+  test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
 
-  test("an uploaded sample session renders in /app/force", async ({ page, request }) => {
-    const base = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
-    test.skip(!base || !key, "SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY must be set");
+  const seatFiles = (n: number) =>
+    ["meta.json", "strokes.csv", "curves.bin", "events.csv"].map((f) => `public/demo/seat-${n}/${f}`);
 
-    // Sign in through Supabase directly, then hand the session to the app.
-    const res = await request.post(`${base}/auth/v1/token?grant_type=password`, {
-      headers: { apikey: key!, "Content-Type": "application/json" },
-      data: { email, password },
-    });
-    expect(res.ok()).toBeTruthy();
-    const body = (await res.json()) as { access_token: string; refresh_token: string };
+  async function crewZip(...seats: number[]) {
+    const entries: Record<string, Uint8Array> = {};
+    for (const n of seats) {
+      for (const f of ["meta.json", "strokes.csv", "curves.bin", "events.csv"]) {
+        entries[`outing/seat-${n}/${f}`] = new Uint8Array(await readFile(`public/demo/seat-${n}/${f}`));
+      }
+    }
+    return { name: "outing.zip", mimeType: "application/zip", buffer: Buffer.from(zipSync(entries)) };
+  }
 
-    await page.goto("/app/login");
-    await page.evaluate(
-      ([a, r]) => localStorage.setItem("sb-auth", JSON.stringify({ access_token: a, refresh_token: r })),
-      [body.access_token, body.refresh_token]
-    );
-
+  async function upload(page: Page, files: Parameters<Page["setInputFiles"]>[1]) {
     await page.goto("/app/force");
-    await page.getByLabel("Files").setInputFiles([
-      "public/demo/seat-1/meta.json",
-      "public/demo/seat-1/strokes.csv",
-      "public/demo/seat-1/curves.bin",
-      "public/demo/seat-1/events.csv",
-    ]);
+    await page.getByLabel("Files").setInputFiles(files);
     await page.getByRole("button", { name: "Upload" }).click();
+    await expect(page).toHaveURL(/\/app\/force\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+    return page.url().split("/").pop()!;
+  }
 
-    await expect(page.getByRole("slider", { name: "Stroke" })).toBeVisible({ timeout: 30000 });
+  test("an uploaded sample session renders in /app/force, and uploading it again doesn't double it", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+
+    const first = await upload(page, seatFiles(1));
+    await expect(page.getByRole("slider", { name: "Stroke" })).toBeVisible();
     await expect(page.getByRole("img", { name: /Force curve for stroke 1/ })).toBeVisible();
+
+    // The same session again lands on the same row, with its strokes replaced.
+    expect(await upload(page, seatFiles(1))).toBe(first);
+    const { data: sessions } = await user.db.from("sessions").select("id, stroke_count");
+    expect(sessions).toEqual([{ id: first, stroke_count: 147 }]);
+    const { count } = await user.db.from("strokes").select("*", { count: "exact", head: true });
+    expect(count).toBe(147);
+  });
+
+  test("seats uploaded together become one crew outing, and uploading it again keeps one", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+
+    const crew = await upload(page, await crewZip(2, 6));
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("2 seats");
+    expect(await upload(page, await crewZip(2, 6))).toBe(crew);
+
+    const { data: rows } = await user.db.from("sessions").select("id, kind, parent_id");
+    expect(rows?.filter((r) => r.kind === "crew").map((r) => r.id)).toEqual([crew]);
+    expect(rows?.filter((r) => r.kind === "node").every((r) => r.parent_id === crew)).toBe(true);
+    expect(rows).toHaveLength(3);
+  });
+
+  test("port and starboard stay set on an outing with no boat", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const crew = await upload(page, await crewZip(2, 6));
+
+    await page.goto(`/app/cox/${crew}`);
+    const seat2 = page.getByRole("listitem").filter({ hasText: "seat 2" }).filter({ has: page.getByRole("button", { name: "P" }) });
+    const saved = page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes(`/app/cox/${crew}`));
+    await seat2.getByRole("button", { name: "P" }).click();
+    await saved;
+
+    await page.reload();
+    await expect(seat2.getByRole("button", { name: "P" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText(/wasn.t saved/)).toHaveCount(0);
   });
 });
