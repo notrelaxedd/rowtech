@@ -57,3 +57,10 @@ test("taking someone off the beta list takes their team's data away too", async 
   const { error: readError } = await user.db.storage.from("sessions").download(path);
   expect(readError).toBeTruthy();
 });
+
+test("the sessions bucket won't hold a file a browser would render as a page", async () => {
+  const { user, team } = await crewWithData();
+  const page = new Blob(["<script>alert(1)</script>"], { type: "text/html" });
+  const { error } = await user.db.storage.from("sessions").upload(`${team}/${randomUUID()}/page.html`, page);
+  expect(error?.message).toMatch(/mime type/i);
+});

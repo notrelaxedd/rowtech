@@ -11,6 +11,22 @@ export type UploadState = { status: "idle" | "error" | "ok"; message: string; se
 
 const decode = (b: Uint8Array) => new TextDecoder().decode(b);
 
+/**
+ * How much one upload, and one team in a day, can add. Far above what a crew
+ * rows (an eight and its cox is nine seats; a long practice is ~2,000 strokes
+ * a seat), and far below what would fill the database.
+ */
+const UPLOAD_LIMITS = {
+  /** Files picked in one go: nine seats of four files. A zip counts as one. */
+  files: 36,
+  /** Seat sessions in one upload: an eight and its cox. */
+  seats: 9,
+  /** Strokes in one seat session. */
+  strokes: 20_000,
+  /** New seat sessions a team can add in 24 hours. */
+  newSessionsPerDay: 200,
+};
+
 /** Everything a beta user needs before they can upload: a team of their own. */
 async function teamId(viewer: { email: string }): Promise<string> {
   const sb = await supabaseServer();
@@ -21,9 +37,17 @@ async function teamId(viewer: { email: string }): Promise<string> {
   return data;
 }
 
+class TooManyFilesError extends Error {
+  constructor() {
+    super("That's more files than one upload takes. Upload one outing at a time: four files a seat, or a zip.");
+  }
+}
+
 async function collect(fd: FormData): Promise<Map<string, SessionFolder>> {
+  const picked = fd.getAll("files");
+  if (picked.length > UPLOAD_LIMITS.files) throw new TooManyFilesError();
   const files: NamedFile[] = [];
-  for (const entry of fd.getAll("files")) {
+  for (const entry of picked) {
     if (!(entry instanceof File) || entry.size === 0) continue;
     files.push({ name: entry.name, bytes: new Uint8Array(await entry.arrayBuffer()) });
   }
@@ -41,8 +65,14 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
   try {
     folders = await collect(fd);
   } catch (e) {
-    if (e instanceof VieveNotSupportedError || e instanceof ZipTooLargeError) return { status: "error", message: e.message };
+    if (e instanceof VieveNotSupportedError || e instanceof ZipTooLargeError || e instanceof TooManyFilesError) {
+      return { status: "error", message: e.message };
+    }
     return { status: "error", message: "That zip couldn't be opened." };
+  }
+
+  if (folders.size > UPLOAD_LIMITS.seats) {
+    return { status: "error", message: "That's more than nine seats. Upload one outing at a time." };
   }
 
   const parsed: Array<{ key: string; session: ParsedSession; raw: SessionFolder }> = [];
@@ -64,6 +94,12 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
       if (e instanceof SessionFormatError) return { status: "error", message: `${where}${e.message}` };
       return { status: "error", message: `${where}that session couldn't be read.` };
     }
+  }
+
+  const long = parsed.find(({ session }) => session.strokes.length > UPLOAD_LIMITS.strokes);
+  if (long) {
+    const where = folders.size > 1 ? `${long.key}: ` : "";
+    return { status: "error", message: `${where}that session has more than 20,000 strokes, more than one upload takes.` };
   }
 
   if (!parsed.length) {
@@ -111,6 +147,24 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     const id = idOf.get(`${session.meta.deviceId}/${session.meta.uuid}`);
     return { session, raw, id: id ?? crypto.randomUUID(), isNew: !id, files: [] as Array<{ kind: string; path: string; bytes: number }> };
   });
+
+  const newSessions = seats.filter((s) => s.isNew).length;
+  if (newSessions) {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count, error: countError } = await sb
+      .from("sessions")
+      .select("id", { count: "exact", head: true })
+      .eq("team_id", team)
+      .eq("kind", "node")
+      .gte("created_at", since);
+    if (countError || count === null) {
+      console.error("upload: quota check failed", { code: countError?.code, message: countError?.message });
+      return { status: "error", message: "The upload couldn't be saved. Try again in a minute." };
+    }
+    if (count + newSessions > UPLOAD_LIMITS.newSessionsPerDay) {
+      return { status: "error", message: "Your team has uploaded as many sessions as one day allows. Try again tomorrow." };
+    }
+  }
 
   // New sessions' files, removed again if their rows don't land. A re-upload
   // overwrites the same session's files in place, so there is nothing to undo.

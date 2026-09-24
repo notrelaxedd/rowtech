@@ -86,6 +86,16 @@ test.describe("signed in", () => {
     expect(rows).toHaveLength(3);
   });
 
+  test("an upload bigger than any outing is refused, and says why", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    await page.goto("/app/force");
+    const tooMany = Array.from({ length: 37 }, (_, i) => ({ name: `f${i}.csv`, mimeType: "text/csv", buffer: Buffer.from("x") }));
+    await page.getByLabel("Files").setInputFiles(tooMany);
+    await page.getByRole("button", { name: "Upload" }).click();
+    await expect(page.getByText(/more files than one upload takes/)).toBeVisible();
+  });
+
   test("port and starboard stay set on an outing with no boat", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);
