@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { StrokeRow } from "@/lib/session/format";
 import { metric, type MetricId } from "@/lib/session/analyse";
+import { paddedRange } from "@/lib/chart";
 
 /**
  * Every stroke in the session, one bar each, scrubbable: drag it, click it, or
@@ -51,9 +52,7 @@ export function StrokeTimeline({
       const lo = Math.min(...values);
       // A tight baseline: over a piece these differ by a few percent, and a
       // zero baseline would flatten every one of them into the same bar.
-      const pad = (hi - lo || hi || 1) * 0.15;
-      const top = hi + pad;
-      const bottom = Math.max(0, lo - pad);
+      const { bottom, top } = paddedRange(lo, hi, 0.15);
       const span = top - bottom || 1;
       const barW = w / strokes.length;
 

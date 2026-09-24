@@ -21,3 +21,13 @@ export function gridTicks(top: number, count = 5): number[] {
   for (let i = 0; i * step <= top; i++) ticks.push(Number((i * step).toFixed(digits)));
   return ticks;
 }
+
+/**
+ * A value axis around `lo`..`hi` with `frac` of the range spare each way. A
+ * flat series gets `frac` of its own size, so the axis never turns upside
+ * down for a negative one; positive data stops at 0, negative data doesn't.
+ */
+export function paddedRange(lo: number, hi: number, frac: number): { bottom: number; top: number } {
+  const pad = (Math.abs(hi - lo) || Math.abs(hi) || 1) * frac;
+  return { bottom: lo < 0 ? lo - pad : Math.max(0, lo - pad), top: hi + pad };
+}

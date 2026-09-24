@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { gridTicks, niceStep } from "../lib/chart";
+import { gridTicks, niceStep, paddedRange } from "../lib/chart";
 
 test("the curve's grid is a handful of round lines, in kg or raw counts", () => {
   expect(niceStep(13.44)).toBe(20);
@@ -24,4 +24,23 @@ test("the curve's grid is a handful of round lines, in kg or raw counts", () => 
   // Nothing to scale: one line, and no endless loop.
   expect(gridTicks(Infinity)).toEqual([0]);
   expect(gridTicks(NaN)).toEqual([0]);
+});
+
+test("a chart's value axis is never upside down, and negative data isn't cut off at 0", () => {
+  // Every value the same negative number: room either side of it.
+  const flatNegative = paddedRange(-40, -40, 0.2);
+  expect(flatNegative.top).toBeGreaterThan(-40);
+  expect(flatNegative.bottom).toBeLessThan(-40);
+
+  const negative = paddedRange(-50, -10, 0.2);
+  expect(negative).toEqual({ bottom: -58, top: -2 });
+  const mixed = paddedRange(-5, 15, 0.15);
+  expect(mixed.bottom).toBeCloseTo(-8);
+  expect(mixed.top).toBeCloseTo(18);
+
+  // Positive data keeps a tight baseline, stopping at 0.
+  expect(paddedRange(50, 60, 0.2)).toEqual({ bottom: 48, top: 62 });
+  expect(paddedRange(50, 50, 0.2)).toEqual({ bottom: 40, top: 60 });
+  expect(paddedRange(2, 60, 0.2).bottom).toBe(0);
+  expect(paddedRange(0, 0, 0.2)).toEqual({ bottom: 0, top: 0.2 });
 });
