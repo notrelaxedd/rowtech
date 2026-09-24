@@ -77,3 +77,15 @@ test("the Vieve page shows it as a 3D model too", async ({ page }) => {
   await expect(model.locator("canvas")).toBeVisible({ timeout: 15000 });
   await expect(page.locator("#parts")).toContainText("concept design");
 });
+
+test("no page can be framed, and responses carry the basic security headers", async ({ request }) => {
+  for (const path of ["/", "/beta", "/force", "/app/login", "/icon.svg"]) {
+    const res = await request.get(path);
+    const h = res.headers();
+    expect(h["content-security-policy"], path).toContain("frame-ancestors 'none'");
+    expect(h["x-frame-options"], path).toBe("DENY");
+    expect(h["x-content-type-options"], path).toBe("nosniff");
+    expect(h["referrer-policy"], path).toBe("strict-origin-when-cross-origin");
+    expect(h["permissions-policy"], path).toContain("camera=()");
+  }
+});
