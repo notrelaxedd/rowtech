@@ -22,25 +22,6 @@
 // ---------------------------------------------------------------------------
 import type { NamedFile } from "./collect";
 
-export type GpsPoint = {
-  tMs: number;
-  lat: number;
-  lon: number;
-  speedMps: number | null;
-  headingDeg: number | null;
-  sats: number | null;
-};
-
-export type VieveSession = {
-  /** GPS UTC for the start of the piece. */
-  startedAt: Date;
-  /** The hub's worst-case clock spread across the crew, in ms. */
-  clockSyncMs: number | null;
-  track: GpsPoint[];
-  /** One entry per seat, each holding what the node's parser returns. */
-  seats: Array<{ seat: number; deviceId: string }>;
-};
-
 /** File names that would mean "this came off a Vieve, not a seat node". */
 const VIEVE_HINTS = ["vieve.json", "crew.json", "gps.csv", "track.csv", "hub.json"];
 
@@ -58,11 +39,4 @@ export class VieveNotSupportedError extends Error {
     );
     this.name = "VieveNotSupportedError";
   }
-}
-
-export function parseVieveSession(files: NamedFile[]): VieveSession {
-  // TODO: implement against the hub's format once it is fixed. Until then the
-  // files are refused rather than guessed at.
-  void files;
-  throw new VieveNotSupportedError();
 }

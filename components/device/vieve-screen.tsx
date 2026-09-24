@@ -14,10 +14,10 @@ const FOOT = 34;
 const COL1 = 300; // split column
 const COL2 = 528; // map column ends here
 
-export type CrewCard = { seat: number; label: string; peak: number; k: number; off?: boolean };
+type CrewCard = { seat: number; label: string; peak: number; k: number; off?: boolean };
 
 /** The crew, as Vieve shows them: stroke top left, bow bottom right. */
-export const CREW: readonly CrewCard[] = [
+const CREW: readonly CrewCard[] = [
   { seat: 8, label: "8 STR", peak: 62.4, k: 1.0 },
   { seat: 7, label: "7", peak: 60.6, k: 0.95 },
   { seat: 6, label: "6", peak: 64.1, k: 1.04 },

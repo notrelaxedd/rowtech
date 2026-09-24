@@ -8,10 +8,10 @@ export type MetricId = "catch" | "rise" | "peak" | "thirds" | "release" | "rhyth
 
 export const STROKES = recentStrokes();
 export const M = measureStroke();
-export const CV = impulseCv(STROKES);
+const CV = impulseCv(STROKES);
 
-export const T0 = -0.1;
-export const T1 = 1.15;
+const T0 = -0.1;
+const T1 = 1.15;
 export const x = (t: number) => PX0 + ((t - T0) / (T1 - T0)) * (PX1 - PX0);
 
 export function curve(v = STROKES[0], a = T0, b = T1) {
@@ -19,7 +19,7 @@ export function curve(v = STROKES[0], a = T0, b = T1) {
   for (let t = a; t <= b + 1e-9; t += 0.004) pts.push([x(t), y(strokeForce(t, v))]);
   return toPath(pts, 0.5);
 }
-export function area(a: number, b: number) {
+function area(a: number, b: number) {
   return `${curve(STROKES[0], a, b)}L${x(b).toFixed(1)} ${y(0).toFixed(1)}L${x(a).toFixed(1)} ${y(0).toFixed(1)}Z`;
 }
 

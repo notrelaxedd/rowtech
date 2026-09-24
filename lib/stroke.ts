@@ -24,20 +24,9 @@ export function driveShape(u: number, peakPos: number = EXAMPLE.peakPct / 100) {
 }
 
 // Deterministic 0..1 from an integer, so server and client render identical curves.
-export function hash01(n: number) {
+function hash01(n: number) {
   const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453
   return x - Math.floor(x)
-}
-
-/** Seat force in kg at session time t (s). */
-export function forceAt(t: number, seed = 0) {
-  const period = 60 / EXAMPLE.spm
-  const drive = EXAMPLE.driveMs / 1000
-  const k = Math.floor(t / period)
-  const ph = t - k * period
-  const peak = EXAMPLE.peakKg * (0.94 + 0.08 * hash01(k * 31 + seed))
-  if (ph < drive) return peak * driveShape(ph / drive)
-  return -0.35 * Math.sin(((ph - drive) / (period - drive)) * Math.PI)
 }
 
 /** Ramer-Douglas-Peucker: drop points within `tol` of the line through their neighbours. */
@@ -83,11 +72,11 @@ export function toPath(pts: Array<[number, number]>, tol = 0) {
 // catch where force crosses catchFrac x reference peak (interpolated between
 // samples), release at half that threshold, trapezoidal impulse.
 // -----------------------------------------------------------------------------
-export const SPS = 80
+const SPS = 80
 const PERIOD = 60 / EXAMPLE.spm
 // Onset-to-zero length of the force pulse. Chosen so the threshold-to-threshold
 // drive the detector reports comes out at EXAMPLE.driveMs.
-export const PULSE_S = 0.924
+const PULSE_S = 0.924
 
 export type StrokeVariant = { k: number; pp: number; ds: number }
 

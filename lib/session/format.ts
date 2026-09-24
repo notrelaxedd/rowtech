@@ -22,9 +22,6 @@ export const CURVE_BYTES = CURVE_POINTS * 2;
 /** Every curve sample is this fraction of the stroke's own peak. */
 export const CURVE_SCALE = 10000;
 
-export const FILE_NAMES = ["meta.json", "strokes.csv", "curves.bin", "events.csv"] as const;
-export type FileName = (typeof FILE_NAMES)[number];
-
 export type Calibration = {
   valid: boolean;
   points: number;

@@ -75,7 +75,7 @@ for (let i = 1; i < RACE.length; i++) LEN.push(LEN[i - 1] + Math.hypot(RACE[i][0
 const TOTAL = LEN[LEN.length - 1];
 
 /** Boat position and heading (degrees clockwise from map-up) at fraction p of the race line. */
-export function boatAt(p: number): { x: number; y: number; heading: number } {
+function boatAt(p: number): { x: number; y: number; heading: number } {
   const d = Math.min(TOTAL, Math.max(0, p * TOTAL));
   let i = 1;
   while (i < LEN.length - 1 && LEN[i] < d) i++;

@@ -177,7 +177,7 @@ export function parseStrokes(text: string): StrokeRow[] {
   return strokes;
 }
 
-export function parseEvents(text: string): SessionEvent[] {
+function parseEvents(text: string): SessionEvent[] {
   const rows = lines(text);
   if (!rows.length) return [];
   if (rows[0].trim() !== EVENT_HEADER) {
@@ -199,7 +199,7 @@ export function parseEvents(text: string): SessionEvent[] {
 }
 
 /** curves.bin must be a whole number of 128-byte records, one per stroke. */
-export function checkCurves(bytes: Uint8Array, strokeCount: number): void {
+function checkCurves(bytes: Uint8Array, strokeCount: number): void {
   if (bytes.byteLength % CURVE_BYTES !== 0) {
     throw new SessionFormatError(
       `curves.bin is ${bytes.byteLength} bytes, which isn't a whole number of ${CURVE_BYTES}-byte records.`

@@ -17,7 +17,7 @@ const chip =
 const label = "text-[0.9375rem] font-semibold";
 const optional = <span className="font-normal text-muted-foreground">(optional)</span>;
 
-export const NEXT_STEPS = [
+const NEXT_STEPS = [
   { t: "We read your application.", d: "Every one, properly." },
   { t: "We get in touch by email.", d: "To talk through your boat, your rigging, your schedule and what you want to see." },
 ];

@@ -56,7 +56,7 @@ Copy `.env.example` to `.env.local`.
 | `app/page.tsx` | The marketing page. Server components; interactive blocks are islands (`components/site/islands.tsx`). |
 | `app/beta` | The application form, its server action and the shared field definitions. |
 | `app/app` | The dashboard. `(dash)` is gated; `login` is not. |
-| `lib/stroke.ts`, `lib/stroke-detector.ts` | The node's own maths, in the browser: the marketing page's numbers are computed, not typed in. |
+| `lib/stroke.ts` | The node's own maths, in the browser: the marketing page's numbers are computed, not typed in. |
 | `components/device` | Force and Vieve, drawn as SVG in the site's colours (after "Vieve V1 + Force, concept A"): the devices, their screens, and the animator that runs the hero's screen. |
 | `supabase/migrations` | Applied to the `rowtech` project. |
 | `PERF.md` | Lighthouse baselines, targets, and what this machine's floor is. |
