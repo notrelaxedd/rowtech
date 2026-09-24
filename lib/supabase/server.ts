@@ -1,6 +1,7 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { authCookieOptions, withSessionLifetime } from "./cookies";
 
 function env() {
   const url = process.env.SUPABASE_URL;
@@ -19,11 +20,12 @@ export async function supabaseServer() {
   const { url, key } = env();
   const jar = await cookies();
   return createServerClient(url, key, {
+    cookieOptions: authCookieOptions,
     cookies: {
       getAll: () => jar.getAll(),
       setAll: (list) => {
         try {
-          for (const { name, value, options } of list) jar.set(name, value, options);
+          for (const { name, value, options } of list) jar.set(name, value, withSessionLifetime(options));
         } catch {
           // Called from a Server Component: the proxy has this covered.
         }
