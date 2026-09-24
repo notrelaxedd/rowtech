@@ -69,7 +69,10 @@ export function SignupForm({ from }: { from: string }) {
     // First-touch UTM/referrer rides along at submit time. Without JS the form
     // still posts, minus that part.
     const a = readAttribution();
-    for (const k of [...UTM, "referrer"] as const) if (a[k]) fd.set(k, a[k]!);
+    for (const k of [...UTM, "referrer"] as const) {
+      const v = a[k];
+      if (v) fd.set(k, v);
+    }
     const next = await submitApplication(prev, fd);
     track("beta_form_submit", { ok: next.status === "ok", from, errors: Object.keys(next.errors).join(",") || undefined });
     return next;

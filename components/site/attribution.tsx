@@ -19,7 +19,8 @@ export function AttributionCapture() {
         if (v) a[k] = v.slice(0, 100);
       }
       // `ref` is the informal version people type into links.
-      if (!a.utm_source && q.get("ref")) a.utm_source = q.get("ref")!.slice(0, 100);
+      const ref = q.get("ref");
+      if (!a.utm_source && ref) a.utm_source = ref.slice(0, 100);
       if (document.referrer) {
         const host = new URL(document.referrer).host;
         if (host && host !== location.host) a.referrer = host.slice(0, 200);

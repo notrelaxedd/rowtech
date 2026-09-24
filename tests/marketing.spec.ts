@@ -70,6 +70,20 @@ test("the diagrams light the part a note describes", async ({ page }) => {
   await expect(note).toHaveAttribute("aria-pressed", "true");
 });
 
+test("picking a measure on the stroke chart shows what it is", async ({ page }) => {
+  await page.goto("/");
+  const chart = page.locator("#stroke");
+  await chart.scrollIntoViewIfNeeded();
+  const rise = chart.getByRole("button", { name: /^Rise rate:/ });
+  // The server's copy is static; the live one swaps in as it comes into view.
+  await expect(async () => {
+    await rise.click();
+    await expect(rise).toHaveAttribute("aria-pressed", "true", { timeout: 500 });
+  }).toPass({ timeout: 10000 });
+  await expect(chart.getByRole("button", { name: /^Catch:/ })).toHaveAttribute("aria-pressed", "false");
+  await expect(chart.locator('[aria-live="polite"]')).toContainText("How quickly the blade loads");
+});
+
 test("the Vieve page shows it as a 3D model too", async ({ page }) => {
   await page.goto("/vieve");
   const model = page.getByRole("group", { name: "3D model: Parts of Vieve" });

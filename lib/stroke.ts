@@ -46,8 +46,9 @@ function simplify(pts: Array<[number, number]>, tol: number): Array<[number, num
   const keep = new Uint8Array(pts.length)
   keep[0] = keep[pts.length - 1] = 1
   const stack: Array<[number, number]> = [[0, pts.length - 1]]
-  while (stack.length) {
-    const [a, b] = stack.pop()!
+  let top: [number, number] | undefined
+  while ((top = stack.pop())) {
+    const [a, b] = top
     const [ax, ay] = pts[a]
     const [bx, by] = pts[b]
     const dx = bx - ax

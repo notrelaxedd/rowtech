@@ -51,10 +51,11 @@ async function sendConfirmation(application: Application): Promise<void> {
 /** The single submit path for beta applications. */
 export async function submitApplication(_prev: ApplyState, fd: FormData): Promise<ApplyState> {
   const boats = [...new Set(fd.getAll("boats").filter((b): b is string => typeof b === "string"))];
+  const [name, email, organization] = [text(fd, "name"), text(fd, "email"), text(fd, "organization")];
   const values: Values = {
-    name: text(fd, "name"),
-    email: text(fd, "email"),
-    organization: text(fd, "organization"),
+    name,
+    email,
+    organization,
     role: text(fd, "role"),
     location: text(fd, "location"),
     message: text(fd, "message"),
@@ -84,9 +85,9 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
   }
 
   const application: Application = {
-    name: values.name!,
-    email: values.email!,
-    organization: values.organization!,
+    name,
+    email,
+    organization,
     role: values.role || null,
     boat_types: boats.length ? boats : null,
     location: values.location || null,

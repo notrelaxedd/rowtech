@@ -39,6 +39,7 @@ export type CurveExplorerViewProps = {
   };
 };
 
+const metric = (id: MetricId) => METRICS.find((m) => m.id === id) ?? METRICS[0];
 const clampX = (v: number) => Math.min(PX1 - 58, Math.max(PX0 + 58, v));
 const at = (t: number, kg = strokeForce(t, STROKES[0])): [number, number] => [x(t), y(kg)];
 const RHYTHM_T = Math.min(M.releaseT + 0.24, 1.1);
@@ -56,7 +57,8 @@ const PINS: ReadonlyArray<{ id: MetricId; at: [number, number]; chip: [number, n
 
 export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }: CurveExplorerViewProps) {
   const lit = (id: MetricId) => (active === id ? 1 : 0);
-  const current = METRICS.find((m) => m.id === active)!;
+  const current = metric(active);
+  const setActive = on?.setActive;
   const fade = "transition-opacity duration-300 ease-out motion-reduce:transition-none";
 
   return (
@@ -79,7 +81,7 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
             <div ref={chartRef} onPointerMove={on?.move} onPointerLeave={on?.leave} className="relative select-none">
               {/* each measure, pinned to the part of the curve it's read from */}
               {PINS.map((p, i) => {
-                const m = METRICS.find((k) => k.id === p.id)!;
+                const m = metric(p.id);
                 const lit_ = active === p.id;
                 return (
                   <button
@@ -87,8 +89,8 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
                     type="button"
                     aria-pressed={lit_}
                     aria-label={`${m.label}: ${m.value}`}
-                    onClick={on?.setActive && (() => on.setActive!(p.id))}
-                    onPointerEnter={on?.setActive && (() => on.setActive!(p.id))}
+                    onClick={setActive && (() => setActive(p.id))}
+                    onPointerEnter={setActive && (() => setActive(p.id))}
                     className={cn(
                       "absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-md border text-left transition-colors duration-200",
                       "flex size-7 items-center justify-center text-xs font-bold tabular-nums sm:block sm:size-auto sm:px-2.5 sm:py-1.5 sm:font-normal",
@@ -251,13 +253,13 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
 
           <ol aria-label="Stroke metrics" className="mt-4 grid grid-cols-2 gap-2 sm:hidden">
             {PINS.map((p, i) => {
-              const m = METRICS.find((k) => k.id === p.id)!;
+              const m = metric(p.id);
               return (
                 <li key={p.id}>
                   <button
                     type="button"
                     aria-pressed={active === p.id}
-                    onClick={on?.setActive && (() => on.setActive!(p.id))}
+                    onClick={setActive && (() => setActive(p.id))}
                     className={cn(
                       "flex min-h-11 w-full items-baseline gap-2 rounded-md border px-3 py-2 text-left text-sm",
                       active === p.id ? "border-trace text-foreground" : "border-line text-muted-foreground"

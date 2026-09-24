@@ -94,16 +94,17 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     return { status: "error", message: "That's more than nine seats. Upload one outing at a time." };
   }
 
-  const parsed: Array<{ key: string; session: ParsedSession; raw: SessionFolder }> = [];
+  const parsed: Array<{ key: string; session: ParsedSession; raw: SessionFolder & { meta: Uint8Array } }> = [];
   for (const [key, folder] of folders) {
-    if (!folder.meta || !folder.strokes) continue;
+    const { meta, strokes } = folder;
+    if (!meta || !strokes) continue;
     try {
       parsed.push({
         key,
-        raw: folder,
+        raw: { ...folder, meta },
         session: parseSession({
-          meta: decode(folder.meta),
-          strokes: decode(folder.strokes),
+          meta: decode(meta),
+          strokes: decode(strokes),
           events: folder.events ? decode(folder.events) : undefined,
           curves: folder.curves,
         }),
@@ -238,7 +239,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
       curve_points: session.meta.curvePoints,
       curve_scale: session.meta.curveScale,
       duration_ms: session.meta.elapsedMs,
-      meta: JSON.parse(decode(raw.meta!)) as Json,
+      meta: JSON.parse(decode(raw.meta)) as Json,
       strokes: session.strokes.map((s) => [
         s.rec, s.seq, s.catchMs, s.driveMs, s.recoveryMs, s.peak, s.peakPosPct,
         s.impulse, s.riseRate, s.thirds[0], s.thirds[1], s.thirds[2], s.curveValid,
