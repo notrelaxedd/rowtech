@@ -55,11 +55,16 @@ test("the Force page shows the node as a 3D model with its notes around it", asy
   await expect(page.locator("#parts")).toContainText("Steps through the rower’s screens");
 });
 
-test("there is no team page for now", async ({ page }) => {
+test("there is no team page for now, and old links to it go home", async ({ page, request }) => {
   await page.goto("/");
   await expect(page.getByRole("link", { name: "Who we are" })).toHaveCount(0);
-  const res = await page.goto("/team");
-  expect(res?.status()).toBe(404);
+  // Temporary (307), not permanent: the page is coming back.
+  const res = await request.get("/team", { maxRedirects: 0 });
+  expect(res.status()).toBe(307);
+  expect(res.headers()["location"]).toBe("/");
+  await page.goto("/team");
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("seat by seat");
 });
 
 test("an address the site doesn't have gets the site's own 404", async ({ page }) => {

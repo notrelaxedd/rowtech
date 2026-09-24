@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
     // form, the magic link) will read before they run.
     serverActions: { bodySizeLimit: "8mb" },
   },
+  async redirects() {
+    return [
+      // The team page is off the site for now and will come back, so this is
+      // temporary (307): old links to it land on the home page meanwhile.
+      { source: "/team", destination: "/", permanent: false },
+    ];
+  },
   async headers() {
     return [
       {
