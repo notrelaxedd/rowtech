@@ -3,8 +3,12 @@ import type { TrackPoint } from "@/components/dash/piece-map";
 /** Seconds per 500 m at this speed; null when the boat is all but stopped. */
 export const splitFromSpeed = (mps: number | null) => (mps && mps > 0.2 ? 500 / mps : null);
 
-/** A split as m:ss.s, or a dash when there isn't one. */
-export const fmtSplit = (s: number | null) => (s === null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, "0")}`);
+/** A split as m:ss.s, or a dash when there isn't one. Rounded to tenths first, so 119.96 s reads 2:00.0, not 1:60.0. */
+export function fmtSplit(s: number | null) {
+  if (s === null) return "—";
+  const t = Math.round(s * 10) / 10;
+  return `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, "0")}`;
+}
 
 /**
  * The track the page sends to the map: every Nth fix and the last, at most

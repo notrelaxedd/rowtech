@@ -154,6 +154,10 @@ test("a split is read off the boat's speed, as m:ss.s per 500 m", () => {
   expect(fmtSplit(splitFromSpeed(5))).toBe("1:40.0");
   expect(fmtSplit(splitFromSpeed(4.1))).toBe("2:02.0");
   expect(fmtSplit(splitFromSpeed(4.7))).toBe("1:46.4");
+  // Seconds that round up to 60 carry into the minute.
+  expect(fmtSplit(119.96)).toBe("2:00.0");
+  expect(fmtSplit(splitFromSpeed(4.1667))).toBe("2:00.0");
+  expect(fmtSplit(59.97)).toBe("1:00.0");
   // Stopped, or no speed from the fix: no split.
   expect(splitFromSpeed(0.2)).toBeNull();
   expect(splitFromSpeed(null)).toBeNull();
