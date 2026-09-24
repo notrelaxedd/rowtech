@@ -11,6 +11,9 @@ export const metadata = { title: "Force" };
 /** Most session rows a page of the list shows, and the history chart. */
 const LISTED = 200;
 const CHARTED = 500;
+/** Crews whose seats are read in one request (their ids go in the URL), and the API's cap on rows. */
+const CREWS_A_READ = 100;
+const ROWS_A_READ = 1000;
 
 export default async function ForcePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   // ?before= pages back through older sessions; a malformed one is the newest page.
@@ -42,12 +45,34 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
     // The query already left these out; this tells the type checker.
     .filter((p): p is typeof p & { seat_number: number } => p.seat_number !== null);
 
-  const children = new Map<string, typeof sessions>();
-  for (const s of sessions) {
-    if (!s.parent_id) continue;
-    children.set(s.parent_id, [...(children.get(s.parent_id) ?? []), s]);
-  }
   const top = sessions.filter((s) => !s.parent_id);
+
+  // A crew's seats are read by crew, not taken from this page: a seat uploaded
+  // again on its own takes the new time and can sit on another page. The API
+  // returns at most 1,000 rows a request, so each batch of crews is read in pages.
+  const crewIds = top.filter((s) => s.kind === "crew").map((s) => s.id);
+  const batches = await Promise.all(
+    Array.from({ length: Math.ceil(crewIds.length / CREWS_A_READ) }, async (_, i) => {
+      const ids = crewIds.slice(i * CREWS_A_READ, (i + 1) * CREWS_A_READ);
+      const rows: { parent_id: string | null; stroke_count: number }[] = [];
+      for (let from = 0; ; from += ROWS_A_READ) {
+        const { data: page, error: seatsError } = await sb
+          .from("sessions")
+          .select("parent_id, stroke_count")
+          .in("parent_id", ids)
+          .order("id")
+          .range(from, from + ROWS_A_READ - 1);
+        if (seatsError) throw await readFailed(seatsError);
+        rows.push(...page);
+        if (page.length < ROWS_A_READ) return rows;
+      }
+    }),
+  );
+  const children = new Map<string, { stroke_count: number }[]>();
+  for (const k of batches.flat()) {
+    if (!k.parent_id) continue;
+    children.set(k.parent_id, [...(children.get(k.parent_id) ?? []), k]);
+  }
 
   return (
     <div className="mx-auto w-full max-w-[110rem] space-y-8 px-4 py-8 sm:px-6">

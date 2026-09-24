@@ -7,10 +7,12 @@ export const beforeParam = (v: unknown): string | null =>
 /**
  * One page of a newest-first list that was read with one row more than it
  * shows. Rows sharing the time of the first row left out go to the next page
- * as well, so a crew and its seats (one recorded_at) stay together and none
- * fall between pages. `older` is the next page's cursor, read with
- * .lt("recorded_at", older). Only a whole page at one instant can't be split
- * that way; it is shown and the rest of that instant is skipped.
+ * as well, so none fall between pages. A crew and its seats usually share one
+ * recorded_at, but not always (a seat uploaded again on its own takes the new
+ * time), so a page doesn't rely on its crews' seats being on it. `older` is
+ * the next page's cursor, read with .lt("recorded_at", older). Only a whole
+ * page at one instant can't be split that way; it is shown and the rest of
+ * that instant is skipped.
  */
 export function newestFirstPage<T extends { recorded_at: string }>(rows: T[], size: number): { rows: T[]; older: string | null } {
   if (rows.length <= size) return { rows, older: null };

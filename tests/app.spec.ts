@@ -412,6 +412,35 @@ test.describe("signed in", () => {
     await expect(page.getByRole("link", { name: "Older sessions →" })).toHaveCount(0);
   });
 
+  // A seat uploaded again on its own stays in its crew but takes the new time,
+  // so it can land on another page from the crew.
+  test("a crew counts a seat uploaded again later, on whatever page the seat is", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const crew = await upload(page, await crewZip(2, 6), "2026-01-01T08:00");
+    await upload(page, seatFiles(2));
+    const { data: seats } = await user.db.from("sessions").select("stroke_count, recorded_at").eq("parent_id", crew);
+    expect(seats).toHaveLength(2);
+    expect(new Set(seats?.map((s) => s.recorded_at)).size).toBe(2);
+    const strokes = (seats ?? []).reduce((a, s) => a + s.stroke_count, 0);
+
+    // 200 sessions between the crew and the seat's new time push the crew to the second page.
+    const { data: team } = await user.db.rpc("ensure_own_team", { p_name: "test crew" });
+    const at = (hours: number) => new Date(Date.UTC(2026, 1, 1) + hours * 3_600_000).toISOString();
+    const rows = Array.from({ length: 200 }, (_, i) => ({
+      id: randomUUID(), team_id: team, kind: "node", seat_number: 1, recorded_at: at(i), stroke_count: 0,
+      device_id: "node-1", session_uuid: randomUUID(), units: "kg", created_by: user.id,
+    }));
+    expect((await user.db.from("sessions").insert(rows)).error).toBeNull();
+
+    await page.goto("/app/force");
+    await expect(page.locator(`a[href="/app/force/${crew}"]`)).toHaveCount(0);
+    await page.getByRole("link", { name: "Older sessions →" }).click();
+    const row = page.locator(`a[href="/app/force/${crew}"]`);
+    await expect(row).toContainText("· 2 seats");
+    await expect(row).toContainText(`${strokes} strokes`);
+  });
+
   test("an upload bigger than any outing is refused, and says why", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);
