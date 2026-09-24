@@ -6,7 +6,7 @@ import { parseSession, parseStrokes, parseMeta, curveAt } from "../lib/session/p
 import { SessionFormatError, CURVE_BYTES, CURVE_POINTS } from "../lib/session/format";
 import { collectSessions, ZIP_LIMITS, ZipTooLargeError } from "../lib/session/collect";
 import { summarise, toCsv } from "../lib/session/analyse";
-import { fmtSplit, splitFromSpeed, thinTrack } from "../lib/session/track";
+import { fmtSplit, nearestFix, splitFromSpeed, thinTrack } from "../lib/session/track";
 
 const seatDir = (n: number) => path.join(process.cwd(), "public", "demo", `seat-${n}`);
 const read = (n: number, f: string) => readFile(path.join(seatDir(n), f));
@@ -154,6 +154,19 @@ test("a long GPS track is thinned for the map, from its first fix to its last", 
     // In time order, never the same fix twice.
     expect(thin.every((p, i) => i === 0 || p.tMs > thin[i - 1].tMs)).toBe(true);
   }
+});
+
+test("pointing at the map picks the fix nearest on the water, not in raw degrees", () => {
+  const fix = (lat: number, lon: number) => ({ tMs: 0, lat, lon, speedMps: 4, headingDeg: 0 });
+  // At 60 degrees north a degree of longitude is half a degree of latitude:
+  // 0.0015 degrees east is about 83 m, 0.001 degrees north about 111 m.
+  const east = fix(60, 0.0015);
+  const north = fix(60.001, 0);
+  expect(nearestFix([north, east], 0, 60)).toBe(east);
+  expect(nearestFix([east, north], 0, 60)).toBe(east);
+  // On the equator the same two gaps go the other way.
+  expect(nearestFix([fix(0, 0.0015), fix(0.001, 0)], 0, 0)).toEqual(fix(0.001, 0));
+  expect(nearestFix([], 0, 60)).toBeNull();
 });
 
 test("a split is read off the boat's speed, as m:ss.s per 500 m", () => {

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { cn } from "@/lib/utils";
 import { chip } from "@/components/dash/chip";
-import { fmtSplit, splitFromSpeed } from "@/lib/session/track";
+import { fmtSplit, nearestFix, splitFromSpeed } from "@/lib/session/track";
 
 export type TrackPoint = {
   tMs: number;
@@ -96,28 +96,15 @@ export function PieceMap({
         });
         const lons = track.map((p) => p.lon);
         const lats = track.map((p) => p.lat);
-        m.fitBounds(
-          [
-            [Math.min(...lons), Math.min(...lats)],
-            [Math.max(...lons), Math.max(...lats)],
-          ],
-          { padding: 40, duration: 0 }
-        );
+        const [west, south, east, north] = [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)];
+        // A boat that never moved has no box to fit: centre on it instead.
+        if (west === east && south === north) m.jumpTo({ center: [west, south], zoom: 15 });
+        else m.fitBounds([[west, south], [east, north]], { padding: 40, duration: 0 });
       });
 
-      // Hover the track: the nearest fix wins.
-      m.on("mousemove", (e) => {
-        let nearest: TrackPoint | null = null;
-        let best = Infinity;
-        for (const p of track) {
-          const d = (p.lon - e.lngLat.lng) ** 2 + (p.lat - e.lngLat.lat) ** 2;
-          if (d < best) {
-            best = d;
-            nearest = p;
-          }
-        }
-        setHover(nearest);
-      });
+      // Hover the track: the nearest fix wins. The track is thinned to at
+      // most 2,000 fixes (thinTrack), so a walk over it is quick enough.
+      m.on("mousemove", (e) => setHover(nearestFix(track, e.lngLat.lng, e.lngLat.lat)));
       m.on("mouseout", () => setHover(null));
     })().catch(() => {
       // No map: the readouts below still tell the story.

@@ -23,3 +23,22 @@ export function thinTrack(track: TrackPoint[], max = 2000): TrackPoint[] {
   out.push(track[track.length - 1]);
   return out;
 }
+
+/**
+ * The fix nearest a point on the map. A degree of longitude is shorter than
+ * a degree of latitude by cos(latitude), so it is scaled to match first;
+ * unscaled, at 45 degrees north an east-west gap counts double.
+ */
+export function nearestFix(track: TrackPoint[], lon: number, lat: number): TrackPoint | null {
+  const k = Math.cos((lat * Math.PI) / 180);
+  let nearest: TrackPoint | null = null;
+  let best = Infinity;
+  for (const p of track) {
+    const d = ((p.lon - lon) * k) ** 2 + (p.lat - lat) ** 2;
+    if (d < best) {
+      best = d;
+      nearest = p;
+    }
+  }
+  return nearest;
+}
