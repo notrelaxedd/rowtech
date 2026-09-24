@@ -65,6 +65,16 @@ test("a file that isn't this format is refused, with a reason", async () => {
   const future = b.meta.toString().replace('"format": 1', '"format": 2');
   expect(() => parseMeta(future)).toThrow(/format 2/);
 
+  // Values the dashboard's tables can't hold are refused before anything is saved.
+  expect(() => parseMeta(b.meta.toString().replace('"seat": 1', '"seat": 9'))).toThrow(/seat should be a whole number from 0 to 8/);
+  expect(() => parseMeta(b.meta.toString().replace('"units": "kg"', `"units": "${"k".repeat(13)}"`))).toThrow(/units is longer/);
+  const lines = b.strokes.toString().split("\n");
+  const withRow = (row: string) => [lines[0], row].join("\n");
+  expect(() => parseStrokes(withRow("0,1,42065,99999999999,1337,56.6,37,28.0,219.7,9.2,13.3,5.5,1"))).toThrow(/line 2: drive_ms/);
+  expect(() => parseStrokes(withRow("0,1,42065,777,1337,56.6,101,28.0,219.7,9.2,13.3,5.5,1"))).toThrow(/line 2: peak_pos_pct/);
+  expect(() => parseStrokes(withRow("0,1,42065,777,1337,1e39,37,28.0,219.7,9.2,13.3,5.5,1"))).toThrow(/line 2: peak is out of range/);
+  expect(parseStrokes(withRow(lines[1]))).toHaveLength(1);
+
   // Curves that don't line up with the strokes are a mismatched pair.
   expect(() =>
     parseSession({ meta: b.meta.toString(), strokes: b.strokes.toString(), curves: b.curves.slice(0, 500) })
