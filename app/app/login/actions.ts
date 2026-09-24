@@ -1,18 +1,20 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { EMAIL } from "@/app/beta/fields";
+import { siteUrl } from "@/lib/site";
 
 export type LoginState = { status: "idle" | "error" | "sent"; message: string; email: string };
 
-async function callbackUrl(next: string) {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  const origin = process.env.SITE_URL || `${proto}://${host}`;
-  return `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
+/**
+ * Where magic links and Google send people back to. Always the configured
+ * site, never the request's own Host headers: every alias of a deployment is
+ * a valid Host, and a sign-in that starts on one origin can't finish on
+ * another (the PKCE verifier cookie stays behind).
+ */
+function callbackUrl(next: string) {
+  return `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`;
 }
 
 /**
@@ -28,7 +30,7 @@ export async function sendMagicLink(_prev: LoginState, fd: FormData): Promise<Lo
   const sb = await supabaseServer();
   const { error } = await sb.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: await callbackUrl("/app"), shouldCreateUser: false },
+    options: { emailRedirectTo: callbackUrl("/app"), shouldCreateUser: false },
   });
   // otp_disabled: no account for this address. Nothing is sent; say the same.
   if (error && error.code !== "otp_disabled") {
@@ -42,7 +44,7 @@ export async function signInWithGoogle() {
   const sb = await supabaseServer();
   const { data, error } = await sb.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: await callbackUrl("/app") },
+    options: { redirectTo: callbackUrl("/app") },
   });
   if (error || !data.url) {
     console.error("google sign-in failed", error);

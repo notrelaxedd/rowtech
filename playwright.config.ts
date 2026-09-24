@@ -23,6 +23,7 @@ export default defineConfig({
     port: PORT,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
-    env: { BETA_DRY_RUN: "1" },
+    // SITE_URL: sign-in links come back to the site under test.
+    env: { BETA_DRY_RUN: "1", SITE_URL: `http://localhost:${PORT}` },
   },
 });

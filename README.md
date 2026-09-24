@@ -37,7 +37,7 @@ Copy `.env.example` to `.env.local`.
 | Variable | What it does |
 |---|---|
 | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | Supabase project `rowtech`. Server-side only. The publishable key can insert into `beta_signups` and, for a signed-in user, read what RLS allows. |
-| `SITE_URL` | Absolute site URL, for Open Graph tags and auth redirects. Optional on Vercel. |
+| `SITE_URL` | Absolute site URL, for Open Graph tags and the sign-in redirect (magic links and Google come back to `SITE_URL/auth/callback`). On Vercel it falls back to the production domain; set it for production anyway. Locally it defaults to `http://localhost:3000`. |
 | `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | Product analytics. **No project exists yet.** With the key unset, `posthog-js` is never downloaded and no events are sent. |
 | `BETA_DRY_RUN` | `1` makes the beta form validate and confirm without writing to Supabase. Used by the Playwright tests; never set it in production. |
 
