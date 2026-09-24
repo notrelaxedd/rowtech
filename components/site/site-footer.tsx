@@ -17,7 +17,6 @@ export function SiteFooter() {
           <Link href="/force#specs" className="hover:text-foreground">Force specifications</Link>
           <Link href="/vieve" className="hover:text-foreground">Vieve</Link>
           <Link href="/vieve#specs" className="hover:text-foreground">Vieve specifications</Link>
-          <Link href="/team" className="hover:text-foreground">Who we are</Link>
           <Link href="/#beta" className="hover:text-foreground">The beta</Link>
         </nav>
       </div>

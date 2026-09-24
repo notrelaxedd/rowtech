@@ -55,12 +55,11 @@ test("the Force page shows the node as a 3D model with its notes around it", asy
   await expect(page.locator("#parts")).toContainText("Steps through the rower’s screens");
 });
 
-test("the team has its own page, and the home page links to it", async ({ page }) => {
+test("there is no team page for now", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("#team")).toHaveCount(0);
-  await page.goto("/team");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Who’s building this");
-  await expect(page.locator("main")).toContainText("Saint Edward crew");
+  await expect(page.getByRole("link", { name: "Who we are" })).toHaveCount(0);
+  const res = await page.goto("/team");
+  expect(res?.status()).toBe(404);
 });
 
 test("the diagrams light the part a note describes", async ({ page }) => {

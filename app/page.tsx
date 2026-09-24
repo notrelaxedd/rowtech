@@ -12,7 +12,6 @@ import { CurveExplorerView } from "@/components/site/curve-explorer-view";
 import { SessionFiles } from "@/components/site/session-files";
 import { ForceMount } from "@/components/device/force-mount";
 import { siteUrl } from "@/lib/site";
-import { TEAM } from "@/lib/team";
 import { cn } from "@/lib/utils";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 sm:px-8";
@@ -115,7 +114,6 @@ const jsonLd = {
       url: siteUrl,
       logo: `${siteUrl}/icon.svg`,
       description: "Seat-by-seat force measurement for rowing.",
-      founder: TEAM.map((p) => ({ "@type": "Person", name: p.name })),
     },
   ],
 };
