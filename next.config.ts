@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Don't advertise the framework (and its version's advisories) on every response.
+  poweredByHeader: false,
   experimental: {
     // The largest thing any action takes is an upload of a crew's session
     // files: about 210 bytes a stroke (a 128-byte curve plus its CSV line), so
