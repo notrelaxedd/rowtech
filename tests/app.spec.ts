@@ -486,6 +486,33 @@ test.describe("signed in", () => {
     await expect(page.getByText("The node didn’t keep a curve for this stroke.")).toBeVisible();
   });
 
+  test("the stroke list is a list of rows, each with a button to show it and one to compare it", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    await upload(page, seatFiles(1));
+
+    await expect(page.getByRole("listbox")).toHaveCount(0);
+    await expect(page.getByRole("option")).toHaveCount(0);
+    const list = page.getByRole("list", { name: "Strokes" });
+    const slider = page.getByRole("slider", { name: "Stroke" });
+    await expect(list.getByRole("listitem").first()).toHaveAttribute("aria-posinset", "1");
+    const total = await slider.getAttribute("aria-valuemax");
+    await expect(list.getByRole("listitem").first()).toHaveAttribute("aria-setsize", total!);
+
+    await list.getByRole("button", { name: "Stroke 3", exact: true }).click();
+    await expect(slider).toHaveAttribute("aria-valuenow", "3");
+    await expect(list.getByRole("button", { name: "Stroke 3", exact: true })).toHaveAttribute("aria-current", "true");
+    await expect(list.getByRole("button", { name: "Stroke 1", exact: true })).not.toHaveAttribute("aria-current");
+
+    // The buttons are reached with Tab, as any others are.
+    await list.getByRole("button", { name: "Stroke 3", exact: true }).focus();
+    await page.keyboard.press("Tab");
+    await expect(list.getByRole("listitem").nth(2).getByRole("button", { name: "compare" })).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(list.getByRole("listitem").nth(2).getByRole("button", { name: "comparing" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Clear comparison" })).toBeVisible();
+  });
+
   // The page signs each curves link for an hour; a tab left open longer gets
   // Storage's refusal, which is not the node having kept no curve.
   test("a curves file that doesn't load says so, and is tried again when its seat is picked", async ({ page, context, baseURL }) => {
