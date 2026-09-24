@@ -84,3 +84,16 @@ test("roles: members can't delete sessions, anyone can leave, only owners delete
   expect(gone).toEqual([{ id: team }]);
   expect(await sessionsSeenBy(owner)).toEqual([]);
 });
+
+test("a file row can only point into its own team's folder", async () => {
+  const { user, team, session } = await crewWithData();
+  const other = await crewWithData();
+  const { error: foreign } = await user.db
+    .from("session_files")
+    .insert({ session_id: session, kind: "meta", path: `${other.team}/${other.session}/meta.json` });
+  expect(foreign?.message).toMatch(/row-level security/);
+  const { error: own } = await user.db
+    .from("session_files")
+    .insert({ session_id: session, kind: "meta", path: `${team}/${session}/meta.json` });
+  expect(own).toBeNull();
+});
