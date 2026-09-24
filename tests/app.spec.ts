@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { zipSync } from "fflate";
 import { hasAccount, localSupabaseMissing, makeUser, signInBrowser } from "./support/local-supabase";
+import { parseStrokes } from "../lib/session/parse";
+import { duration, fmt, summarise, type SessionSummary } from "../lib/session/analyse";
 
 test("the dashboard is closed to people who aren't signed in", async ({ page }) => {
   await page.goto("/app/force");
@@ -93,6 +95,49 @@ test.describe("signed in", () => {
     expect(rows?.filter((r) => r.kind === "crew").map((r) => r.id)).toEqual([crew]);
     expect(rows?.filter((r) => r.kind === "node").every((r) => r.parent_id === crew)).toBe(true);
     expect(rows).toHaveLength(3);
+  });
+
+  // Each session's figures are stored when its strokes are written; they are
+  // the ones the session page works out from the same rows.
+  test("an outing's figures are the ones its files give, and follow its strokes", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const crew = await upload(page, await crewZip(2, 6));
+
+    const { data: rows, error } = await user.db.from("session_stats").select("*").eq("parent_id", crew).order("seat_number");
+    expect(error).toBeNull();
+    expect(rows?.map((r) => r.seat_number)).toEqual([2, 6]);
+    const summaries: SessionSummary[] = [];
+    for (const row of rows ?? []) {
+      const s = summarise(parseStrokes((await readFile(`public/demo/seat-${row.seat_number}/strokes.csv`)).toString()));
+      summaries.push(s);
+      expect(row.strokes).toBe(s.strokes);
+      // First catch to the last release, not to the longest drive.
+      expect(row.span_ms).toBe(s.durationMs);
+      expect(row.avg_peak).toBeCloseTo(s.avgPeak, 3);
+      expect(row.avg_impulse).toBeCloseTo(s.avgImpulse, 3);
+      expect(row.avg_rise_rate).toBeCloseTo(s.avgRiseRate, 3);
+      expect(row.avg_peak_pos_pct).toBeCloseTo(s.avgPeakPosPct, 6);
+      expect(row.avg_drive_ms).toBeCloseTo(s.avgDriveMs, 6);
+      expect(row.avg_recovery_ms).toBeCloseTo(s.avgRecoveryMs, 6);
+      expect(row.consistency_pct).toBeCloseTo(s.consistencyPct!, 3);
+    }
+
+    // The compare page shows them, over both seats.
+    const both = (get: (s: SessionSummary) => number) => (get(summaries[0]) + get(summaries[1])) / 2;
+    await page.goto(`/app/cox/compare?a=${crew}`);
+    const cell = (measure: string) => page.getByRole("row").filter({ hasText: measure }).getByRole("cell").nth(1);
+    await expect(cell("Strokes")).toHaveText(String(Math.max(summaries[0].strokes, summaries[1].strokes)));
+    await expect(cell("Time")).toHaveText(duration(Math.max(summaries[0].durationMs, summaries[1].durationMs)));
+    await expect(cell("Avg peak")).toHaveText(fmt(both((s) => s.avgPeak)));
+    await expect(cell("Avg impulse")).toHaveText(fmt(both((s) => s.avgImpulse)));
+    await expect(cell("Consistency")).toHaveText(`CV ${fmt(both((s) => s.consistencyPct!))}%`);
+
+    // Strokes written or removed some other way move the figures with them.
+    const seat = rows![0].session_id;
+    expect((await user.db.from("strokes").delete().eq("session_id", seat)).error).toBeNull();
+    const { data: emptied } = await user.db.from("session_stats").select("strokes, avg_peak, span_ms").eq("session_id", seat).single();
+    expect(emptied).toEqual({ strokes: 0, avg_peak: null, span_ms: null });
   });
 
   /** Seat n's demo session, stretched to `strokes` strokes (with curves), as a new session. */

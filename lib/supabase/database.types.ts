@@ -243,9 +243,16 @@ export type Database = {
       }
       sessions: {
         Row: {
+          avg_drive_ms: number | null
+          avg_impulse: number | null
+          avg_peak: number | null
+          avg_peak_pos_pct: number | null
+          avg_recovery_ms: number | null
+          avg_rise_rate: number | null
           boat_id: string | null
           clock_source: string
           clock_sync_ms: number | null
+          consistency_pct: number | null
           created_at: string
           created_by: string | null
           curve_points: number | null
@@ -262,15 +269,23 @@ export type Database = {
           seat_number: number | null
           session_uuid: string | null
           side: Database["public"]["Enums"]["seat_side"] | null
+          span_ms: number | null
           stroke_count: number
           team_id: string
           title: string | null
           units: string | null
         }
         Insert: {
+          avg_drive_ms?: number | null
+          avg_impulse?: number | null
+          avg_peak?: number | null
+          avg_peak_pos_pct?: number | null
+          avg_recovery_ms?: number | null
+          avg_rise_rate?: number | null
           boat_id?: string | null
           clock_source?: string
           clock_sync_ms?: number | null
+          consistency_pct?: number | null
           created_at?: string
           created_by?: string | null
           curve_points?: number | null
@@ -287,15 +302,23 @@ export type Database = {
           seat_number?: number | null
           session_uuid?: string | null
           side?: Database["public"]["Enums"]["seat_side"] | null
+          span_ms?: number | null
           stroke_count?: number
           team_id: string
           title?: string | null
           units?: string | null
         }
         Update: {
+          avg_drive_ms?: number | null
+          avg_impulse?: number | null
+          avg_peak?: number | null
+          avg_peak_pos_pct?: number | null
+          avg_recovery_ms?: number | null
+          avg_rise_rate?: number | null
           boat_id?: string | null
           clock_source?: string
           clock_sync_ms?: number | null
+          consistency_pct?: number | null
           created_at?: string
           created_by?: string | null
           curve_points?: number | null
@@ -312,6 +335,7 @@ export type Database = {
           seat_number?: number | null
           session_uuid?: string | null
           side?: Database["public"]["Enums"]["seat_side"] | null
+          span_ms?: number | null
           stroke_count?: number
           team_id?: string
           title?: string | null
@@ -485,6 +509,44 @@ export type Database = {
           team_id: string | null
           title: string | null
           units: string | null
+        }
+        Insert: {
+          avg_drive_ms?: number | null
+          avg_impulse?: number | null
+          avg_peak?: number | null
+          avg_peak_pos_pct?: number | null
+          avg_recovery_ms?: number | null
+          avg_rise_rate?: number | null
+          boat_id?: string | null
+          consistency_pct?: number | null
+          parent_id?: string | null
+          recorded_at?: string | null
+          seat_number?: number | null
+          session_id?: string | null
+          span_ms?: number | null
+          strokes?: number | null
+          team_id?: string | null
+          title?: string | null
+          units?: string | null
+        }
+        Update: {
+          avg_drive_ms?: number | null
+          avg_impulse?: number | null
+          avg_peak?: number | null
+          avg_peak_pos_pct?: number | null
+          avg_recovery_ms?: number | null
+          avg_rise_rate?: number | null
+          boat_id?: string | null
+          consistency_pct?: number | null
+          parent_id?: string | null
+          recorded_at?: string | null
+          seat_number?: number | null
+          session_id?: string | null
+          span_ms?: number | null
+          strokes?: number | null
+          team_id?: string | null
+          title?: string | null
+          units?: string | null
         }
         Relationships: [
           {
