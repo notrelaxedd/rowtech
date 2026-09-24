@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "playwright test",
     "demo:build": "node scripts/make-demo-session.mjs",
-    "db:types": "npx supabase gen types typescript --local --schema public > lib/supabase/database.types.ts"
+    "db:types": "node scripts/db-types.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",
