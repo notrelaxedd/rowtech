@@ -1,19 +1,19 @@
-import Link from "next/link";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
-import { BetaLink, SectionEnd, ctaSecondary } from "@/components/site/cta";
+import { BetaLink, SectionEnd } from "@/components/site/cta";
 import { Hero } from "@/components/site/hero";
 import { CrewLanes } from "@/components/site/crew-lanes";
-import { CurveExplorerIsland, ScreenTourIsland, VieveShowcaseIsland } from "@/components/site/islands";
+import { CurveExplorerIsland, ForceDeviceIsland, VieveShowcaseIsland } from "@/components/site/islands";
+import { AnnotatedDiagram } from "@/components/site/annotated-diagram";
+import { FORCE_NOTES, FORCE_RATIO, VIEVE_NOTES, VIEVE_RATIO } from "@/components/site/device-notes";
 import { ForceScreen } from "@/components/device/force-screen";
 import { DevicePlaceholder } from "@/components/device/device-placeholder";
 import { CurveExplorerView } from "@/components/site/curve-explorer-view";
-import { ScreenTourView } from "@/components/site/screen-tour-view";
 import { CoxBoxView } from "@/components/site/cox-box-view";
 import { SessionFiles } from "@/components/site/session-files";
 import { PhotoSlot } from "@/components/site/photo-slot";
-import { emptySummary } from "@/components/site/stroke-live-types";
 import { siteUrl } from "@/lib/site";
+import { TEAM } from "@/lib/team";
 import { cn } from "@/lib/utils";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 sm:px-8";
@@ -44,23 +44,6 @@ const STEPS = [
     t: "Review",
     d: "At the dock, join the node’s WiFi from a phone and download the session: every stroke, every force curve.",
   },
-] as const;
-
-const VIEVE = [
-  { t: "The cox’s voice", d: "Mic in, amplified out to the boat’s speakers." },
-  { t: "One clock for the crew", d: "Seat nodes have no clock of their own. Comparing catch timing between seats depends on Vieve keeping them on one." },
-  { t: "Every seat, in one place", d: "Seat nodes send their strokes to Vieve by radio during the outing." },
-  { t: "GPS at 10 Hz", d: "A u-blox MAX-M10S module. Vieve also stamps each session with GPS time." },
-  { t: "A map on the cox’s screen", d: "A GPS map, on a 5″ screen rated at 1000 nits." },
-  { t: "Uploads ashore", d: "Back on land, Vieve uploads the outing over WiFi." },
-] as const;
-
-const VIEVE_SPECS = [
-  ["Screen", "5″, 1000 nits"],
-  ["GPS", "u-blox MAX-M10S, 10 Hz"],
-  ["Crew link", "Radio to every seat node; target of every seat within 5 ms"],
-  ["Battery", "5000 mAh"],
-  ["Target price", "$499"],
 ] as const;
 
 const BOATHOUSE = [
@@ -103,12 +86,6 @@ const NEXT = [
   "Sessions uploaded from the boat to the team dashboard",
 ];
 
-const TEAM = [
-  { name: "Caden Polk", line: "Writes the firmware and the software." },
-  { name: "Emmett O’Donnell", line: "Does the mechanical engineering and runs sales." },
-  { name: "Stanislav Ryskin", line: "Does the design." },
-] as const;
-
 const FAQ = [
   {
     q: "Do we need WiFi at the boathouse?",
@@ -124,7 +101,7 @@ const FAQ = [
   },
   {
     q: "Where does the data go?",
-    a: "Onto each node’s microSD card, and off it as plain files over the node’s own WiFi. There’s a sample session to try on the demo page.",
+    a: "Onto each node’s microSD card, and off it as plain files over the node’s own WiFi.",
   },
   {
     q: "How accurate is it?",
@@ -155,14 +132,6 @@ const jsonLd = {
     },
   ],
 };
-
-const screenPhoto = (
-  <PhotoSlot
-    className="mt-8"
-    label="rower's-eye view of screen"
-    shows="The node's screen from the seat, mid-outing, as the rower sees it."
-  />
-);
 
 export default function Home() {
   return (
@@ -227,11 +196,6 @@ export default function Home() {
                 </li>
               ))}
             </ol>
-            <p className="mt-12">
-              <Link href="/demo?from=how" data-cta="how-demo" className={ctaSecondary}>
-                See a sample session
-              </Link>
-            </p>
           </div>
         </section>
 
@@ -242,15 +206,15 @@ export default function Home() {
               <h2 className="type-h2">One stroke, taken apart.</h2>
               <p className="type-lead mt-5 text-muted-foreground">
                 How fast the blade loads, how high the peak is and where it lands, and where the work goes through the drive.
-                The node measures all of it on every stroke. Pick a measure, or row a stroke yourself.
+                The node measures all of it on every stroke. Pick a measure to see where it lives on the curve.
               </p>
             </div>
             <div className="mt-12">
               <CurveExplorerIsland
-                fallback={<CurveExplorerView active="catch" mode="example" switched={false} live={emptySummary()} held="none" session={0} />}
+                fallback={<CurveExplorerView active="catch" />}
               />
             </div>
-            <SectionEnd from="stroke" apply secondary={{ href: "/demo?from=stroke", label: "See a whole session", from: "stroke-demo" }}>
+            <SectionEnd from="stroke" apply>
               The node measures every stroke like this, on every seat that has one.
             </SectionEnd>
           </div>
@@ -266,8 +230,19 @@ export default function Home() {
               </p>
             </div>
             <div className="mt-12">
-              <ScreenTourIsland photo={screenPhoto} fallback={<ScreenTourView placeholder photo={screenPhoto} />} />
+              <AnnotatedDiagram
+                label="Parts of the Force node"
+                ratio={FORCE_RATIO}
+                notes={FORCE_NOTES}
+                caption="Force node, concept design. It's wired to a 50 kg load cell in series on the rigger backstay."
+                drawing={<ForceDeviceIsland idPrefix="tour" className="block h-auto w-full" fallback={<DevicePlaceholder ratio={FORCE_RATIO} name="FORCE" />} />}
+              />
             </div>
+            <PhotoSlot
+              className="mt-12 max-w-md"
+              label="rower's-eye view of screen"
+              shows="The node's screen from the seat, mid-outing, as the rower sees it."
+            />
           </div>
         </section>
 
@@ -287,40 +262,15 @@ export default function Home() {
             <div className="mt-12">
               <CoxBoxView lit={8} />
             </div>
-            <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)] lg:items-start lg:gap-16">
-              <figure className="m-0">
-                <div className="instrument rounded-lg p-3 sm:p-4">
-                  <VieveShowcaseIsland fallback={<DevicePlaceholder ratio={1320 / 760} name="VIEVE" />} />
-                </div>
-                <figcaption className="mt-3 text-sm text-muted-foreground">Vieve V1, concept design.</figcaption>
-              </figure>
-              <dl className="grid grid-cols-1 gap-x-10 gap-y-9 sm:grid-cols-2">
-                {VIEVE.map((f) => (
-                  <div key={f.t}>
-                    <dt className="type-h3">{f.t}</dt>
-                    <dd className="type-body mt-2 text-muted-foreground">{f.d}</dd>
-                  </div>
-                ))}
-              </dl>
+            <div className="mt-14">
+              <AnnotatedDiagram
+                label="Parts of Vieve"
+                ratio={VIEVE_RATIO}
+                notes={VIEVE_NOTES}
+                caption="Vieve V1, concept design."
+                drawing={<VieveShowcaseIsland fallback={<DevicePlaceholder ratio={VIEVE_RATIO} name="VIEVE" />} />}
+              />
             </div>
-            <details className="group mt-12 border-y border-line">
-              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 py-4 text-[1.0625rem] font-semibold [&::-webkit-details-marker]:hidden">
-                Vieve specs
-                <span aria-hidden className="relative size-3.5 shrink-0">
-                  <span className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 bg-muted-foreground" />
-                  <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-muted-foreground transition-transform duration-200 ease-out group-open:scale-y-0" />
-                </span>
-              </summary>
-              <dl className="divide-y divide-line pb-4">
-                {VIEVE_SPECS.map(([k, v]) => (
-                  <div key={k} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[9rem_1fr] sm:gap-6">
-                    <dt className="text-sm font-semibold text-muted-foreground">{k}</dt>
-                    <dd className="text-[0.9375rem]">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              <p className="pb-4 text-sm text-muted-foreground">In development. The drawing above is a concept design.</p>
-            </details>
           </div>
         </section>
 
@@ -394,11 +344,7 @@ export default function Home() {
                 <h3 className="type-h3 mt-10">The team dashboard</h3>
                 <p className="type-body mt-3 max-w-[52ch]">
                   Upload a node&rsquo;s four session files, or several seats at once as one outing, and go through it
-                  stroke by stroke. So far it has only run on a made-up sample session, which you can{" "}
-                  <Link href="/demo?from=beta-scope" className="underline underline-offset-4 hover:text-trace">
-                    try on the demo page
-                  </Link>
-                  .
+                  stroke by stroke. So far it has only run on a made-up sample session.
                 </p>
               </div>
               <div className="lg:pl-12">
@@ -436,23 +382,6 @@ export default function Home() {
                 ))}
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* ------------------------------------------------ who's building it */}
-        <section id="team" data-section="team" className="below-fold border-t border-line py-24 sm:py-28">
-          <div className={wrap}>
-            <h2 className="type-h2 max-w-3xl">Who&rsquo;s building this.</h2>
-            <ul className="mt-12 grid max-w-4xl grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 sm:gap-8">
-              {TEAM.map((p) => (
-                <li key={p.name}>
-                  <PhotoSlot label={p.name} shows={`A portrait of ${p.name}, ideally at the boathouse.`} ratio="1 / 1" />
-                  <p className="type-h3 mt-5">{p.name}</p>
-                  <p className="type-body mt-1 text-muted-foreground">{p.line}</p>
-                </li>
-              ))}
-            </ul>
-            <p className="type-h3 mt-16 border-t border-line pt-10">Our pilot site is Saint Edward crew.</p>
           </div>
         </section>
 

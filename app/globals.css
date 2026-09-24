@@ -100,33 +100,34 @@
   --buoy-ink: #1d2327;
 }
 
-/* The marketing pages (anything wrapped in .site) are the boathouse at dawn:
-   fog-grey ground tinted toward the river, carbon ink, aluminium rules, and
-   lane-buoy orange for the one action that matters. The dashboard keeps the
-   dark tokens above. */
+/* The marketing pages (anything wrapped in .site): the river before dawn.
+   Deep water for the ground, fog-white ink, aluminium for secondary text,
+   the node's trace cyan for force, and lane-buoy orange for the one action
+   that matters. The dashboard keeps the tokens above. */
 :root:has(.site) {
-  color-scheme: light;
-  --background: #e6ebed; /* fog */
-  --foreground: #1d2327; /* carbon */
-  --card: #dde4e7;
-  --card-foreground: #1d2327;
-  --popover: #f1f4f5;
-  --popover-foreground: #1d2327;
+  color-scheme: dark;
+  --background: #0a1c23; /* deep river */
+  --foreground: #e6ebed; /* fog */
+  --card: #0f2730;
+  --card-foreground: #e6ebed;
+  --popover: #102a34;
+  --popover-foreground: #e6ebed;
   --primary: #f76b15;
   --primary-foreground: #1d2327;
-  --secondary: #d5dde1;
-  --secondary-foreground: #1d2327;
-  --muted: #d5dde1;
-  --muted-foreground: #56646c; /* aluminium: 5.1:1 on fog */
-  --accent: #d5dde1;
-  --accent-foreground: #1d2327;
-  --destructive: #b42318;
-  --border: rgb(29 35 39 / 0.14);
-  --input: rgb(29 35 39 / 0.28);
-  --ring: #1d2327;
-  --trace: #086a72; /* the trace, printed on paper: 5.3:1 on fog */
-  --panel: #0a2029;
-  --line: rgb(29 35 39 / 0.14);
+  --secondary: #16343f;
+  --secondary-foreground: #e6ebed;
+  --muted: #16343f;
+  --muted-foreground: #9fb3bc; /* aluminium: 8.1:1 on deep river */
+  --accent: #16343f;
+  --accent-foreground: #e6ebed;
+  --destructive: #ff7b72;
+  --border: rgb(230 235 237 / 0.12);
+  --input: rgb(230 235 237 / 0.22);
+  --ring: #e6ebed;
+  --trace: #22e3ef;
+  --warn: #f5c542;
+  --panel: #0e2b35;
+  --line: rgb(230 235 237 / 0.1);
 }
 
 /* Instruments: anything that stands in for a screen or a chart the node
@@ -147,12 +148,13 @@
   --trace: #22e3ef;
   --ok: #3ddc6e;
   --warn: #f5c542; /* off-average yellow, kept well clear of the buoy orange */
-  --panel: #0a2029;
+  --panel: #0e2b35;
   --line: rgb(230 235 237 / 0.1);
   color: var(--foreground);
 }
 .instrument {
   background-color: var(--panel);
+  box-shadow: inset 0 0 0 1px rgb(230 235 237 / 0.08);
 }
 .river {
   background-color: var(--background);

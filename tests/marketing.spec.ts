@@ -8,7 +8,7 @@ test("the marketing page renders, with the beta offered in four places", async (
   await expect(page.getByRole("img", { name: /Force seat node/i }).first()).toBeVisible();
   await expect(page.locator("#hero-peak")).toHaveCount(1);
 
-  for (const id of ["crew", "how", "stroke", "screens", "vieve", "boathouse", "beta-scope", "faq", "team", "beta"]) {
+  for (const id of ["crew", "how", "stroke", "screens", "vieve", "boathouse", "beta-scope", "faq", "beta"]) {
     await expect(page.locator(`#${id}`)).toHaveCount(1);
   }
 
@@ -45,7 +45,23 @@ test("the node's keys light their key on the device", async ({ page }) => {
   await expect(page.locator("#screens").getByRole("img", { name: /Force seat node/i })).toBeVisible({ timeout: 15000 });
 
   await view.hover();
-  await expect(page.locator("#screens")).toContainText("Steps through the rower's screens");
+  await expect(page.locator("#screens")).toContainText("Steps through the rower’s screens");
+});
+
+test("the team has its own page, and the home page links to it", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#team")).toHaveCount(0);
+  await page.goto("/team");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Who’s building this");
+  await expect(page.locator("main")).toContainText("Saint Edward crew");
+});
+
+test("the diagrams light the part a note describes", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#screens figure").first().scrollIntoViewIfNeeded();
+  const note = page.getByRole("list", { name: "Parts of the Force node" }).getByRole("button", { name: /TARE/ });
+  await note.click();
+  await expect(note).toHaveAttribute("aria-pressed", "true");
 });
 
 test("Vieve is shown as well as described", async ({ page }) => {

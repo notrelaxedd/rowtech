@@ -14,7 +14,7 @@ export function MobileMenu({ links }: { links: ReadonlyArray<{ href: string; lab
       </summary>
       <nav
         aria-label="Primary"
-        className="absolute right-0 top-12 z-50 w-56 rounded-md border border-line bg-popover p-1.5 shadow-[0_12px_32px_rgb(29_35_39/0.18)]"
+        className="absolute right-0 top-12 z-50 w-56 rounded-md border border-line bg-popover p-1.5 shadow-[0_12px_32px_rgb(0_0_0/0.45)]"
       >
         {links.map((l) => (
           <Link

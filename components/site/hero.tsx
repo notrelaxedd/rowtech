@@ -1,9 +1,7 @@
-import Link from "next/link";
-import { BetaLink, ctaSecondary } from "./cta";
+import { BetaLink } from "./cta";
 import { ScopeStrip } from "./scope-strip";
 import { ForceDevice } from "@/components/device/force-device";
 import { ScreenAnimator } from "@/components/device/screen-animator";
-import { cn } from "@/lib/utils";
 
 // Server-rendered, including the node, its screen and the curve. The only
 // client code is the animator, which runs the screen the server already drew.
@@ -20,11 +18,8 @@ export function Hero() {
               A Force node on each seat&rsquo;s rigger backstay records the force curve of every stroke, shows it to the
               rower live on its 3.5&Prime; screen, and saves the session to a microSD card for you to download at the dock.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8">
               <BetaLink from="hero" className="max-sm:w-full" />
-              <Link href="/demo?from=hero" data-cta="hero-demo" className={cn(ctaSecondary, "max-sm:w-full")}>
-                See a sample session
-              </Link>
             </div>
             <p className="mt-5 text-sm text-muted-foreground">For high school, college and club coaches. We&rsquo;re choosing beta crews now.</p>
           </div>

@@ -83,7 +83,9 @@ export function ForceScreen({
   /** Set when the screen is nested inside a device drawing. */
   frame?: { x: number; y: number; width: number; height: number };
 }) {
-  const clip = `${idPrefix}-sweep`;
+  // The clip path and the rect inside it need different ids: the animator
+  // grows the rect, found by id, to sweep the stroke across the panel.
+  const clip = `${idPrefix}-sweep-clip`;
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
@@ -156,10 +158,10 @@ export function ForceScreen({
         </g>
       ))}
       <line x1={CX0 - 8} x2={CX1} y1={cy(0)} y2={cy(0)} stroke={SCREEN.line} />
+      {/* the stroke before, for comparison: always there, so this one draws over it */}
+      <path d={LAST_LINE} fill="none" stroke={SCREEN.label} strokeOpacity={0.85} strokeWidth={1.75} strokeDasharray="5 4" />
       <g clipPath={`url(#${clip})`}>
         <path d={THIS_AREA} fill={SCREEN.traceFill} />
-        {/* the stroke before, for comparison: over the fill so it stays readable */}
-        <path d={LAST_LINE} fill="none" stroke={SCREEN.label} strokeOpacity={0.85} strokeWidth={1.75} strokeDasharray="5 4" />
         <path d={THIS_LINE} fill="none" stroke={SCREEN.trace} strokeWidth={2.5} strokeLinejoin="round" />
         <g id={`${idPrefix}-cursor`} transform={`translate(${PEAK_AT[0].toFixed(1)} ${PEAK_AT[1].toFixed(1)})`}>
           <circle r={5.5} fill={SCREEN.bg} stroke={SCREEN.value} strokeWidth={2.5} />
@@ -181,7 +183,7 @@ export function ForceScreen({
               {label}
             </text>
             <text x={x} y={H - 16} fill={SCREEN.value} fontFamily={sans} fontSize={30} fontWeight={700} style={{ fontStretch: "108%" }}>
-              {value}
+              <tspan id={label === "STROKE" ? `${idPrefix}-stroke` : undefined}>{value}</tspan>
               {unit && (
                 <tspan fill={SCREEN.label} fontFamily={mono} fontSize={13} fontWeight={400}>
                   {" "}

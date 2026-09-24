@@ -25,7 +25,7 @@ export function PhotoSlot({
         role="img"
         aria-label={`Photo to come: ${label}. ${shows}`}
         style={{ aspectRatio: ratio }}
-        className="flex w-full flex-col justify-end rounded-md border border-dashed border-foreground/30 bg-[repeating-linear-gradient(135deg,transparent_0_11px,rgb(29_35_39/0.05)_11px_12px)] p-4"
+        className="flex w-full flex-col justify-end rounded-md border border-dashed border-foreground/30 bg-[repeating-linear-gradient(135deg,transparent_0_11px,rgb(230_235_237/0.05)_11px_12px)] p-4"
       >
         <p className="text-sm font-semibold text-foreground">[PHOTO: {label}]</p>
         <p className="mt-1 max-w-[40ch] text-sm text-muted-foreground">{shows}</p>

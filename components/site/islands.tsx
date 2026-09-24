@@ -67,5 +67,5 @@ function island<P extends object>(load: () => Promise<ComponentType<P>>, margin 
 }
 
 export const CurveExplorerIsland = island(() => import("./curve-explorer").then((m) => m.CurveExplorer));
-export const ScreenTourIsland = island(() => import("./screen-tour").then((m) => m.ScreenTour));
+export const ForceDeviceIsland = island(() => import("@/components/device/force-device").then((m) => m.ForceDevice));
 export const VieveShowcaseIsland = island(() => import("@/components/device/vieve-showcase").then((m) => m.VieveShowcase));
