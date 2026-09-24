@@ -186,18 +186,9 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     }
   }
 
-  // New sessions' files, removed again if their rows don't land. A re-upload
-  // overwrites the same session's files in place, so there is nothing to undo.
-  const stored: string[] = [];
-  const discard = async () => {
-    if (!stored.length) return;
-    const { error } = await sb.storage.from("sessions").remove(stored);
-    if (error) console.error("upload: cleanup failed", { paths: stored, message: error.message });
-  };
-
-  // The files themselves, exactly as they came off the card. Stored first, so
-  // no row ever points at a file that isn't there.
-  for (const seat of seats) {
+  // The files themselves, exactly as they came off the card, every seat's at
+  // once. Stored first, so no row ever points at a file that isn't there.
+  const uploads = seats.flatMap((seat) => {
     const { raw } = seat;
     const files: Array<[kind: "meta" | "strokes" | "curves" | "events", name: string, bytes: Uint8Array | undefined]> = [
       ["meta", "meta.json", raw.meta],
@@ -205,20 +196,45 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
       ["curves", "curves.bin", raw.curves],
       ["events", "events.csv", raw.events],
     ];
-    for (const [kind, name, bytes] of files) {
-      if (!bytes) continue;
+    return files.flatMap(([kind, name, bytes]) => {
+      if (!bytes) return [];
       const path = `${team}/${seat.id}/${name}`;
-      const { error: upErr } = await sb.storage
-        .from("sessions")
-        .upload(path, new Blob([bytes as BlobPart]), { upsert: true, contentType: name.endsWith(".bin") ? "application/octet-stream" : name.endsWith(".json") ? "application/json" : "text/csv" });
-      if (upErr) {
-        console.error("upload: file not stored", { path, message: upErr.message });
-        await discard();
-        return { status: "error", message: `${name} couldn't be stored. Try again in a minute.` };
-      }
-      if (seat.isNew) stored.push(path);
       seat.files.push({ kind, path, bytes: bytes.byteLength });
-    }
+      return [{ seat, name, path, bytes }];
+    });
+  });
+  // Each resolves to why it failed, or null; a throw counts as a failure too,
+  // so every upload has finished before anything is cleaned up.
+  const results = await Promise.all(
+    uploads.map(async ({ name, path, bytes }) => {
+      try {
+        const { error } = await sb.storage
+          .from("sessions")
+          .upload(path, new Blob([bytes as BlobPart]), { upsert: true, contentType: name.endsWith(".bin") ? "application/octet-stream" : name.endsWith(".json") ? "application/json" : "text/csv" });
+        return error?.message ?? null;
+      } catch (e) {
+        return e instanceof Error ? e.message : String(e);
+      }
+    })
+  );
+
+  // New sessions' files, removed again if their rows don't land. A new
+  // session's id is fresh, so its folder holds only this upload's files; one
+  // that failed may still have landed, so it goes too. A re-upload overwrites
+  // the same session's files in place, so there is nothing to undo.
+  const stored = uploads.filter((u) => u.seat.isNew).map((u) => u.path);
+  const discard = async () => {
+    if (!stored.length) return;
+    const { error } = await sb.storage.from("sessions").remove(stored);
+    if (error) console.error("upload: cleanup failed", { paths: stored, message: error.message });
+  };
+
+  const failed = results.findIndex((r) => r !== null);
+  if (failed !== -1) {
+    const notStored = uploads.flatMap((u, i) => (results[i] === null ? [] : [{ path: u.path, message: results[i] }]));
+    console.error("upload: files not stored", notStored);
+    await discard();
+    return { status: "error", message: `${uploads[failed].name} couldn't be stored. Try again in a minute.` };
   }
 
   // Then every row -- boat, crew, seats, strokes, file rows -- in one

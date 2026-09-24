@@ -7,6 +7,8 @@
 // - for a user whose email starts with "db-down-", every database call fails,
 //   the beta-list check included;
 // - for a user whose email starts with "storage-down-", only Storage fails;
+// - for a user whose email starts with "events-down-", Storage refuses every
+//   events.csv and everything else works;
 // - for anyone else the beta-list check works and every other database or
 //   Storage call fails: the dashboard's header renders and its pages can't.
 import http from "node:http";
@@ -30,6 +32,7 @@ function fails(req) {
   if (path.startsWith("/auth/")) return who.startsWith("auth-down-") && path.startsWith("/auth/v1/user");
   if (who.startsWith("db-down-")) return true;
   if (who.startsWith("storage-down-")) return path.startsWith("/storage/");
+  if (who.startsWith("events-down-")) return path.startsWith("/storage/") && path.endsWith("/events.csv");
   return !path.startsWith("/rest/v1/rpc/is_beta_user");
 }
 
