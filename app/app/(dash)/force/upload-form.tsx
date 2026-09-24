@@ -18,6 +18,21 @@ function nowLocal() {
   return d.toISOString().slice(0, 16);
 }
 
+/**
+ * datetime-local gives a wall-clock time with no zone, and the server can't
+ * know the browser's, so the time is turned into an instant here, in the zone
+ * it was typed in, before it's sent.
+ */
+function withInstant(fd: FormData) {
+  const v = fd.get("recorded_at");
+  if (typeof v === "string" && v) {
+    // A date and time with no offset is read in the browser's zone.
+    const d = new Date(v);
+    if (!Number.isNaN(d.getTime())) fd.set("recorded_at", d.toISOString());
+  }
+  return fd;
+}
+
 export function UploadForm() {
   const [state, action, pending] = useActionState(uploadSession, EMPTY);
   const [picked, setPicked] = useState<string[]>([]);
@@ -38,7 +53,7 @@ export function UploadForm() {
   }, [state, router]);
 
   return (
-    <form ref={form} action={action} className="rounded-lg border border-line bg-panel p-4 sm:p-5">
+    <form ref={form} action={(fd) => action(withInstant(fd))} className="rounded-lg border border-line bg-panel p-4 sm:p-5">
       <h2 className="type-h3 text-lg">Upload a session</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         The four files a node writes (<span className="readout">meta.json</span>, <span className="readout">strokes.csv</span>,{" "}

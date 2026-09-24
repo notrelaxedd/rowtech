@@ -58,6 +58,22 @@ async function collect(fd: FormData): Promise<Map<string, SessionFolder>> {
   return collectSessions(files);
 }
 
+/** A date and time with its offset: 2026-09-24T10:00:00.000Z, or ...T06:00-04:00. */
+const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})$/;
+
+/**
+ * When the session was rowed. The node has no clock, so this is what the coach
+ * typed, sent by the form as an instant (upload-form.tsx). A time with no
+ * offset would be read in this server's zone, which isn't the coach's, so it's
+ * refused (null) rather than guessed at. Left blank, it's now.
+ */
+function readRecordedAt(v: FormDataEntryValue | null): Date | null {
+  if (v === null || v === "") return new Date();
+  if (typeof v !== "string" || !INSTANT.test(v)) return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 export async function uploadSession(_prev: UploadState, fd: FormData): Promise<UploadState> {
   const viewer = await getViewer();
   if (viewer.state !== "allowed") return { status: "error", message: "Sign in with a beta account to upload." };
@@ -115,11 +131,8 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     return { status: "error", message: "Two of those folders hold the same session. Pick each seat's folder once." };
   }
 
-  const recordedAt = (() => {
-    const v = fd.get("recorded_at");
-    const d = typeof v === "string" && v ? new Date(v) : new Date();
-    return Number.isNaN(d.getTime()) ? new Date() : d;
-  })();
+  const recordedAt = readRecordedAt(fd.get("recorded_at"));
+  if (!recordedAt) return { status: "error", message: "That date and time couldn't be read. Pick it again." };
   const boatName = (fd.get("boat") as string | null)?.trim() ?? "";
   const title = (fd.get("title") as string | null)?.trim() ?? "";
   // The form says so too, but a request doesn't have to come from the form.

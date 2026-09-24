@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { supabaseServer } from "@/lib/supabase/server";
 import type { StrokeRow } from "@/lib/session/format";
+import { LocalTime } from "@/components/dash/local-time";
 import { CrewView } from "./crew-view";
 
 export const metadata = { title: "Crew outing" };
@@ -81,7 +82,7 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
         </Link>
         <h1 className="type-h3 mt-3 text-2xl">{crew.title || "Crew outing"}</h1>
         <p className="readout mt-1 text-sm text-muted-foreground">
-          {new Date(crew.recorded_at).toLocaleString()}
+          <LocalTime at={crew.recorded_at} />
           {boat ? ` · ${boat}` : ""} · {seats.length} seats
         </p>
       </div>

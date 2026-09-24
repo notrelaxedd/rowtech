@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { supabaseServer } from "@/lib/supabase/server";
 import type { StrokeRow } from "@/lib/session/format";
 import { SessionViewer, type SeatSource } from "@/components/dash/session-viewer";
+import { LocalTime } from "@/components/dash/local-time";
 
 export const metadata = { title: "Session" };
 
@@ -76,7 +77,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
           {session.title || (session.kind === "crew" ? `${seats.length} seats` : `Seat ${session.seat_number ?? "?"}`)}
         </h1>
         <p className="readout mt-1 text-sm text-muted-foreground">
-          {new Date(session.recorded_at).toLocaleString()}
+          <LocalTime at={session.recorded_at} />
           {boat ? ` · ${boat}` : ""}
           {session.units ? ` · ${session.units}` : ""}
         </p>

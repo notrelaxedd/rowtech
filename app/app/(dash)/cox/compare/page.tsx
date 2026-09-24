@@ -99,7 +99,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
         <h1 className="type-h3 mt-3 text-2xl">Two pieces, side by side</h1>
       </div>
 
-      <ComparePicker crews={crews.map((c) => ({ id: c.id, label: `${c.title || "Crew outing"} · ${new Date(c.recorded_at).toLocaleDateString()}` }))} a={a?.session.id} b={b?.session.id} />
+      <ComparePicker crews={crews.map((c) => ({ id: c.id, label: c.title || "Crew outing", at: c.recorded_at }))} a={a?.session.id} b={b?.session.id} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {[a, b].map((p, i) => (

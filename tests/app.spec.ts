@@ -96,6 +96,50 @@ test.describe("signed in", () => {
     await expect(page.getByText(/more files than one upload takes/)).toBeVisible();
   });
 
+  // The typed time is the coach's wall clock; the server runs in UTC (Vercel
+  // does, and so does this test's server, see playwright.config.ts). 21:30 on
+  // 15 January in New York is 02:30 the next day in UTC, in winter time, while
+  // today New York is on summer time.
+  test.describe("in a browser in New York, in English (UK)", () => {
+    test.use({ timezoneId: "America/New_York", locale: "en-GB" });
+
+    test("a typed time is stored as that time in the coach's zone, and shown in it", async ({ page, context, baseURL }) => {
+      const user = await makeUser();
+      await signInBrowser(context, user, baseURL!);
+      const hydration: string[] = [];
+      const check = (text: string) => {
+        if (/hydrat|Minified React error #4(18|19|20|21|22|23|25)/i.test(text)) hydration.push(text);
+      };
+      page.on("console", (m) => m.type() === "error" && check(m.text()));
+      page.on("pageerror", (e) => check(e.message));
+
+      await page.goto("/app/force");
+      await page.getByLabel("Files").setInputFiles(await crewZip(2, 6));
+      await page.getByLabel("When was it rowed?").fill("2026-01-15T21:30");
+      await page.getByRole("button", { name: "Upload" }).click();
+      await expect(page).toHaveURL(/\/app\/force\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+      const crew = page.url().split("/").pop()!;
+
+      const { data: rows } = await user.db.from("sessions").select("recorded_at");
+      expect(rows).toHaveLength(3);
+      for (const r of rows ?? []) expect(new Date(r.recorded_at).toISOString()).toBe("2026-01-16T02:30:00.000Z");
+
+      const shown = "15/01/2026, 21:30:00";
+      // Arrived at by client-side navigation, then loaded afresh.
+      await expect(page.locator("time").first()).toHaveText(shown);
+      await page.reload();
+      await expect(page.locator("time").first()).toHaveText(shown);
+      for (const path of ["/app/force", "/app/cox", `/app/cox/${crew}`]) {
+        await page.goto(path);
+        await expect(page.locator("time").first()).toHaveText(shown);
+      }
+      await page.goto("/app/cox/compare");
+      await expect(page.locator("option", { hasText: "· 15/01/2026" })).toHaveCount(2);
+      await expect(page.locator("option", { hasText: "16/01/2026" })).toHaveCount(0);
+      expect(hydration).toEqual([]);
+    });
+  });
+
   test("port and starboard stay set on an outing with no boat", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);

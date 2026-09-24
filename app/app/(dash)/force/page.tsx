@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { duration, fmt } from "@/lib/session/analyse";
+import { LocalTime } from "@/components/dash/local-time";
 import { UploadForm } from "./upload-form";
 import { HistoryPanel, type HistoryPoint } from "./history-panel";
 
@@ -67,7 +68,7 @@ export default async function ForcePage() {
                           {s.title || (s.kind === "crew" ? `${kids.length} seats` : `Seat ${s.seat_number ?? "?"}`)}
                         </span>
                         <span className="readout block text-xs text-muted-foreground">
-                          {new Date(s.recorded_at).toLocaleString()}
+                          <LocalTime at={s.recorded_at} />
                           {s.boats?.name ? ` · ${s.boats.name}` : ""}
                           {s.kind === "crew" ? ` · ${kids.length} seats` : s.seat_number !== null ? ` · seat ${s.seat_number}` : ""}
                         </span>

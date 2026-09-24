@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { duration } from "@/lib/session/analyse";
+import { LocalTime } from "@/components/dash/local-time";
 
 export const metadata = { title: "Cox" };
 
@@ -50,7 +51,7 @@ export default async function CoxPage() {
                   <span className="min-w-0">
                     <span className="block truncate font-semibold">{c.title || "Crew outing"}</span>
                     <span className="readout block text-xs text-muted-foreground">
-                      {new Date(c.recorded_at).toLocaleString()}
+                      <LocalTime at={c.recorded_at} />
                       {c.boats?.name ? ` · ${c.boats.name}` : ""}
                     </span>
                   </span>
