@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { zipSync } from "fflate";
+import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { addToTeam, allow, emailedLink, hasAccount, localSupabaseMissing, mailpitMissing, makeUser, revoke, signInBrowser } from "./support/local-supabase";
 import { parseStrokes } from "../lib/session/parse";
 import { duration, fmt, summarise, type SessionSummary } from "../lib/session/analyse";
@@ -89,10 +89,11 @@ test.describe("signed in", () => {
     return { name: "outing.zip", mimeType: "application/zip", buffer: Buffer.from(zipSync(entries)) };
   }
 
-  async function upload(page: Page, files: Parameters<Page["setInputFiles"]>[1], rowedAt?: string) {
+  async function upload(page: Page, files: Parameters<Page["setInputFiles"]>[1], rowedAt?: string, boat?: string) {
     await page.goto("/app/force");
     await page.getByLabel("Files").setInputFiles(files);
     if (rowedAt) await page.getByLabel("When was it rowed?").fill(rowedAt);
+    if (boat) await page.getByLabel("Boat").fill(boat);
     await page.getByRole("button", { name: "Upload" }).click();
     await expect(page).toHaveURL(/\/app\/force\/[0-9a-f-]{36}$/, { timeout: 30_000 });
     return page.url().split("/").pop()!;
@@ -766,6 +767,49 @@ test.describe("signed in", () => {
     await page.reload();
     await expect(seat2.getByRole("button", { name: "P" })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByText(/wasn.t saved/)).toHaveCount(0);
+  });
+
+  // With a boat, a side belongs to that seat of the boat: set once, it holds
+  // for the boat's next outing too.
+  test("port and starboard set in a boat carry over to its next outing", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const boat = "Test VIII";
+    const first = await upload(page, await crewZip(2, 6), undefined, boat);
+    await expect(page.getByText(`· ${boat}`)).toBeVisible();
+    for (const path of ["/app/force", "/app/cox"]) {
+      await page.goto(path);
+      await expect(page.locator(`a[href$="/${first}"]`)).toContainText(`· ${boat}`);
+    }
+
+    await page.goto(`/app/cox/${first}`);
+    await expect(page.getByText(`· ${boat} · 2 seats`)).toBeVisible();
+    const seat = (n: number) => page.getByRole("listitem").filter({ hasText: `seat ${n}` }).filter({ has: page.getByRole("button", { name: "P" }) });
+    for (const [n, side] of [[2, "P"], [6, "S"]] as const) {
+      const saved = page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes(`/app/cox/${first}`));
+      await seat(n).getByRole("button", { name: side }).click();
+      await saved;
+    }
+    await page.reload();
+    await expect(seat(2).getByRole("button", { name: "P" })).toHaveAttribute("aria-pressed", "true");
+    await expect(seat(6).getByRole("button", { name: "S" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText(/wasn.t saved/)).toHaveCount(0);
+
+    // The same seats on another day: new sessions, so a new outing, in the same boat.
+    const again = await crewZip(2, 6);
+    const entries = unzipSync(again.buffer);
+    for (const n of [2, 6]) {
+      const meta = JSON.parse(strFromU8(entries[`outing/seat-${n}/meta.json`]));
+      entries[`outing/seat-${n}/meta.json`] = strToU8(JSON.stringify({ ...meta, uuid: randomUUID() }));
+    }
+    const second = await upload(page, { ...again, buffer: Buffer.from(zipSync(entries)) }, undefined, boat);
+    expect(second).not.toBe(first);
+    const { data: boats } = await user.db.from("boats").select("id");
+    expect(boats).toHaveLength(1);
+
+    await page.goto(`/app/cox/${second}`);
+    await expect(seat(2).getByRole("button", { name: "P" })).toHaveAttribute("aria-pressed", "true");
+    await expect(seat(6).getByRole("button", { name: "S" })).toHaveAttribute("aria-pressed", "true");
   });
 
   // Nothing writes a GPS clock yet; this is the day Vieve does, on an outing
