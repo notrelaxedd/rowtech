@@ -848,8 +848,10 @@ test.describe("signed in", () => {
     await expect(page.getByRole("img", { name: "Consistency by seat, across 3 sessions." })).toBeVisible();
   });
 
-  // The layout's check runs once per page load; the actions check again, so
-  // a page left open after someone is taken off the beta list changes nothing.
+  // The layout's check runs once per page load, so a page left open after
+  // someone is taken off the beta list still has its buttons. Delete's message
+  // comes only from the action's own viewer check, so that half proves it; the
+  // side half only proves the write is refused, which RLS would do on its own.
   test("taken off the beta list, a page left open can't set a side or delete", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);
