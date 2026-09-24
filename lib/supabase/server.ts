@@ -34,6 +34,15 @@ export async function supabaseServer() {
   });
 }
 
+/**
+ * For page reads: a failed query throws, so the nearest error.tsx says the
+ * page didn't load instead of it rendering as if there were nothing there.
+ * Only the code and message go into the error (and the logs), never details.
+ */
+export function readFailed(error: { code?: string; message: string }) {
+  return new Error(`Supabase read failed: ${error.code || "no code"} ${error.message}`);
+}
+
 export type Viewer =
   | { state: "signed-out" }
   | { state: "not-allowed"; email: string }

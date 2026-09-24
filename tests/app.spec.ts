@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { zipSync } from "fflate";
 import { hasAccount, localSupabaseMissing, makeUser, signInBrowser } from "./support/local-supabase";
 
@@ -14,6 +15,14 @@ test("a stale magic link says so instead of failing quietly", async ({ page }) =
   await page.goto("/auth/callback");
   await expect(page).toHaveURL(/\/app\/login\?error=link/);
   await expect(page.getByRole("alert").first()).toContainText(/expired|already used/i);
+});
+
+test("/api/health answers 200 when Supabase does, and is never cached", async ({ request }) => {
+  test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
+  const res = await request.get("/api/health");
+  expect(res.status()).toBe(200);
+  expect(res.headers()["cache-control"]).toBe("no-store");
+  expect(await res.json()).toEqual({ ok: true });
 });
 
 test.describe("signing in", () => {
@@ -161,6 +170,17 @@ test.describe("signed in", () => {
       expect(at).toBeGreaterThanOrEqual(before - 1000);
       expect(at).toBeLessThanOrEqual(Date.now() + 1000);
     });
+  });
+
+  test("a session that isn't there is a 404 inside the dashboard", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    for (const path of [`/app/force/${randomUUID()}`, "/app/force/not-an-id", `/app/cox/${randomUUID()}`]) {
+      const res = await page.goto(path);
+      expect(res?.status()).toBe(404);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Nothing here.");
+      await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+    }
   });
 
   test("port and starboard stay set on an outing with no boat", async ({ page, context, baseURL }) => {

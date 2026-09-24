@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { outage } from "./tests/support/local-supabase";
 
 const PORT = 3210;
 
@@ -16,15 +17,34 @@ export default defineConfig({
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile", use: { ...devices["Pixel 7"] }, testIgnore: /(node|rls)\.spec\.ts/ },
+    { name: "mobile", use: { ...devices["Pixel 7"] }, testIgnore: /(node|rls|outage)\.spec\.ts/ },
   ],
-  webServer: {
-    command: `npm run build && npx next start -p ${PORT}`,
-    port: PORT,
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-    // SITE_URL: sign-in links come back to the site under test. TZ: the
-    // server's zone is UTC, as on Vercel, whatever the machine's is.
-    env: { BETA_DRY_RUN: "1", SITE_URL: `http://localhost:${PORT}`, TZ: "UTC" },
-  },
+  webServer: [
+    {
+      command: `npm run build && npx next start -p ${PORT}`,
+      port: PORT,
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+      // SITE_URL: sign-in links come back to the site under test. TZ: the
+      // server's zone is UTC, as on Vercel, whatever the machine's is.
+      env: { BETA_DRY_RUN: "1", SITE_URL: `http://localhost:${PORT}`, TZ: "UTC" },
+    },
+    // Started in order, so this one reuses the build above.
+    ...(outage
+      ? [
+          {
+            command: "node tests/support/supabase-outage.mjs",
+            port: Number(new URL(outage.supabase).port),
+            reuseExistingServer: !process.env.CI,
+            env: { UPSTREAM_SUPABASE_URL: process.env.SUPABASE_URL!, PORT: new URL(outage.supabase).port },
+          },
+          {
+            command: `npx next start -p ${new URL(outage.app).port}`,
+            port: Number(new URL(outage.app).port),
+            reuseExistingServer: !process.env.CI,
+            env: { BETA_DRY_RUN: "1", SITE_URL: outage.app, TZ: "UTC", SUPABASE_URL: outage.supabase },
+          },
+        ]
+      : []),
+  ],
 });

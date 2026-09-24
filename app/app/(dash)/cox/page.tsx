@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase/server";
+import { readFailed, supabaseServer } from "@/lib/supabase/server";
 import { duration } from "@/lib/session/analyse";
 import { LocalTime } from "@/components/dash/local-time";
 
@@ -16,12 +16,13 @@ type Row = {
 
 export default async function CoxPage() {
   const sb = await supabaseServer();
-  const { data } = await sb
+  const { data, error } = await sb
     .from("sessions")
     .select("id, title, recorded_at, clock_source, duration_ms, boats(name)")
     .eq("kind", "crew")
     .order("recorded_at", { ascending: false })
     .limit(100);
+  if (error) throw readFailed(error);
   const crews = (data ?? []) as unknown as Row[];
 
   return (

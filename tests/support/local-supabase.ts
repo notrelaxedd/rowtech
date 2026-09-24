@@ -29,6 +29,15 @@ export const localSupabaseMissing: string | null =
       ? "SUPABASE_URL isn't a local Supabase; the signed-in tests only write to one"
       : null;
 
+/**
+ * A second server on the same build, in front of a half-down Supabase
+ * (supabase-outage.mjs), for tests/outage.spec.ts. Local Supabase only: the
+ * app's session cookie is named after Supabase's host, so the stand-in has to
+ * share it.
+ */
+export const outage =
+  localSupabaseMissing || !isLocal(url) ? null : { app: "http://localhost:3211", supabase: `http://${new URL(url).hostname}:3212` };
+
 const noSession = { auth: { persistSession: false, autoRefreshToken: false } };
 const admin = () => createClient(url, secret, noSession);
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { supabaseServer } from "@/lib/supabase/server";
+import { readFailed, supabaseServer } from "@/lib/supabase/server";
+import { isUuid } from "@/lib/uuid";
 import { duration, fmt } from "@/lib/session/analyse";
 import { ComparePicker } from "./compare-picker";
 import { PieceMap, type TrackPoint } from "@/components/dash/piece-map";
@@ -10,27 +11,31 @@ export const metadata = { title: "Compare pieces" };
 type Crew = { id: string; title: string | null; recorded_at: string; boats: { name: string } | null };
 
 async function piece(id: string | undefined) {
-  if (!id) return null;
+  // A missing or malformed id in the URL is nothing picked, not a failed read.
+  if (!isUuid(id)) return null;
   const sb = await supabaseServer();
-  const { data: session } = await sb
+  const { data: session, error } = await sb
     .from("sessions")
     .select("id, title, recorded_at, clock_source, boats(name)")
     .eq("id", id)
     .eq("kind", "crew")
     .maybeSingle();
+  if (error) throw readFailed(error);
   if (!session) return null;
 
-  const { data: stats } = await sb
+  const { data: stats, error: statsError } = await sb
     .from("session_stats")
     .select("strokes, avg_peak, avg_impulse, avg_drive_ms, avg_recovery_ms, consistency_pct, span_ms, seat_number")
     .eq("parent_id", id);
+  if (statsError) throw readFailed(statsError);
 
-  const { data: gps } = await sb
+  const { data: gps, error: gpsError } = await sb
     .from("gps_points")
     .select("t_ms, lat, lon, speed_mps, heading_deg")
     .eq("session_id", id)
     .order("t_ms")
     .limit(20000);
+  if (gpsError) throw readFailed(gpsError);
 
   const seats = stats ?? [];
   const n = seats.length || 1;
@@ -67,12 +72,13 @@ const split = (s: number | null) => (s === null ? "—" : `${Math.floor(s / 60)}
 export default async function ComparePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const q = await searchParams;
   const sb = await supabaseServer();
-  const { data } = await sb
+  const { data, error } = await sb
     .from("sessions")
     .select("id, title, recorded_at, boats(name)")
     .eq("kind", "crew")
     .order("recorded_at", { ascending: false })
     .limit(100);
+  if (error) throw readFailed(error);
   const crews = (data ?? []) as unknown as Crew[];
 
   const a = await piece(typeof q.a === "string" ? q.a : crews[0]?.id);

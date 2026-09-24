@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { supabaseServer } from "@/lib/supabase/server";
+import { readFailed, supabaseServer } from "@/lib/supabase/server";
+import { isUuid } from "@/lib/uuid";
 import type { StrokeRow } from "@/lib/session/format";
 import { LocalTime } from "@/components/dash/local-time";
 import { CrewView } from "./crew-view";
@@ -22,31 +23,37 @@ const toStroke = (s: DbStroke): StrokeRow => ({
 
 export default async function CrewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  // Not an id at all: there is no such outing, rather than a failed read.
+  if (!isUuid(id)) notFound();
   const sb = await supabaseServer();
 
-  const { data: crew } = await sb
+  const { data: crew, error } = await sb
     .from("sessions")
     .select("id, kind, title, recorded_at, clock_source, clock_sync_ms, boat_id, boats(name)")
     .eq("id", id)
     .maybeSingle();
+  if (error) throw readFailed(error);
   if (!crew || crew.kind !== "crew") notFound();
 
-  const { data: kids } = await sb
+  const { data: kids, error: kidsError } = await sb
     .from("sessions")
     .select("id, seat_number, units, side")
     .eq("parent_id", id)
     .order("seat_number");
+  if (kidsError) throw readFailed(kidsError);
 
   const seats = [];
   for (const k of kids ?? []) {
-    const { data: rows } = await sb
+    const { data: rows, error: rowsError } = await sb
       .from("strokes")
       .select("rec, seq, catch_ms, drive_ms, recovery_ms, peak, peak_pos_pct, impulse, rise_rate, third1, third2, third3, curve_valid")
       .eq("session_id", k.id)
       .order("rec");
-    const { data: seat } = crew.boat_id
+    if (rowsError) throw readFailed(rowsError);
+    const { data: seat, error: seatError } = crew.boat_id
       ? await sb.from("seats").select("side").eq("boat_id", crew.boat_id).eq("seat_number", k.seat_number ?? -1).maybeSingle()
-      : { data: null };
+      : { data: null, error: null };
+    if (seatError) throw readFailed(seatError);
     seats.push({
       id: k.id,
       seat: k.seat_number ?? 0,
@@ -56,12 +63,13 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
     });
   }
 
-  const { data: gps } = await sb
+  const { data: gps, error: gpsError } = await sb
     .from("gps_points")
     .select("t_ms, lat, lon, speed_mps, heading_deg")
     .eq("session_id", id)
     .order("t_ms")
     .limit(20000);
+  if (gpsError) throw readFailed(gpsError);
 
   const track = (gps ?? []).map((p) => ({
     tMs: p.t_ms as number,

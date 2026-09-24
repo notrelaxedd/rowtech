@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase/server";
+import { readFailed, supabaseServer } from "@/lib/supabase/server";
 import { duration, fmt } from "@/lib/session/analyse";
 import { LocalTime } from "@/components/dash/local-time";
 import { UploadForm } from "./upload-form";
@@ -22,18 +22,20 @@ type SessionRow = {
 
 export default async function ForcePage() {
   const sb = await supabaseServer();
-  const { data } = await sb
+  const { data, error } = await sb
     .from("sessions")
     .select("id, kind, parent_id, seat_number, title, recorded_at, units, stroke_count, duration_ms, boats(name)")
     .order("recorded_at", { ascending: false })
     .limit(200);
+  if (error) throw readFailed(error);
   const sessions = (data ?? []) as unknown as SessionRow[];
 
-  const { data: statsData } = await sb
+  const { data: statsData, error: statsError } = await sb
     .from("session_stats")
     .select("session_id, seat_number, recorded_at, avg_peak, avg_rise_rate, avg_peak_pos_pct, avg_drive_ms, avg_recovery_ms, consistency_pct, strokes")
     .order("recorded_at", { ascending: true })
     .limit(500);
+  if (statsError) throw readFailed(statsError);
   const history = (statsData ?? []).filter((s) => s.seat_number !== null && s.strokes > 0) as HistoryPoint[];
 
   const children = new Map<string, SessionRow[]>();
