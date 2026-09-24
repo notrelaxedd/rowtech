@@ -155,6 +155,28 @@ test.describe("signed in", () => {
     expect(after?.strokes).toBe(kept);
   });
 
+  // The parser takes any catch_ms, so a clock that jumps mid-outing still
+  // uploads; its time runs to the last release, past what an int holds.
+  test("an outing whose strokes span more than 24.8 days still uploads", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const [meta, csv] = await Promise.all(["meta.json", "strokes.csv"].map((f) => readFile(`public/demo/seat-1/${f}`)));
+    const rows = csv.toString().trim().split("\n");
+    const last = rows[rows.length - 1].split(",");
+    last[2] = String(2_200_000_000); // catch_ms
+    rows[rows.length - 1] = last.join(",");
+    const strokes = rows.join("\n") + "\n";
+    const id = await upload(page, [
+      { name: "meta.json", mimeType: "application/json", buffer: meta },
+      { name: "strokes.csv", mimeType: "text/csv", buffer: Buffer.from(strokes) },
+    ]);
+
+    const { data: row } = await user.db.from("session_stats").select("strokes, span_ms").eq("session_id", id).single();
+    const s = summarise(parseStrokes(strokes));
+    expect(s.durationMs).toBeGreaterThan(2 ** 31 - 1);
+    expect(row).toEqual({ strokes: s.strokes, span_ms: s.durationMs });
+  });
+
   // An uncalibrated node writes raw counts, five or six digits before the
   // point; the database keeps every digit the file has.
   test("Export CSV gives back the node's strokes.csv, raw counts and all", async ({ page, context, baseURL }) => {

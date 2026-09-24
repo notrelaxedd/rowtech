@@ -12,7 +12,8 @@
 -- CODE-031: span_ms took the longest drive, not the last stroke's. It now
 -- runs from the first catch to the last release, as summarise() in
 -- lib/session/analyse.ts does, and consistency_pct needs three strokes, as
--- there.
+-- there. It is bigint, as catch_ms is: the parser takes any catch_ms, and an
+-- int cast here would fail the upload of a file it accepted.
 alter table public.sessions
   add column avg_peak         double precision,
   add column avg_impulse      double precision,
@@ -21,7 +22,7 @@ alter table public.sessions
   add column avg_drive_ms     double precision,
   add column avg_recovery_ms  double precision,
   add column consistency_pct  double precision,
-  add column span_ms          integer;
+  add column span_ms          bigint;
 
 -- Works these sessions' figures out again from their strokes. A session with
 -- none left has 0 strokes and no figures.
@@ -49,7 +50,7 @@ language sql security invoker set search_path = '' as $fn$
            avg(k.recovery_ms)::double precision       as avg_recovery_ms,
            case when count(k.rec) >= 3 and avg(k.impulse) <> 0
                 then (stddev_samp(k.impulse) / avg(k.impulse) * 100)::double precision end as consistency_pct,
-           (max(k.catch_ms + k.drive_ms) - min(k.catch_ms))::int                          as span_ms
+           (max(k.catch_ms + k.drive_ms) - min(k.catch_ms))                               as span_ms
       from unnest(p_sessions) as t(id)
       left join public.strokes k on k.session_id = t.id
      group by t.id
