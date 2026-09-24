@@ -6,6 +6,7 @@ import { parseSession } from "@/lib/session/parse";
 import { SessionFormatError, type ParsedSession } from "@/lib/session/format";
 import { collectSessions, ZipTooLargeError, type NamedFile, type SessionFolder } from "@/lib/session/collect";
 import { looksLikeVieve, VieveNotSupportedError } from "@/lib/session/vieve";
+import { isUuid } from "@/lib/uuid";
 
 export type UploadState = { status: "idle" | "error" | "ok"; message: string; sessionId?: string };
 
@@ -243,14 +244,30 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
 
 /** Removes a session, its seats if it is a crew session, and their files. */
 export async function deleteSession(id: string): Promise<void> {
+  if (!isUuid(id)) return;
   // RLS is the real gate; this keeps a removed beta user out even if it weren't.
   if ((await getViewer()).state !== "allowed") return;
   const sb = await supabaseServer();
-  const { data: kids } = await sb.from("sessions").select("id").eq("parent_id", id);
+  const { data: kids, error: kidsError } = await sb.from("sessions").select("id").eq("parent_id", id);
   const ids = [id, ...(kids ?? []).map((k) => k.id)];
-  const { data: files } = await sb.from("session_files").select("path").in("session_id", ids);
-  if (files?.length) await sb.storage.from("sessions").remove(files.map((f) => f.path));
-  // The children go with the parent: sessions.parent_id cascades.
-  await sb.from("sessions").delete().eq("id", id);
+  const { data: files, error: filesError } = await sb.from("session_files").select("path").in("session_id", ids);
+  if (kidsError || filesError) {
+    console.error("delete: lookup failed", { message: (kidsError ?? filesError)?.message });
+    return;
+  }
+
+  // The rows first, so a failure leaves everything as it was. The seats, their
+  // strokes and file rows go with the session (the foreign keys cascade).
+  const { data: deleted, error } = await sb.from("sessions").delete().eq("id", id).select("id");
+  if (error || !deleted?.length) {
+    console.error("delete: session not deleted", { id, message: error?.message ?? "no row deleted" });
+    return;
+  }
+  // Then the files. If this fails they are orphaned in Storage, but no row
+  // points at a file that's gone.
+  if (files?.length) {
+    const { error: removeError } = await sb.storage.from("sessions").remove(files.map((f) => f.path));
+    if (removeError) console.error("delete: files not removed", { id, message: removeError.message });
+  }
   revalidatePath("/app/force");
 }

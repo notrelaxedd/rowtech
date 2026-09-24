@@ -2,16 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { getViewer, supabaseServer } from "@/lib/supabase/server";
+import { isUuid } from "@/lib/uuid";
 
 export type SideResult = { ok: true } | { ok: false; message: string };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FAILED: SideResult = { ok: false, message: "That side wasn't saved. Try again in a minute." };
 
 /** Which side a seat rows. The node can't know, so the coach says once. */
 export async function setSeatSide(sessionId: string, side: "port" | "starboard"): Promise<SideResult> {
   // The types above are gone at runtime; a hand-made request can send anything.
-  if (!UUID.test(sessionId) || (side !== "port" && side !== "starboard")) return FAILED;
+  if (!isUuid(sessionId) || (side !== "port" && side !== "starboard")) return FAILED;
   // RLS is the real gate; this keeps a removed beta user out even if it weren't.
   if ((await getViewer()).state !== "allowed") return FAILED;
 
