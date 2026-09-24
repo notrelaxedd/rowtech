@@ -483,6 +483,34 @@ test.describe("signed in", () => {
     await page.reload();
     await expect(page.getByRole("slider", { name: "Stroke" })).toBeVisible();
     await expect(page.getByText("This page didn’t load.")).toHaveCount(0);
+    await expect(page.getByText("The node didn’t keep a curve for this stroke.")).toBeVisible();
+  });
+
+  // The page signs each curves link for an hour; a tab left open longer gets
+  // Storage's refusal, which is not the node having kept no curve.
+  test("a curves file that doesn't load says so, and is tried again when its seat is picked", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const expired = /\/storage\/v1\/object\/sign\//;
+    await page.route(expired, (route) =>
+      route.fulfill({ status: 400, contentType: "application/json", body: '{"statusCode":"400","error":"InvalidJWT","message":"\\"exp\\" claim timestamp check failed"}' })
+    );
+    await upload(page, await crewZip(2, 6));
+
+    const failed = page.getByText("Couldn’t load the curve. Reload the page to try again.");
+    const noCurve = page.getByText("The node didn’t keep a curve for this stroke.");
+    await expect(failed).toBeVisible();
+    await expect(noCurve).toHaveCount(0);
+
+    await page.unroute(expired);
+    for (const seat of ["seat 6", "seat 2"]) {
+      const fetched = page.waitForResponse(expired);
+      await page.getByRole("button", { name: seat }).click();
+      expect((await fetched).ok(), seat).toBe(true);
+      await expect(page.getByRole("button", { name: seat })).toHaveAttribute("aria-pressed", "true");
+      await expect(failed).toHaveCount(0);
+      await expect(noCurve).toHaveCount(0);
+    }
   });
 
   test("a node whose seat was never set is stored with no seat, and shows as seat ?", async ({ page, context, baseURL }) => {

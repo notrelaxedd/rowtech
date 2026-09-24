@@ -22,7 +22,16 @@ const PAD = { l: 52, r: 16, t: 16, b: 30 };
  * units. The curve is 64 points of the drive, so the x axis is the drive and
  * the release is the last point -- which is exactly what the node recorded.
  */
-export function CurveCanvas({ layers, height = 320 }: { layers: CurveLayer[]; height?: number }) {
+export function CurveCanvas({
+  layers,
+  height = 320,
+  loadFailed = false,
+}: {
+  layers: CurveLayer[];
+  height?: number;
+  /** The seat's curves file is there but didn't load. */
+  loadFailed?: boolean;
+}) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -156,7 +165,9 @@ export function CurveCanvas({ layers, height = 320 }: { layers: CurveLayer[]; he
       />
       {!main?.curve && (
         <p className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-          The node didn&rsquo;t keep a curve for this stroke.
+          {loadFailed
+            ? "Couldn’t load the curve. Reload the page to try again."
+            : "The node didn’t keep a curve for this stroke."}
         </p>
       )}
     </div>
