@@ -180,7 +180,11 @@ export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: s
                 work {thirds.map((t) => Math.round(t)).join(" · ")} %
               </p>
             </div>
-            <CurveCanvas layers={layers} loadFailed={loaded === "failed"} />
+            <CurveCanvas
+              layers={layers}
+              loadFailed={loaded === "failed"}
+              loading={!!seat.curvesUrl && loaded === undefined}
+            />
             {layers.length > 1 && (
               <ul className="flex flex-wrap gap-4 px-1 pt-2 text-xs text-muted-foreground">
                 {layers.map((l) => (

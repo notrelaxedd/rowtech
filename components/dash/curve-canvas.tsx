@@ -26,11 +26,14 @@ export function CurveCanvas({
   layers,
   height = 320,
   loadFailed = false,
+  loading = false,
 }: {
   layers: CurveLayer[];
   height?: number;
   /** The seat's curves file is there but didn't load. */
   loadFailed?: boolean;
+  /** The seat's curves file is there and still on its way. */
+  loading?: boolean;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -167,7 +170,9 @@ export function CurveCanvas({
         <p className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
           {loadFailed
             ? "Couldn’t load the curve. Reload the page to try again."
-            : "The node didn’t keep a curve for this stroke."}
+            : loading
+              ? "Loading the curve…"
+              : "The node didn’t keep a curve for this stroke."}
         </p>
       )}
     </div>

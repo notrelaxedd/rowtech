@@ -530,10 +530,25 @@ test.describe("signed in", () => {
     await expect(noCurve).toHaveCount(0);
 
     await page.unroute(expired);
+    const loading = page.getByText("Loading the curve…");
     for (const seat of ["seat 6", "seat 2"]) {
+      // Hold the fetch, so the page can be seen while it waits: it says the
+      // curve is loading, not that the node kept none.
+      let release!: () => void;
+      const held = new Promise<void>((r) => (release = r));
+      await page.route(expired, async (route) => {
+        await held;
+        await route.continue();
+      });
       const fetched = page.waitForResponse(expired);
       await page.getByRole("button", { name: seat }).click();
+      await expect(loading).toBeVisible();
+      await expect(failed).toHaveCount(0);
+      await expect(noCurve).toHaveCount(0);
+      release();
       expect((await fetched).ok(), seat).toBe(true);
+      await page.unroute(expired);
+      await expect(loading).toHaveCount(0);
       await expect(page.getByRole("button", { name: seat })).toHaveAttribute("aria-pressed", "true");
       await expect(failed).toHaveCount(0);
       await expect(noCurve).toHaveCount(0);
