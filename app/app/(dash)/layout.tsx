@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getViewer } from "@/lib/supabase/server";
 import { Logo } from "@/components/site/logo";
+import { SkipLink } from "@/components/site/skip-link";
 import { signOut } from "../login/actions";
 import { RequestAccess } from "./request-access";
 import { DashNav } from "./dash-nav";
@@ -16,6 +17,7 @@ export default async function DashLayout({ children }: { children: React.ReactNo
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur-md">
+        <SkipLink />
         <div className="mx-auto flex h-14 w-full max-w-[110rem] items-center gap-6 px-4 sm:px-6">
           <Link href="/app" aria-label="RowTech dashboard" className="rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-trace">
             <Logo />
@@ -31,7 +33,7 @@ export default async function DashLayout({ children }: { children: React.ReactNo
           </div>
         </div>
       </header>
-      <main id="main" className="flex-1">
+      <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
         {children}
       </main>
     </div>

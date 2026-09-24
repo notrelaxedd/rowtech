@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Logo } from "./logo";
 import { BetaLink } from "./cta";
 import { MobileMenu } from "./mobile-menu";
+import { SkipLink } from "./skip-link";
 
 const links = [
   { href: "/#how", label: "How it works" },
@@ -15,6 +16,7 @@ const links = [
 export function SiteHeader({ cta = true }: { cta?: boolean }) {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/95 backdrop-blur-sm">
+      <SkipLink />
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-8">
         <Link href="/" aria-label="RowTech home" className="rounded-md">
           <Logo />

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { expectSkipLink } from "./support/skip-link";
 
 test("the marketing page renders, with the beta offered in four places", async ({ page }) => {
   await page.goto("/");
@@ -167,4 +168,12 @@ test("links to the FAQ land on the FAQ", async ({ page, isMobile }) => {
   await page.goto("/force");
   await clickFaq();
   await landsOnFaq();
+});
+
+// Keyboard users get past the header's links in one step (A11Y-001).
+test("the first Tab on every page is a link past the header to the content", async ({ page }) => {
+  for (const path of ["/", "/beta", "/force", "/vieve", "/no-such-page", "/app/login"]) {
+    await page.goto(path);
+    await test.step(path, () => expectSkipLink(page));
+  }
 });

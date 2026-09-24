@@ -5,6 +5,7 @@ import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { addToTeam, allow, emailedLink, hasAccount, localSupabaseMissing, mailpitMissing, makeUser, revoke, signInBrowser } from "./support/local-supabase";
 import { parseStrokes } from "../lib/session/parse";
 import { duration, fmt, summarise, type SessionSummary } from "../lib/session/analyse";
+import { expectSkipLink } from "./support/skip-link";
 
 test("the dashboard is closed to people who aren't signed in", async ({ page }) => {
   await page.goto("/app/force");
@@ -98,6 +99,13 @@ test.describe("signed in", () => {
     await expect(page).toHaveURL(/\/app\/force\/[0-9a-f-]{36}$/, { timeout: 30_000 });
     return page.url().split("/").pop()!;
   }
+
+  test("the dashboard's first Tab is a link past its header to the content", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    await page.goto("/app/force");
+    await expectSkipLink(page);
+  });
 
   test("an uploaded sample session renders in /app/force, and uploading it again doesn't double it", async ({ page, context, baseURL }) => {
     const user = await makeUser();

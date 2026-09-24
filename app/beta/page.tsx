@@ -21,7 +21,7 @@ export default async function BetaPage({
   return (
     <div className="site flex min-h-full flex-col">
       <SiteHeader cta={false} />
-      <main id="main" className="flex-1">
+      <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
         <div className="mx-auto w-full max-w-xl px-5 pt-12 pb-24 sm:px-8 sm:pt-16">
           <SignupForm from={from} />
         </div>
