@@ -97,3 +97,9 @@ test("a file row can only point into its own team's folder", async () => {
     .insert({ session_id: session, kind: "meta", path: `${team}/${session}/meta.json` });
   expect(own).toBeNull();
 });
+
+test("the membership check can't be called through the API", async () => {
+  const { user, team } = await crewWithData();
+  const { error } = await user.db.rpc("is_team_member", { team });
+  expect(error?.code).toBe("PGRST202"); // no such function exposed
+});
