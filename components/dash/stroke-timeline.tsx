@@ -171,7 +171,8 @@ export function StrokeList({
       style={{ height }}
       className="overflow-y-auto rounded-md border border-line bg-panel"
     >
-      <ul aria-label="Strokes" style={{ height: strokes.length * ROW }} className="relative">
+      {/* role="list": Safari drops the list role from a list with no markers. */}
+      <ul role="list" aria-label="Strokes" style={{ height: strokes.length * ROW }} className="relative">
         {strokes.slice(first, last).map((s, n) => {
           const i = first + n;
           const on = i === selected;
