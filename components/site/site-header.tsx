@@ -4,10 +4,10 @@ import { BetaLink } from "./cta";
 import { MobileMenu } from "./mobile-menu";
 
 const links = [
-  { href: "/#crew", label: "Crew view" },
   { href: "/#how", label: "How it works" },
   { href: "/#stroke", label: "One stroke" },
-  { href: "/#vieve", label: "Vieve" },
+  { href: "/force", label: "Force" },
+  { href: "/vieve", label: "Vieve" },
   { href: "/team", label: "Who we are" },
   { href: "/#faq", label: "FAQ" },
 ];

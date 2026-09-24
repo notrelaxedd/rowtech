@@ -8,7 +8,7 @@ test("the marketing page renders, with the beta offered in four places", async (
   await expect(page.getByRole("img", { name: /Force seat node/i }).first()).toBeVisible();
   await expect(page.locator("#hero-peak")).toHaveCount(1);
 
-  for (const id of ["crew", "how", "stroke", "screens", "vieve", "boathouse", "beta-scope", "faq", "beta"]) {
+  for (const id of ["crew", "how", "stroke", "products", "beta-scope", "faq", "beta"]) {
     await expect(page.locator(`#${id}`)).toHaveCount(1);
   }
 
@@ -26,19 +26,33 @@ test("the marketing page renders, with the beta offered in four places", async (
   await expect(page.locator("#beta-scope")).toContainText("In the node’s firmware now");
 });
 
-test("reduced motion leaves the page in its finished state", async ({ page }) => {
+test("specifications live on the product pages, not the home page", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("main")).not.toContainText("3000 mAh");
+  await expect(page.locator("main")).not.toContainText("$499");
+  await expect(page.locator("#products").getByRole("link", { name: /Force/ })).toHaveAttribute("href", "/force");
+  await expect(page.locator("#products").getByRole("link", { name: /Vieve/ })).toHaveAttribute("href", "/vieve");
+
+  await page.goto("/force");
+  await expect(page.locator("#specs")).toContainText("3000 mAh");
+  await page.goto("/vieve");
+  await expect(page.locator("#specs")).toContainText("$499");
+});
+
+test("reduced motion leaves the pages in their finished state", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(page.locator(".rt-stroke-cursor")).toBeHidden();
-  await expect(page.locator("#vieve")).toContainText("8 of 8");
+  await page.goto("/vieve");
+  await expect(page.locator("#clock")).toContainText("8 of 8");
 });
 
-test("the Force node is shown as a 3D model with its notes around it", async ({ page }) => {
-  await page.goto("/");
+test("the Force page shows the node as a 3D model with its notes around it", async ({ page }) => {
+  await page.goto("/force");
   const model = page.getByRole("group", { name: "3D model: Parts of the Force node" });
   await model.scrollIntoViewIfNeeded();
   await expect(model.locator("canvas")).toBeVisible({ timeout: 15000 });
-  await expect(page.locator("#screens")).toContainText("Steps through the rower’s screens");
+  await expect(page.locator("#parts")).toContainText("Steps through the rower’s screens");
 });
 
 test("the team has its own page, and the home page links to it", async ({ page }) => {
@@ -50,17 +64,17 @@ test("the team has its own page, and the home page links to it", async ({ page }
 });
 
 test("the diagrams light the part a note describes", async ({ page }) => {
-  await page.goto("/");
-  await page.locator("#screens figure").first().scrollIntoViewIfNeeded();
+  await page.goto("/force");
+  await page.locator("#parts figure").first().scrollIntoViewIfNeeded();
   const note = page.getByRole("list", { name: "Parts of the Force node" }).getByRole("button", { name: /TARE/ });
   await note.click();
   await expect(note).toHaveAttribute("aria-pressed", "true");
 });
 
-test("Vieve is shown as a 3D model too", async ({ page }) => {
-  await page.goto("/");
+test("the Vieve page shows it as a 3D model too", async ({ page }) => {
+  await page.goto("/vieve");
   const model = page.getByRole("group", { name: "3D model: Parts of Vieve" });
   await model.scrollIntoViewIfNeeded();
   await expect(model.locator("canvas")).toBeVisible({ timeout: 15000 });
-  await expect(page.locator("#vieve")).toContainText("concept design");
+  await expect(page.locator("#parts")).toContainText("concept design");
 });

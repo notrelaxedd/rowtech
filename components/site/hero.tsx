@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BetaLink } from "./cta";
 import { ScopeStrip } from "./scope-strip";
 import { ForceDevice } from "@/components/device/force-device";
@@ -17,8 +18,8 @@ export function Hero() {
           <div>
             <h1 className="type-h1 max-w-[16ch]">Making imperative data available to everyone, seat by seat.</h1>
             <p className="type-lead mt-6 max-w-[36rem] text-muted-foreground">
-              A Force node on each seat&rsquo;s rigger backstay records the force curve of every stroke, shows it to the
-              rower live on its 3.5&Prime; screen, and saves the session to a microSD card for you to download at the dock.
+              A Force node on each seat&rsquo;s rigger backstay records the force curve of every stroke and shows it to the
+              rower live. You download the practice at the dock.
             </p>
             <div className="mt-8">
               <BetaLink from="hero" className="max-sm:w-full" />
@@ -30,7 +31,12 @@ export function Hero() {
             <div className="[transform:rotateY(-11deg)_rotateX(4deg)] drop-shadow-[0_24px_36px_rgb(3_14_18/0.55)] max-lg:[transform:none]">
               <ForceDevice idPrefix="hero" className="block h-auto w-full" />
             </div>
-            <figcaption className="mt-4 text-center text-sm text-muted-foreground">Force node, concept design.</figcaption>
+            <figcaption className="mt-4 text-center text-sm text-muted-foreground">
+              Force node, concept design.{" "}
+              <Link href="/force" className="text-foreground underline underline-offset-4 hover:text-trace">
+                See Force
+              </Link>
+            </figcaption>
           </figure>
         </div>
       </div>

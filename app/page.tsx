@@ -3,13 +3,12 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { BetaLink, SectionEnd } from "@/components/site/cta";
 import { Hero } from "@/components/site/hero";
 import { CrewLanes } from "@/components/site/crew-lanes";
-import { CurveExplorerIsland } from "@/components/site/islands";
-import { DeviceDiagram3D } from "@/components/site/device-diagram-3d";
-import { FORCE_DEFAULT_VIEW, FORCE_NOTES, VIEVE_DEFAULT_VIEW, VIEVE_NOTES } from "@/components/site/device-notes";
+import Link from "next/link";
+import { CurveExplorerIsland, ForceDeviceIsland, VieveDeviceIsland } from "@/components/site/islands";
+import { Status } from "@/components/site/status";
 import { ForceScreen } from "@/components/device/force-screen";
 import { DevicePlaceholder } from "@/components/device/device-placeholder";
 import { CurveExplorerView } from "@/components/site/curve-explorer-view";
-import { CoxBoxView } from "@/components/site/cox-box-view";
 import { SessionFiles } from "@/components/site/session-files";
 import { PhotoSlot } from "@/components/site/photo-slot";
 import { siteUrl } from "@/lib/site";
@@ -17,16 +16,6 @@ import { TEAM } from "@/lib/team";
 import { cn } from "@/lib/utils";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 sm:px-8";
-
-/** Where a section stands, in words: built, or still being built. */
-function Status({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-      <span aria-hidden className="size-2 rounded-[2px] border border-current" />
-      {children}
-    </p>
-  );
-}
 
 const STEPS = [
   {
@@ -46,28 +35,35 @@ const STEPS = [
   },
 ] as const;
 
-const BOATHOUSE = [
+const PRODUCTS = [
   {
-    t: "Its own WiFi network",
-    d: "Each node runs its own network. Join it from a phone, open a browser, and the node’s page is there. There’s no app to install.",
+    href: "/force",
+    name: "Force, the seat node",
+    status: null,
+    line: "One on each seat’s rigger. It records the force curve of every stroke and shows the rower their own.",
+    cta: "See Force and its specifications",
+    drawing: (
+      <ForceDeviceIsland
+        idPrefix="card-force"
+        className="block h-auto w-full"
+        fallback={<DevicePlaceholder ratio={1180 / 800} name="FORCE" />}
+      />
+    ),
   },
   {
-    t: "Calibration, and where it stands",
-    d: "The firmware calibrates against up to five known weights and reports its own worst-case error. We haven’t calibrated a node yet, so for now force reads in raw sensor units. The timing measures don’t need calibration.",
+    href: "/vieve",
+    name: "Vieve, the RowTech cox box",
+    status: "In development",
+    line: "The cox’s voice to the boat’s speakers, and the hub that puts every seat on one clock.",
+    cta: "See Vieve and its specifications",
+    drawing: (
+      <VieveDeviceIsland
+        idPrefix="card-vieve"
+        className="block h-auto w-full"
+        fallback={<DevicePlaceholder ratio={1320 / 760} name="VIEVE" />}
+      />
+    ),
   },
-] as const;
-
-const SPECS = [
-  ["Load cell", "50 kg, in series on the rigger backstay"],
-  ["Electronics", "Adafruit Feather ESP32-S3 and an HX711 breakout on a RowTech carrier board, 80 samples a second"],
-  ["Catch timing", "Placed on the node to within about 3 ms, interpolated between samples 12.5 ms apart"],
-  ["Calibration", "Up to 5 points against known weights; reports its own worst-case error. Not yet run on a node"],
-  ["Screen", "3.5″ 480×320 TFT"],
-  ["Keys", "VIEW, TARE, POWER"],
-  ["Seat number", "Set on the node’s own web page"],
-  ["Network", "Its own WiFi network; download from any phone or laptop"],
-  ["Storage", "microSD. Per session: strokes.csv, curves.bin, events.csv, meta.json"],
-  ["Battery", "3000 mAh"],
 ] as const;
 
 const BUILT = [
@@ -80,7 +76,7 @@ const BUILT = [
 const NEXT = [
   "Calibration, so every node reads in kilograms",
   "Vieve: the cox’s voice, GPS time, and the hub every seat reports to",
-  "One clock across the boat, with a target of 5 ms for an eight",
+  "One clock across the boat, so seats can be compared",
   "Catch spread and sequencing, seat by seat",
   "Port and starboard balance",
   "Sessions uploaded from the boat to the team dashboard",
@@ -105,7 +101,7 @@ const FAQ = [
   },
   {
     q: "How accurate is it?",
-    a: "The node places each catch to within about 3 ms by interpolating between samples taken 12.5 ms apart. Force is another matter: it needs each node calibrated against known weights, and we haven’t done that yet. Until we do, force reads in raw sensor units.",
+    a: "Timing is measured on the node itself, and it doesn’t need calibration. Force does: each node has to be calibrated against known weights, and we haven’t done that yet. Until we do, force reads in raw sensor units. The Force page has the numbers.",
   },
 ];
 
@@ -120,15 +116,6 @@ const jsonLd = {
       logo: `${siteUrl}/icon.svg`,
       description: "Seat-by-seat force measurement for rowing.",
       founder: TEAM.map((p) => ({ "@type": "Person", name: p.name })),
-    },
-    {
-      "@type": "Product",
-      name: "RowTech Force",
-      brand: { "@id": `${siteUrl}/#org` },
-      category: "Rowing force measurement",
-      image: `${siteUrl}/og.png`,
-      description:
-        "A seat node for rowing: a load cell in the rigger backstay and a 3.5-inch screen. It records the force curve of every stroke and saves each session to microSD. In beta.",
     },
   ],
 };
@@ -155,7 +142,7 @@ export default function Home() {
               <p className="type-body mt-4 max-w-[58ch] text-muted-foreground">
                 Each node records its own seat today. Comparing seats needs two things we&rsquo;re still building:
                 calibration, so every node reads in kilograms, and Vieve, the RowTech cox box, which puts every seat on
-                one clock. The target is within 5 ms across an eight.
+                one clock.
               </p>
             </div>
             <CrewLanes />
@@ -220,107 +207,27 @@ export default function Home() {
           </div>
         </section>
 
-        {/* --------------------------------------------------------- screens */}
-        <section id="screens" data-section="screens" className="below-fold border-t border-line py-24 sm:py-28">
+        {/* -------------------------------------------------------- products */}
+        <section id="products" data-section="products" className="below-fold border-t border-line py-24 sm:py-28">
           <div className={wrap}>
-            <div className="max-w-3xl">
-              <h2 className="type-h2">What the rower sees on the water.</h2>
-              <p className="type-lead mt-5 text-muted-foreground">
-                Their own peak and their own curve, on a 3.5&Prime; screen, with three keys down its edge.
-              </p>
-            </div>
-            <div className="mt-12">
-              <DeviceDiagram3D
-                kind="force"
-                label="Parts of the Force node"
-                notes={FORCE_NOTES}
-                defaultView={FORCE_DEFAULT_VIEW}
-                caption="Force node, concept design. It's wired to a 50 kg load cell in series on the rigger backstay."
-                poster={<div className="flex h-full items-center justify-center p-6"><DevicePlaceholder ratio={1180 / 800} name="FORCE" /></div>}
-              />
-            </div>
-            <PhotoSlot
-              className="mt-12 max-w-md"
-              label="rower's-eye view of screen"
-              shows="The node's screen from the seat, mid-outing, as the rower sees it."
-            />
-          </div>
-        </section>
-
-        {/* ----------------------------------------------------------- Vieve */}
-        <section id="vieve" data-section="vieve" className="below-fold border-t border-line py-24 sm:py-32">
-          <div className={wrap}>
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end lg:gap-16">
-              <div>
-                <Status>In development</Status>
-                <h2 className="type-h2 mt-5">Vieve hears every seat.</h2>
-              </div>
-              <p className="type-lead text-muted-foreground">
-                Vieve, the RowTech cox box, will carry the cox&rsquo;s voice to the boat&rsquo;s speakers and be the hub
-                every seat node reports to. The target price is $499.
-              </p>
-            </div>
-            <div className="mt-12">
-              <CoxBoxView lit={8} />
-            </div>
-            <div className="mt-14">
-              <DeviceDiagram3D
-                kind="vieve"
-                label="Parts of Vieve"
-                notes={VIEVE_NOTES}
-                defaultView={VIEVE_DEFAULT_VIEW}
-                caption="Vieve V1, concept design."
-                poster={<div className="flex h-full items-center justify-center p-6"><DevicePlaceholder ratio={1320 / 760} name="VIEVE" /></div>}
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* ------------------------------------------------------- boathouse */}
-        <section id="boathouse" data-section="boathouse" className="below-fold border-t border-line py-24 sm:py-28">
-          <div className={wrap}>
-            <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-16">
-              <div>
-                <h2 className="type-h2">It brings its own network to the dock.</h2>
-                <PhotoSlot
-                  className="mt-10 hidden lg:block"
-                  label="PCB"
-                  shows="The RowTech carrier board with the Feather ESP32-S3 and HX711 breakout fitted."
-                />
-              </div>
-              <div>
-                <dl className="grid grid-cols-1 gap-x-12 gap-y-10 sm:grid-cols-2">
-                  {BOATHOUSE.map((f) => (
-                    <div key={f.t}>
-                      <dt className="type-h3">{f.t}</dt>
-                      <dd className="type-body mt-2 text-muted-foreground">{f.d}</dd>
-                    </div>
-                  ))}
-                </dl>
-                <details className="group mt-12 border-y border-line">
-                  <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 py-4 text-[1.0625rem] font-semibold [&::-webkit-details-marker]:hidden">
-                    Seat node specs
-                    <span aria-hidden className="relative size-3.5 shrink-0">
-                      <span className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 bg-muted-foreground" />
-                      <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-muted-foreground transition-transform duration-200 ease-out group-open:scale-y-0" />
-                    </span>
-                  </summary>
-                  <dl className="divide-y divide-line pb-4">
-                    {SPECS.map(([k, v]) => (
-                      <div key={k} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[9rem_1fr] sm:gap-6">
-                        <dt className="text-sm font-semibold text-muted-foreground">{k}</dt>
-                        <dd className="text-[0.9375rem]">{v}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </details>
-                <PhotoSlot
-                  className="mt-10 lg:hidden"
-                  label="PCB"
-                  shows="The RowTech carrier board with the Feather ESP32-S3 and HX711 breakout fitted."
-                />
-              </div>
-            </div>
+            <h2 className="type-h2 max-w-3xl">Two products, one system.</h2>
+            <ul className="mt-12 grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-10">
+              {PRODUCTS.map((p) => (
+                <li key={p.href} className="flex flex-col">
+                  <div className="instrument flex aspect-[4/3] items-center justify-center rounded-lg p-6 sm:p-10">
+                    {p.drawing}
+                  </div>
+                  <div className="mt-6">{p.status && <Status>{p.status}</Status>}</div>
+                  <h3 className="type-h3 mt-2">{p.name}</h3>
+                  <p className="type-body mt-2 max-w-[48ch] text-muted-foreground">{p.line}</p>
+                  <p className="mt-5">
+                    <Link href={p.href} className="font-semibold text-trace underline-offset-4 hover:underline">
+                      {p.cta}
+                    </Link>
+                  </p>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
