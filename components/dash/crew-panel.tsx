@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import type { StrokeRow } from "@/lib/session/format";
 import { fmt } from "@/lib/session/analyse";
 import { cn } from "@/lib/utils";
@@ -27,11 +27,14 @@ export function CrewPanel({
   seats: CrewSeat[];
   clockSource: "boot_ms" | "gps";
   clockSyncMs: number | null;
-  onSetSide?: (seatId: string, side: "port" | "starboard") => void;
+  /** Saves a side; resolves to a message when it wasn't saved. */
+  onSetSide?: (seatId: string, side: "port" | "starboard") => Promise<string | null>;
 }) {
   const [sides, setSides] = useState<Record<string, "port" | "starboard" | null>>(
     Object.fromEntries(seats.map((s) => [s.id, s.side === "port" || s.side === "starboard" ? s.side : null]))
   );
+  const [sideError, setSideError] = useState<string | null>(null);
+  const [, startSaving] = useTransition();
 
   // Load share: each seat's impulse as a share of the crew's, over the piece.
   // Valid without a shared clock: it compares totals, not moments.
@@ -138,8 +141,17 @@ export function CrewPanel({
                   type="button"
                   aria-pressed={sides[s.id] === side}
                   onClick={() => {
+                    // Shown at once, taken back if it doesn't save.
+                    const before = sides[s.id] ?? null;
                     setSides((v) => ({ ...v, [s.id]: side }));
-                    onSetSide?.(s.id, side);
+                    setSideError(null);
+                    startSaving(async () => {
+                      const problem = (await onSetSide?.(s.id, side)) ?? null;
+                      if (problem) {
+                        setSides((v) => ({ ...v, [s.id]: before }));
+                        setSideError(problem);
+                      }
+                    });
                   }}
                   className={cn(
                     "rounded px-1.5 py-0.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace",
@@ -152,6 +164,11 @@ export function CrewPanel({
             </li>
           ))}
         </ul>
+        {sideError && (
+          <p role="alert" className="mt-3 text-sm text-destructive">
+            {sideError}
+          </p>
+        )}
       </section>
 
       <section className={cn("rounded-lg border border-line bg-panel p-4", !synced && "opacity-90")}>

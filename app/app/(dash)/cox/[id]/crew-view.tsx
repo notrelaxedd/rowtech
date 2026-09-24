@@ -52,8 +52,9 @@ export function CrewView({
         seats={seats}
         clockSource={clockSource}
         clockSyncMs={clockSyncMs}
-        onSetSide={(seatId, side) => {
-          void setSeatSide(seatId, side);
+        onSetSide={async (seatId, side) => {
+          const saved = await setSeatSide(seatId, side);
+          return saved.ok ? null : saved.message;
         }}
       />
     </div>

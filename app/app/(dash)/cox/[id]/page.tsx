@@ -32,7 +32,7 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
 
   const { data: kids } = await sb
     .from("sessions")
-    .select("id, seat_number, units")
+    .select("id, seat_number, units, side")
     .eq("parent_id", id)
     .order("seat_number");
 
@@ -50,7 +50,7 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
       id: k.id,
       seat: k.seat_number ?? 0,
       label: k.seat_number ? `seat ${k.seat_number}` : "seat ?",
-      side: (seat?.side ?? null) as "port" | "starboard" | "scull" | "cox" | null,
+      side: (seat?.side ?? k.side ?? null) as "port" | "starboard" | "scull" | "cox" | null,
       strokes: ((rows ?? []) as DbStroke[]).map(toStroke),
     });
   }
