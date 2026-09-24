@@ -39,8 +39,8 @@ test.describe("signing in", () => {
     expect(await hasAccount(email)).toBe(false);
   });
 
-  // Sign-ups are off (supabase/config.toml, as on the rowtech project); a
-  // magic link still works for an account that was made by hand.
+  // Sign-ups are off (supabase/config.toml, as they should be on the rowtech
+  // project); a magic link still works for an account that was made by hand.
   test("an account on the beta list signs in with the emailed link", async ({ page }) => {
     test.skip(!!mailpitMissing, mailpitMissing ?? "");
     const user = await makeUser();

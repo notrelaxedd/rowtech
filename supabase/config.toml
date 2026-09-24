@@ -175,8 +175,8 @@ enable_refresh_token_rotation = true
 # Requires enable_refresh_token_rotation = true.
 refresh_token_reuse_interval = 10
 # Allow/disallow new user signups to your project.
-# Off: accounts are made by hand (README, "Dashboard access"), and the rowtech project turns
-# it off too (README, "Auth setup").
+# Off: accounts are made by hand (README, "Dashboard access"), as it should be on the rowtech
+# project too (README, "Auth setup").
 enable_signup = false
 # Allow/disallow anonymous sign-ins to your project.
 enable_anonymous_sign_ins = false
