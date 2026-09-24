@@ -140,6 +140,29 @@ test.describe("signed in", () => {
     });
   });
 
+  // The form posts to the server action itself, so it works before any script
+  // has run. With no script the time isn't sent, and the server takes now.
+  test.describe("with JavaScript off", () => {
+    test.use({ javaScriptEnabled: false });
+
+    test("an upload still goes through, dated now", async ({ page, context, baseURL }) => {
+      const user = await makeUser();
+      await signInBrowser(context, user, baseURL!);
+      await page.goto("/app/force");
+      const form = page.locator("form").filter({ has: page.getByLabel("Files") });
+      await expect(form).not.toHaveAttribute("action", /^javascript:/);
+      await page.getByLabel("Files").setInputFiles(seatFiles(1));
+      const before = Date.now();
+      await page.getByRole("button", { name: "Upload" }).click();
+
+      await expect.poll(async () => (await user.db.from("sessions").select("id")).data?.length, { timeout: 30_000 }).toBe(1);
+      const { data: rows } = await user.db.from("sessions").select("recorded_at");
+      const at = new Date(rows![0].recorded_at).getTime();
+      expect(at).toBeGreaterThanOrEqual(before - 1000);
+      expect(at).toBeLessThanOrEqual(Date.now() + 1000);
+    });
+  });
+
   test("port and starboard stay set on an outing with no boat", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);

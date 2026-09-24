@@ -21,22 +21,20 @@ function nowLocal() {
 /**
  * datetime-local gives a wall-clock time with no zone, and the server can't
  * know the browser's, so the time is turned into an instant here, in the zone
- * it was typed in, before it's sent.
+ * it was typed in, and sent in a hidden field. Without JavaScript that field is
+ * blank and the server takes it as now.
  */
-function withInstant(fd: FormData) {
-  const v = fd.get("recorded_at");
-  if (typeof v === "string" && v) {
-    // A date and time with no offset is read in the browser's zone.
-    const d = new Date(v);
-    if (!Number.isNaN(d.getTime())) fd.set("recorded_at", d.toISOString());
-  }
-  return fd;
+function toInstant(v: string) {
+  // A date and time with no offset is read in the browser's zone.
+  const d = new Date(v);
+  return v && !Number.isNaN(d.getTime()) ? d.toISOString() : "";
 }
 
 export function UploadForm() {
   const [state, action, pending] = useActionState(uploadSession, EMPTY);
   const [picked, setPicked] = useState<string[]>([]);
   const when = useRef<HTMLInputElement>(null);
+  const instant = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
 
@@ -46,6 +44,7 @@ export function UploadForm() {
   useEffect(() => {
     const el = when.current;
     if (el && !el.value) el.value = nowLocal();
+    if (el && instant.current) instant.current.value = toInstant(el.value);
   }, []);
 
   useEffect(() => {
@@ -53,7 +52,7 @@ export function UploadForm() {
   }, [state, router]);
 
   return (
-    <form ref={form} action={(fd) => action(withInstant(fd))} className="rounded-lg border border-line bg-panel p-4 sm:p-5">
+    <form ref={form} action={action} className="rounded-lg border border-line bg-panel p-4 sm:p-5">
       <h2 className="type-h3 text-lg">Upload a session</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         The four files a node writes (<span className="readout">meta.json</span>, <span className="readout">strokes.csv</span>,{" "}
@@ -85,7 +84,15 @@ export function UploadForm() {
         </label>
         <label>
           <span className="text-sm font-semibold">When was it rowed?</span>
-          <input ref={when} type="datetime-local" name="recorded_at" className={cn(field, "mt-1.5")} />
+          <input
+            ref={when}
+            type="datetime-local"
+            onChange={(e) => {
+              if (instant.current) instant.current.value = toInstant(e.target.value);
+            }}
+            className={cn(field, "mt-1.5")}
+          />
+          <input ref={instant} type="hidden" name="recorded_at" />
         </label>
         <label>
           <span className="text-sm font-semibold">
