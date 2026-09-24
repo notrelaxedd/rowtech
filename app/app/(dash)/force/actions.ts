@@ -80,6 +80,11 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     };
   }
 
+  const keys = parsed.map(({ session }) => `${session.meta.deviceId}/${session.meta.uuid}`);
+  if (new Set(keys).size !== keys.length) {
+    return { status: "error", message: "Two of those folders hold the same session. Pick each seat's folder once." };
+  }
+
   const recordedAt = (() => {
     const v = fd.get("recorded_at");
     const d = typeof v === "string" && v ? new Date(v) : new Date();
@@ -97,94 +102,36 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     return { status: "error", message: "We couldn't set your team up. Try again in a minute." };
   }
 
-  // The boat is named at upload: the node's meta.json doesn't record one.
-  let boatId: string | null = null;
-  if (boatName) {
-    const { data: existing } = await sb.from("boats").select("id").eq("team_id", team).eq("name", boatName).maybeSingle();
-    if (existing?.id) boatId = existing.id;
-    else {
-      const { data: made, error } = await sb.from("boats").insert({ team_id: team, name: boatName }).select("id").single();
-      if (error) return { status: "error", message: `The boat couldn't be saved: ${error.message}` };
-      boatId = made?.id ?? null;
-    }
+  // A session already uploaded keeps its id, so its files stay where they are;
+  // a new one gets its id here, so its files can be stored before its row.
+  const { data: known, error: lookupError } = await sb
+    .from("sessions")
+    .select("id, device_id, session_uuid")
+    .eq("team_id", team)
+    .in("session_uuid", parsed.map((p) => p.session.meta.uuid));
+  if (lookupError) {
+    console.error("upload: session lookup failed", { code: lookupError.code, message: lookupError.message });
+    return { status: "error", message: "The upload couldn't be saved. Try again in a minute." };
   }
+  const idOf = new Map((known ?? []).map((r) => [`${r.device_id}/${r.session_uuid}`, r.id as string]));
+  const seats = parsed.map(({ session, raw }) => {
+    const id = idOf.get(`${session.meta.deviceId}/${session.meta.uuid}`);
+    return { session, raw, id: id ?? crypto.randomUUID(), isNew: !id, files: [] as Array<{ kind: string; path: string; bytes: number }> };
+  });
 
-  // Several seats in one upload become a crew session that owns them.
-  let parentId: string | null = null;
-  if (parsed.length > 1) {
-    const { data: parent, error } = await sb
-      .from("sessions")
-      .insert({
-        team_id: team,
-        kind: "crew",
-        boat_id: boatId,
-        title: title || `${parsed.length} seats`,
-        recorded_at: recordedAt.toISOString(),
-        created_by: viewer.id,
-      })
-      .select("id")
-      .single();
-    if (error || !parent) return { status: "error", message: `The upload couldn't be saved: ${error?.message ?? "unknown error"}` };
-    parentId = parent.id;
-  }
+  // New sessions' files, removed again if their rows don't land. A re-upload
+  // overwrites the same session's files in place, so there is nothing to undo.
+  const stored: string[] = [];
+  const discard = async () => {
+    if (!stored.length) return;
+    const { error } = await sb.storage.from("sessions").remove(stored);
+    if (error) console.error("upload: cleanup failed", { paths: stored, message: error.message });
+  };
 
-  let firstId = parentId;
-  for (const { session, raw } of parsed) {
-    const { meta, strokes } = session;
-    const { data: row, error } = await sb
-      .from("sessions")
-      .upsert(
-        {
-          team_id: team,
-          kind: "node",
-          parent_id: parentId,
-          boat_id: boatId,
-          seat_number: meta.seat,
-          title: title || null,
-          recorded_at: recordedAt.toISOString(),
-          device_id: meta.deviceId,
-          session_uuid: meta.uuid,
-          format: meta.format,
-          units: meta.units,
-          sample_rate: meta.sampleRate,
-          curve_points: meta.curvePoints,
-          curve_scale: meta.curveScale,
-          stroke_count: strokes.length,
-          duration_ms: meta.elapsedMs,
-          meta: JSON.parse(decode(raw.meta!)) as Record<string, unknown>,
-          created_by: viewer.id,
-        },
-        { onConflict: "team_id,device_id,session_uuid" }
-      )
-      .select("id")
-      .single();
-    if (error || !row) return { status: "error", message: `The session couldn't be saved: ${error?.message ?? "unknown error"}` };
-    firstId ??= row.id;
-
-    // Re-uploading the same session replaces its strokes rather than doubling them.
-    await sb.from("strokes").delete().eq("session_id", row.id);
-    const rows = strokes.map((s) => ({
-      session_id: row.id,
-      rec: s.rec,
-      seq: s.seq,
-      catch_ms: s.catchMs,
-      drive_ms: s.driveMs,
-      recovery_ms: s.recoveryMs,
-      peak: s.peak,
-      peak_pos_pct: s.peakPosPct,
-      impulse: s.impulse,
-      rise_rate: s.riseRate,
-      third1: s.thirds[0],
-      third2: s.thirds[1],
-      third3: s.thirds[2],
-      curve_valid: s.curveValid,
-    }));
-    for (let i = 0; i < rows.length; i += 500) {
-      const { error: strokeError } = await sb.from("strokes").insert(rows.slice(i, i + 500));
-      if (strokeError) return { status: "error", message: `The strokes couldn't be saved: ${strokeError.message}` };
-    }
-
-    // The files themselves, exactly as they came off the card.
+  // The files themselves, exactly as they came off the card. Stored first, so
+  // no row ever points at a file that isn't there.
+  for (const seat of seats) {
+    const { raw } = seat;
     const files: Array<[kind: "meta" | "strokes" | "curves" | "events", name: string, bytes: Uint8Array | undefined]> = [
       ["meta", "meta.json", raw.meta],
       ["strokes", "strokes.csv", raw.strokes],
@@ -193,17 +140,55 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     ];
     for (const [kind, name, bytes] of files) {
       if (!bytes) continue;
-      const path = `${team}/${row.id}/${name}`;
+      const path = `${team}/${seat.id}/${name}`;
       const { error: upErr } = await sb.storage
         .from("sessions")
         .upload(path, new Blob([bytes as BlobPart]), { upsert: true, contentType: name.endsWith(".bin") ? "application/octet-stream" : name.endsWith(".json") ? "application/json" : "text/csv" });
-      if (upErr) return { status: "error", message: `${name} couldn't be stored: ${upErr.message}` };
-      await sb.from("session_files").upsert({ session_id: row.id, kind, path, bytes: bytes.byteLength }, { onConflict: "session_id,kind" });
+      if (upErr) {
+        console.error("upload: file not stored", { path, message: upErr.message });
+        await discard();
+        return { status: "error", message: `${name} couldn't be stored. Try again in a minute.` };
+      }
+      if (seat.isNew) stored.push(path);
+      seat.files.push({ kind, path, bytes: bytes.byteLength });
     }
   }
 
+  // Then every row -- boat, crew, seats, strokes, file rows -- in one
+  // transaction (supabase/migrations/*_ingest_sessions.sql).
+  const { data: saved, error: saveError } = await sb.rpc("ingest_sessions", {
+    p_team: team,
+    p_boat_name: boatName,
+    p_title: title,
+    p_recorded_at: recordedAt.toISOString(),
+    p_seats: seats.map(({ id, session, raw, files }) => ({
+      id,
+      device_id: session.meta.deviceId,
+      session_uuid: session.meta.uuid,
+      seat_number: session.meta.seat,
+      format: session.meta.format,
+      units: session.meta.units,
+      sample_rate: session.meta.sampleRate,
+      curve_points: session.meta.curvePoints,
+      curve_scale: session.meta.curveScale,
+      duration_ms: session.meta.elapsedMs,
+      meta: JSON.parse(decode(raw.meta!)) as Record<string, unknown>,
+      strokes: session.strokes.map((s) => [
+        s.rec, s.seq, s.catchMs, s.driveMs, s.recoveryMs, s.peak, s.peakPosPct,
+        s.impulse, s.riseRate, s.thirds[0], s.thirds[1], s.thirds[2], s.curveValid,
+      ]),
+      files,
+    })),
+  });
+  if (saveError || !saved) {
+    console.error("upload: rows not saved", { code: saveError?.code, message: saveError?.message });
+    await discard();
+    return { status: "error", message: "The upload couldn't be saved. Try again in a minute." };
+  }
+
   revalidatePath("/app/force");
-  return { status: "ok", message: "", sessionId: firstId ?? undefined };
+  const { parent, sessions } = saved as { parent: string | null; sessions: string[] };
+  return { status: "ok", message: "", sessionId: parent ?? sessions[0] };
 }
 
 /** Removes a session, its seats if it is a crew session, and their files. */
