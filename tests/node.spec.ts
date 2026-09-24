@@ -4,7 +4,7 @@ import path from "node:path";
 import { zipSync } from "fflate";
 import { parseSession, parseStrokes, parseMeta, curveAt } from "../lib/session/parse";
 import { SessionFormatError, CURVE_BYTES, CURVE_POINTS } from "../lib/session/format";
-import { collectSessions } from "../lib/session/collect";
+import { collectSessions, ZIP_LIMITS, ZipTooLargeError } from "../lib/session/collect";
 import { summarise, toCsv } from "../lib/session/analyse";
 
 const seatDir = (n: number) => path.join(process.cwd(), "public", "demo", `seat-${n}`);
@@ -102,4 +102,20 @@ test("an upload groups seats, loose files and zips the same way", async () => {
 
   // A folder with no session in it is dropped rather than half-read.
   expect(collectSessions([{ name: "notes/readme.txt", bytes: new Uint8Array([1]) }]).size).toBe(0);
+});
+
+test("a zip that would expand past what an upload needs is refused before it is inflated", () => {
+  // A few kB that expands to more than any session file can be.
+  const bomb = zipSync({ "s/strokes.csv": new Uint8Array(ZIP_LIMITS.fileBytes + 1), "s/meta.json": new Uint8Array(1) });
+  expect(bomb.byteLength).toBeLessThan(64 * 1024);
+  expect(() => collectSessions([{ name: "bomb.zip", bytes: bomb }])).toThrow(ZipTooLargeError);
+
+  // Too many session files, however small.
+  const many: Record<string, Uint8Array> = {};
+  for (let i = 0; i <= ZIP_LIMITS.files; i++) many[`s${i}/meta.json`] = new Uint8Array(1);
+  expect(() => collectSessions([{ name: "many.zip", bytes: zipSync(many) }])).toThrow(ZipTooLargeError);
+
+  // Anything that isn't a session file doesn't count, and isn't expanded.
+  const junk = zipSync({ "photos/big.jpg": new Uint8Array(ZIP_LIMITS.totalBytes + 1), "s/notes.txt": new Uint8Array(10) });
+  expect(collectSessions([{ name: "junk.zip", bytes: junk }]).size).toBe(0);
 });

@@ -19,6 +19,47 @@ const WANTED: Record<string, keyof SessionFolder> = {
   "events.csv": "events",
 };
 
+/**
+ * What one zip may expand to. A session is four files of a few hundred kB, so
+ * these are far above any real upload, and far below what a crafted zip (a
+ * few MB that declares gigabytes) would otherwise make the server allocate.
+ */
+export const ZIP_LIMITS = {
+  /** Session files taken from one zip: nine seats of four files is 36. */
+  files: 64,
+  /** Declared size of any one of them. */
+  fileBytes: 8 * 1024 * 1024,
+  /** Declared size of all of them together. */
+  totalBytes: 64 * 1024 * 1024,
+};
+
+export class ZipTooLargeError extends Error {
+  constructor() {
+    super("That zip holds more than one upload can take. Zip one outing's session folders at a time.");
+    this.name = "ZipTooLargeError";
+  }
+}
+
+/** Expands only the session files, refusing a zip that would expand past ZIP_LIMITS. */
+function unzipSessionFiles(bytes: Uint8Array) {
+  let files = 0;
+  let total = 0;
+  return unzipSync(bytes, {
+    // Runs before anything is inflated, on the sizes the zip declares. fflate
+    // never writes more than the declared size, so this bounds the memory.
+    filter: (f) => {
+      const name = f.name.split(/[\\/]/).pop()?.toLowerCase() ?? "";
+      if (f.name.endsWith("/") || !WANTED[name]) return false;
+      files += 1;
+      total += f.originalSize;
+      if (files > ZIP_LIMITS.files || f.originalSize > ZIP_LIMITS.fileBytes || total > ZIP_LIMITS.totalBytes) {
+        throw new ZipTooLargeError();
+      }
+      return true;
+    },
+  });
+}
+
 function place(folders: Map<string, SessionFolder>, fullPath: string, bytes: Uint8Array) {
   const parts = fullPath.split(/[\\/]/).filter(Boolean);
   const file = parts.pop()?.toLowerCase() ?? "";
@@ -38,7 +79,7 @@ export function collectSessions(files: NamedFile[]): Map<string, SessionFolder> 
   for (const { name, bytes } of files) {
     if (!bytes.byteLength) continue;
     if (name.toLowerCase().endsWith(".zip")) {
-      const entries = unzipSync(bytes);
+      const entries = unzipSessionFiles(bytes);
       for (const [path, content] of Object.entries(entries)) {
         if (path.endsWith("/") || content.length === 0) continue;
         place(folders, path, content);

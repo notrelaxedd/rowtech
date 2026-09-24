@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { supabaseServer, getViewer } from "@/lib/supabase/server";
 import { parseSession } from "@/lib/session/parse";
 import { SessionFormatError, type ParsedSession } from "@/lib/session/format";
-import { collectSessions, type NamedFile, type SessionFolder } from "@/lib/session/collect";
+import { collectSessions, ZipTooLargeError, type NamedFile, type SessionFolder } from "@/lib/session/collect";
 import { looksLikeVieve, VieveNotSupportedError } from "@/lib/session/vieve";
 
 export type UploadState = { status: "idle" | "error" | "ok"; message: string; sessionId?: string };
@@ -41,7 +41,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
   try {
     folders = await collect(fd);
   } catch (e) {
-    if (e instanceof VieveNotSupportedError) return { status: "error", message: e.message };
+    if (e instanceof VieveNotSupportedError || e instanceof ZipTooLargeError) return { status: "error", message: e.message };
     return { status: "error", message: "That zip couldn't be opened." };
   }
 
