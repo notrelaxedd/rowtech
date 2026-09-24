@@ -18,7 +18,8 @@ export type TableRow<T extends keyof Generated["public"]["Tables"]> = Generated[
 
 export type Database = Omit<Generated, "public"> & {
   public: Omit<Generated["public"], "Views"> & {
-    Views: {
+    // Every generated view, with session_stats' row corrected.
+    Views: Omit<Generated["public"]["Views"], "session_stats"> & {
       session_stats: Omit<Generated["public"]["Views"]["session_stats"], "Row"> & { Row: SessionStats };
     };
   };
