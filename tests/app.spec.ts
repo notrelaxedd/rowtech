@@ -165,6 +165,40 @@ test.describe("signed in", () => {
     }
   });
 
+  test("the history chart keeps the newest sessions, and the lists say when they stop short", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const { data: team } = await user.db.rpc("ensure_own_team", { p_name: "test crew" });
+    const at = (hours: number) => new Date(Date.UTC(2026, 0, 1) + hours * 3_600_000).toISOString();
+    // 101 crew outings, then 501 seat sessions after them, one stroke each.
+    const crews = Array.from({ length: 101 }, (_, i) => ({ id: randomUUID(), team_id: team, kind: "crew", recorded_at: at(i), created_by: user.id }));
+    const seats = Array.from({ length: 501 }, (_, i) => ({
+      id: randomUUID(), team_id: team, kind: "node", seat_number: 1, recorded_at: at(200 + i), stroke_count: 1,
+      device_id: "node-1", session_uuid: randomUUID(), units: "kg", created_by: user.id,
+    }));
+    expect((await user.db.from("sessions").insert(crews)).error).toBeNull();
+    expect((await user.db.from("sessions").insert(seats)).error).toBeNull();
+    const strokes = seats.map((s) => ({
+      session_id: s.id, rec: 0, seq: 1, catch_ms: 1000, drive_ms: 700, recovery_ms: 1300, peak: 50, peak_pos_pct: 40,
+      impulse: 25, rise_rate: 200, third1: 8, third2: 12, third3: 5, curve_valid: true,
+    }));
+    expect((await user.db.from("strokes").insert(strokes)).error).toBeNull();
+
+    await page.goto("/app/force");
+    await expect(page.getByText("Only the most recent sessions are listed; older ones aren’t shown here.")).toBeVisible();
+    await expect(page.getByText(/The most recent sessions, by seat; older ones aren’t in the chart/)).toBeVisible();
+    await expect(page.getByRole("img", { name: /across 500 sessions/ })).toBeVisible();
+    // The oldest seat session is past the list and, now, past the chart too.
+    const html = await (await page.request.get("/app/force")).text();
+    expect(html).toContain(seats[500].id);
+    expect(html).not.toContain(seats[0].id);
+
+    await page.goto("/app/cox");
+    await expect(page.getByText("Only the 100 most recent outings are listed; older ones aren’t shown here.")).toBeVisible();
+    await page.goto("/app/cox/compare");
+    await expect(page.getByText("The lists hold the 100 most recent outings; older ones aren’t in them.")).toBeVisible();
+  });
+
   test("an upload bigger than any outing is refused, and says why", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);

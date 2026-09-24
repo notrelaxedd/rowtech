@@ -5,6 +5,9 @@ import { LocalTime } from "@/components/dash/local-time";
 
 export const metadata = { title: "Cox" };
 
+/** Most outings the list shows. */
+const LISTED = 100;
+
 type Row = {
   id: string;
   title: string | null;
@@ -21,9 +24,10 @@ export default async function CoxPage() {
     .select("id, title, recorded_at, clock_source, duration_ms, boats(name)")
     .eq("kind", "crew")
     .order("recorded_at", { ascending: false })
-    .limit(100);
+    .limit(LISTED + 1);
   if (error) throw await readFailed(error);
-  const crews = (data ?? []) as unknown as Row[];
+  const more = (data ?? []).length > LISTED;
+  const crews = (data ?? []).slice(0, LISTED) as unknown as Row[];
 
   return (
     <div className="mx-auto w-full max-w-[110rem] space-y-8 px-4 py-8 sm:px-6">
@@ -64,6 +68,7 @@ export default async function CoxPage() {
               </li>
             ))}
           </ul>
+          {more && <p className="text-sm text-muted-foreground">Only the {LISTED} most recent outings are listed; older ones aren&rsquo;t shown here.</p>}
           {crews.length > 1 && (
             <Link href="/app/cox/compare" className="inline-block text-sm text-trace underline-offset-4 hover:underline">
               Compare two pieces →

@@ -12,6 +12,9 @@ export const metadata = { title: "Compare pieces" };
 
 type Crew = { id: string; title: string | null; recorded_at: string; boats: { name: string } | null };
 
+/** Most outings the pickers list. */
+const CREWS = 100;
+
 async function piece(sb: Awaited<ReturnType<typeof supabaseServer>>, id: string | undefined) {
   // A missing or malformed id in the URL is nothing picked, not a failed read.
   if (!isUuid(id)) return null;
@@ -60,9 +63,10 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
     .select("id, title, recorded_at, boats(name)")
     .eq("kind", "crew")
     .order("recorded_at", { ascending: false })
-    .limit(100);
+    .limit(CREWS + 1);
   if (error) throw await readFailed(error);
-  const crews = (data ?? []) as unknown as Crew[];
+  const more = (data ?? []).length > CREWS;
+  const crews = (data ?? []).slice(0, CREWS) as unknown as Crew[];
 
   const [a, b] = await Promise.all([
     piece(sb, typeof q.a === "string" ? q.a : crews[0]?.id),
@@ -91,6 +95,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
       </div>
 
       <ComparePicker crews={crews.map((c) => ({ id: c.id, label: c.title || "Crew outing", at: c.recorded_at }))} a={a?.session.id} b={b?.session.id} />
+      {more && <p className="text-sm text-muted-foreground">The lists hold the {CREWS} most recent outings; older ones aren&rsquo;t in them.</p>}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {[a, b].map((p, i) => (
