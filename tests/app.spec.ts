@@ -1009,7 +1009,8 @@ test.describe("signed in", () => {
     await page.reload();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("The dashboard is for beta crews.");
     await expect(page.getByText(user.email)).toBeVisible();
-    await expect(page.getByRole("link", { name: "Apply for the beta" })).toHaveAttribute("href", "/beta?from=app");
+    await expect(page.getByRole("link", { name: "Apply for the beta" })).toHaveAttribute("href", "/beta");
+    await expect(page.getByRole("link", { name: "Apply for the beta" })).toHaveAttribute("data-cta", "app");
 
     await allow(user.email);
     const { data: rows } = await user.db.from("sessions").select("id, side");

@@ -83,7 +83,8 @@ test("an address the site doesn't have gets the site's own 404", async ({ page }
   for (const [name, href] of [["Home", "/"], ["Force", "/force"], ["Vieve", "/vieve"]]) {
     await expect(main.getByRole("link", { name, exact: true })).toHaveAttribute("href", href);
   }
-  await expect(main.getByRole("link", { name: /apply for the beta/i })).toHaveAttribute("href", "/beta?from=not-found");
+  await expect(main.getByRole("link", { name: /apply for the beta/i })).toHaveAttribute("href", "/beta");
+  await expect(main.getByRole("link", { name: /apply for the beta/i })).toHaveAttribute("data-cta", "not-found");
   // Dark, like the rest of the site, not the framework's white default.
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   expect(bg).not.toBe("rgb(255, 255, 255)");

@@ -17,7 +17,7 @@ export function RequestAccess({ email, signOut }: { email: string; signOut: () =
           yet. Apply and tell us about your boat: we&rsquo;ll turn your account on when your crew joins.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/beta?from=app" data-cta="app" className={cn(ctaPrimary, "max-sm:w-full")}>
+          <Link href="/beta" data-cta="app" className={cn(ctaPrimary, "max-sm:w-full")}>
             Apply for the beta
           </Link>
           <form action={signOut} className="max-sm:w-full">

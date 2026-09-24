@@ -9,21 +9,14 @@ export const metadata: Metadata = {
     "Apply to be a RowTech beta crew: seat-by-seat force measurement for rowing coaches and programs.",
 };
 
-export default async function BetaPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const q = await searchParams;
-  const raw = typeof q.from === "string" ? q.from : "direct";
-  const from = raw.replace(/[^a-z0-9_-]/gi, "").slice(0, 40) || "direct";
-
+// Static: which link someone came in on is read in the browser (SignupForm).
+export default function BetaPage() {
   return (
     <div className="site flex min-h-full flex-col">
       <SiteHeader cta={false} />
       <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
         <div className="mx-auto w-full max-w-xl px-5 pt-12 pb-24 sm:px-8 sm:pt-16">
-          <SignupForm from={from} />
+          <SignupForm />
         </div>
       </main>
       <SiteFooter />

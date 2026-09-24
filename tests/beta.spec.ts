@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 
 // The server runs with BETA_DRY_RUN=1: the whole path runs, nothing is written.
 test("the beta form submits and says what happens next", async ({ page }) => {
+  // An older link with ?from= still says where it came from.
   await page.goto("/beta?from=hero");
 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Apply for the beta");
@@ -14,10 +15,41 @@ test("the beta form submits and says what happens next", async ({ page }) => {
   await expect(page.locator("form details")).toHaveAttribute("open", "", { timeout: 3000 });
 
   await page.getByText("8+", { exact: true }).click();
+  const sent = page.waitForRequest((r) => r.method() === "POST" && new URL(r.url()).pathname === "/beta");
   await page.getByRole("button", { name: /apply for the beta/i }).click();
+  expect((await sent).postData()).toMatch(/from"\s+hero\s/);
 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
   await expect(page.getByText("We read your application.")).toBeVisible();
+});
+
+test("every beta link goes to the one /beta, and the form knows which was used", async ({ page, request }) => {
+  // One static page, cached rather than rendered per visit.
+  const res = await request.get("/beta");
+  expect(res.headers()["x-nextjs-prerender"]).toMatch(/^1\b/);
+  expect(res.headers()["cache-control"] ?? "").not.toMatch(/no-store|private/);
+
+  await page.goto("/");
+  const hrefs = await page.locator("a[data-cta]").filter({ hasText: /apply for the beta/i }).evaluateAll((els) => els.map((e) => e.getAttribute("href")));
+  expect(hrefs.length).toBeGreaterThan(0);
+  expect(new Set(hrefs)).toEqual(new Set(["/beta"]));
+
+  await page.locator("a[data-cta=hero]").click();
+  await expect(page).toHaveURL(/\/beta$/);
+  await expect(page.locator('input[name="from"]')).toHaveValue("hero");
+
+  await page.getByLabel("Name").fill("Sam Rower");
+  await page.getByLabel("Email").fill("sam.rower@example.com");
+  await page.getByLabel("Club, school or program").fill("Riverside RC");
+  const sent = page.waitForRequest((r) => r.method() === "POST" && new URL(r.url()).pathname === "/beta");
+  await page.getByRole("button", { name: /apply for the beta/i }).click();
+  expect((await sent).postData()).toMatch(/from"\s+hero\s/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
+});
+
+test("straight to /beta, the form says it came direct", async ({ page }) => {
+  await page.goto("/beta");
+  await expect(page.locator('input[name="from"]')).toHaveValue("direct");
 });
 
 test("the form says what is wrong rather than failing silently", async ({ page }) => {

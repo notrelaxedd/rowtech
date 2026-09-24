@@ -1,15 +1,15 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowRight, LoaderCircle } from "lucide-react";
-import { readAttribution, UTM } from "@/components/site/attribution";
+import { readAttribution, readCta, UTM } from "@/components/site/attribution";
 import { ctaPrimary, ctaSecondary } from "@/components/site/cta";
 import { formField } from "@/components/ui/field";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { submitApplication } from "./actions";
-import { BOATS, EMAIL, EMPTY_STATE, LIMITS, REQUIRED, requiredError, ROLES, type ApplyState, type Field } from "./fields";
+import { BOATS, cleanFrom, EMAIL, EMPTY_STATE, LIMITS, REQUIRED, requiredError, ROLES, type ApplyState, type Field } from "./fields";
 
 const input = cn(formField, "placeholder:text-muted-foreground");
 const chip =
@@ -24,6 +24,17 @@ const NEXT_STEPS = [
   { t: "We read your application.", d: "Every one, properly." },
   { t: "We get in touch by email.", d: "To talk through your boat, your rigging, your schedule and what you want to see." },
 ];
+
+/**
+ * Which link brought them here: the beta link they used on the site (its
+ * data-cta, remembered for the tab), or an older /beta?from= link's tag.
+ * Read in the browser, so /beta itself can be one static page. The server's
+ * render, and a form sent without JavaScript, say "direct".
+ */
+function readFrom() {
+  return cleanFrom(new URLSearchParams(location.search).get("from") ?? "") || cleanFrom(readCta()) || "direct";
+}
+const noSubscribe = () => () => {};
 
 function Err({ id, msg }: { id: string; msg?: string }) {
   if (!msg) return null;
@@ -67,7 +78,8 @@ function Done({ name }: { name?: string }) {
   );
 }
 
-export function SignupForm({ from }: { from: string }) {
+export function SignupForm() {
+  const from = useSyncExternalStore(noSubscribe, readFrom, () => "direct");
   // The action itself, so the form posts without JavaScript too (and before
   // it has loaded); what JavaScript adds rides along in the effects below.
   const [state, action, pending] = useActionState(submitApplication, EMPTY_STATE);

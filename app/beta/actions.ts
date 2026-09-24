@@ -1,7 +1,7 @@
 "use server";
 
 import { supabaseAnon } from "@/lib/supabase/anon";
-import { BOATS, LIMITS, requiredError, ROLES, type ApplyState, type Values } from "./fields";
+import { BOATS, cleanFrom, LIMITS, requiredError, ROLES, type ApplyState, type Values } from "./fields";
 
 type Application = {
   name: string;
@@ -102,7 +102,7 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
     boat_types: boats.length ? boats : null,
     location: values.location || null,
     message: values.message || null,
-    from_cta: clip(text(fd, "from").replace(/[^a-z0-9_-]/gi, ""), LIMITS.from),
+    from_cta: cleanFrom(text(fd, "from")) || null,
     utm_source: clip(text(fd, "utm_source"), LIMITS.utm),
     utm_medium: clip(text(fd, "utm_medium"), LIMITS.utm),
     utm_campaign: clip(text(fd, "utm_campaign"), LIMITS.utm),
