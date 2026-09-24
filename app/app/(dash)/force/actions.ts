@@ -258,32 +258,62 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
   return { status: "ok", message: "", sessionId: parent ?? sessions[0] };
 }
 
-/** Removes a session, its seats if it is a crew session, and their files. */
-export async function deleteSession(id: string): Promise<void> {
-  if (!isUuid(id)) return;
+export type DeleteResult = { ok: true } | { ok: false; message: string };
+
+const NOT_DELETED: DeleteResult = { ok: false, message: "The session wasn't deleted. Try again in a minute." };
+
+/**
+ * Removes a session, its seats if it is a crew session, and their files. A
+ * seat's crew goes too once it has no seats left.
+ */
+export async function deleteSession(id: string): Promise<DeleteResult> {
+  if (!isUuid(id)) return NOT_DELETED;
   // RLS is the real gate; this keeps a removed beta user out even if it weren't.
-  if ((await getViewer()).state !== "allowed") return;
+  const viewer = await getViewer();
+  if (viewer.state === "error") return NOT_DELETED;
+  if (viewer.state !== "allowed") return { ok: false, message: "Sign in with a beta account to delete a session." };
   const sb = await supabaseServer();
-  const { data: kids, error: kidsError } = await sb.from("sessions").select("id").eq("parent_id", id);
+  const [{ data: session, error: sessionError }, { data: kids, error: kidsError }] = await Promise.all([
+    sb.from("sessions").select("id, parent_id").eq("id", id).maybeSingle(),
+    sb.from("sessions").select("id").eq("parent_id", id),
+  ]);
   const ids = [id, ...(kids ?? []).map((k) => k.id)];
   const { data: files, error: filesError } = await sb.from("session_files").select("path").in("session_id", ids);
-  if (kidsError || filesError) {
-    console.error("delete: lookup failed", { message: (kidsError ?? filesError)?.message });
-    return;
+  if (sessionError || kidsError || filesError) {
+    console.error("delete: lookup failed", { message: (sessionError ?? kidsError ?? filesError)?.message });
+    return NOT_DELETED;
   }
+  if (!session) return { ok: false, message: "That session isn't there any more." };
 
   // The rows first, so a failure leaves everything as it was. The seats, their
   // strokes and file rows go with the session (the foreign keys cascade).
   const { data: deleted, error } = await sb.from("sessions").delete().eq("id", id).select("id");
-  if (error || !deleted?.length) {
-    console.error("delete: session not deleted", { id, message: error?.message ?? "no row deleted" });
-    return;
+  if (error) {
+    console.error("delete: session not deleted", { id, code: error.code, message: error.message });
+    return NOT_DELETED;
   }
+  // The row is there (it was just read), so RLS kept it: only owners and
+  // coaches delete sessions (supabase/migrations/*_team_roles.sql).
+  if (!deleted?.length) return { ok: false, message: "Only the team's owner or a coach can delete a session." };
+
   // Then the files. If this fails they are orphaned in Storage, but no row
   // points at a file that's gone.
   if (files?.length) {
     const { error: removeError } = await sb.storage.from("sessions").remove(files.map((f) => f.path));
     if (removeError) console.error("delete: files not removed", { id, message: removeError.message });
   }
+
+  // A crew with no seats left shows as an empty outing; an upload never leaves
+  // one (ingest_sessions), so neither does this.
+  if (session.parent_id) {
+    const { count, error: countError } = await sb
+      .from("sessions")
+      .select("id", { count: "exact", head: true })
+      .eq("parent_id", session.parent_id);
+    const { error: parentError } = count === 0 ? await sb.from("sessions").delete().eq("id", session.parent_id) : { error: countError };
+    if (parentError) console.error("delete: empty crew not removed", { id: session.parent_id, message: parentError.message });
+  }
+
   revalidatePath("/app/force");
+  return { ok: true };
 }

@@ -7,6 +7,7 @@ import { isUuid } from "@/lib/uuid";
 import { seatStrokes } from "@/lib/session/load";
 import { SessionViewer, type SeatSource } from "@/components/dash/session-viewer";
 import { LocalTime } from "@/components/dash/local-time";
+import { DeleteSession } from "./delete-session";
 import type { TableRow } from "@/lib/supabase/types";
 
 export const metadata = { title: "Session" };
@@ -49,6 +50,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
           {boat ? ` · ${boat}` : ""}
           {session.units ? ` · ${session.units}` : ""}
         </p>
+        <DeleteSession id={session.id} seats={kids?.length ?? 0} />
       </div>
 
       {/* The header shows while the strokes load. */}

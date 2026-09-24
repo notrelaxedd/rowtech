@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { zipSync } from "fflate";
-import { hasAccount, localSupabaseMissing, makeUser, signInBrowser } from "./support/local-supabase";
+import { addToTeam, hasAccount, localSupabaseMissing, makeUser, signInBrowser } from "./support/local-supabase";
 import { parseStrokes } from "../lib/session/parse";
 import { duration, fmt, summarise, type SessionSummary } from "../lib/session/analyse";
 
@@ -478,6 +478,68 @@ test.describe("signed in", () => {
     await page.reload();
     await expect(page.getByRole("slider", { name: "Stroke" })).toBeVisible();
     await expect(page.getByText("This page didn’t load.")).toHaveCount(0);
+  });
+
+  test("the team's owner can delete an outing, its seats and their files", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    await upload(page, await crewZip(2, 6));
+    const { data: files } = await user.db.from("session_files").select("path");
+    expect(files).toHaveLength(8);
+
+    page.once("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "Delete session" }).click();
+    await expect(page).toHaveURL(/\/app\/force$/);
+    await expect(page.getByRole("link", { name: /2 seats/ })).toHaveCount(0);
+
+    expect((await user.db.from("sessions").select("id")).data).toEqual([]);
+    for (const f of files!) {
+      const { error } = await user.db.storage.from("sessions").download(f.path);
+      expect(error, f.path).toBeTruthy();
+    }
+  });
+
+  test("deleting a crew's last seat takes the crew with it", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const crew = await upload(page, await crewZip(2, 6));
+    const { data: seats } = await user.db.from("sessions").select("id").eq("parent_id", crew).order("seat_number");
+
+    page.on("dialog", (d) => d.accept());
+    for (const [i, seat] of seats!.entries()) {
+      await page.goto(`/app/force/${seat.id}`);
+      await page.getByRole("button", { name: "Delete session" }).click();
+      await expect(page).toHaveURL(/\/app\/force$/);
+      const { data: left } = await user.db.from("sessions").select("id");
+      const expected = i === 0 ? [crew, seats![1].id] : [];
+      expect(left?.map((r) => r.id).sort(), `after seat ${i + 1}`).toEqual(expected.sort());
+    }
+  });
+
+  test("a team member who isn't a coach can't delete a session, and is told why", async ({ page, context, baseURL }) => {
+    const owner = await makeUser();
+    await signInBrowser(context, owner, baseURL!);
+    const id = await upload(page, seatFiles(1));
+    const { data: row } = await owner.db.from("sessions").select("team_id").eq("id", id).single();
+
+    const member = await makeUser();
+    await addToTeam(row!.team_id, member, "member");
+    await context.clearCookies();
+    await signInBrowser(context, member, baseURL!);
+    await page.goto(`/app/force/${id}`);
+
+    let asked = false;
+    page.once("dialog", (d) => {
+      asked = true;
+      return d.accept();
+    });
+    await page.getByRole("button", { name: "Delete session" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "Only the team's owner or a coach can delete a session." })).toBeVisible();
+    expect(asked).toBe(true);
+    await expect(page).toHaveURL(new RegExp(`/app/force/${id}$`));
+    expect((await owner.db.from("sessions").select("id")).data).toEqual([{ id }]);
+    const { count } = await owner.db.from("session_files").select("*", { count: "exact", head: true });
+    expect(count).toBe(4);
   });
 
   // The layout checks who is signed in, but a click inside the dashboard
