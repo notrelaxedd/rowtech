@@ -35,18 +35,19 @@ export default async function ForcePage() {
   const moreSessions = (data ?? []).length > LISTED;
   const sessions = (data ?? []).slice(0, LISTED) as unknown as SessionRow[];
 
-  // The newest sessions, back in time order for the chart.
+  // The newest seat sessions with strokes, back in time order for the chart.
+  // Crew rows and empty seats are left out in the query, so the cap and the
+  // "older ones" line count only what the chart draws.
   const { data: statsData, error: statsError } = await sb
     .from("session_stats")
     .select("session_id, seat_number, recorded_at, avg_peak, avg_rise_rate, avg_peak_pos_pct, avg_drive_ms, avg_recovery_ms, consistency_pct, strokes")
+    .not("seat_number", "is", null)
+    .gt("strokes", 0)
     .order("recorded_at", { ascending: false })
     .limit(CHARTED + 1);
   if (statsError) throw await readFailed(statsError);
   const moreHistory = (statsData ?? []).length > CHARTED;
-  const history = (statsData ?? [])
-    .slice(0, CHARTED)
-    .reverse()
-    .filter((s) => s.seat_number !== null && s.strokes > 0) as HistoryPoint[];
+  const history = (statsData ?? []).slice(0, CHARTED).reverse() as HistoryPoint[];
 
   const children = new Map<string, SessionRow[]>();
   for (const s of sessions) {

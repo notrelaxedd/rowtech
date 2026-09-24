@@ -199,6 +199,36 @@ test.describe("signed in", () => {
     await expect(page.getByText("The lists hold the 100 most recent outings; older ones aren’t in them.")).toBeVisible();
   });
 
+  test("the history chart's cap counts only the seat sessions it draws", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const { data: team } = await user.db.rpc("ensure_own_team", { p_name: "test crew" });
+    const at = (hours: number) => new Date(Date.UTC(2026, 0, 1) + hours * 3_600_000).toISOString();
+    // 500 seat sessions with a stroke each, crew rows in among them, and
+    // only a crew row and an empty seat older than all of them.
+    const seats = Array.from({ length: 500 }, (_, i) => ({
+      id: randomUUID(), team_id: team, kind: "node", seat_number: 1, recorded_at: at(10 + i), stroke_count: 1,
+      device_id: "node-1", session_uuid: randomUUID(), units: "kg", created_by: user.id,
+    }));
+    const crews = Array.from({ length: 60 }, (_, i) => ({ id: randomUUID(), team_id: team, kind: "crew", recorded_at: at(10 + i * 8), created_by: user.id }));
+    crews.push({ id: randomUUID(), team_id: team, kind: "crew", recorded_at: at(0), created_by: user.id });
+    const empty = {
+      id: randomUUID(), team_id: team, kind: "node", seat_number: 2, recorded_at: at(1), stroke_count: 0,
+      device_id: "node-2", session_uuid: randomUUID(), units: "kg", created_by: user.id,
+    };
+    expect((await user.db.from("sessions").insert([...seats, empty])).error).toBeNull();
+    expect((await user.db.from("sessions").insert(crews)).error).toBeNull();
+    const strokes = seats.map((s) => ({
+      session_id: s.id, rec: 0, seq: 1, catch_ms: 1000, drive_ms: 700, recovery_ms: 1300, peak: 50, peak_pos_pct: 40,
+      impulse: 25, rise_rate: 200, third1: 8, third2: 12, third3: 5, curve_valid: true,
+    }));
+    expect((await user.db.from("strokes").insert(strokes)).error).toBeNull();
+
+    await page.goto("/app/force");
+    await expect(page.getByRole("img", { name: /across 500 sessions/ })).toBeVisible();
+    await expect(page.getByText(/Every session so far, by seat\./)).toBeVisible();
+  });
+
   test("an upload bigger than any outing is refused, and says why", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);
