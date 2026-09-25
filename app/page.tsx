@@ -109,7 +109,7 @@ const FAQ = [
   },
   {
     q: "How accurate is it?",
-    a: "Timing is measured on the node itself, and it doesn’t need calibration. Force does: each node has to be calibrated against known weights, and we haven’t done that yet. Until we do, force reads in raw sensor units. The Force page has the numbers.",
+    a: "Timing is measured on the node itself, and it doesn’t need calibration. Force does: each node has to be calibrated against known weights, and we haven’t done that yet. Until we do, force reads in raw sensor units. The Force page says where calibration stands.",
   },
 ];
 

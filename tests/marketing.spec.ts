@@ -16,6 +16,8 @@ test("the marketing page renders, with the beta offered in four places", async (
   // Vieve is named, and named properly on first mention.
   await expect(page.locator("#crew")).toContainText("Vieve, the RowTech cox box");
   await expect(page.locator("#faq")).toContainText("Vieve");
+  // The Force page has no calibrated numbers to point to yet (BIZ-013).
+  await expect(page.locator("#faq")).toContainText("The Force page says where calibration stands.");
 
   // The beta is offered in the nav, the hero, once mid-page and at the close.
   const froms = await page
