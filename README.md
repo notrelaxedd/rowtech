@@ -133,8 +133,9 @@ sessions and boats; anyone can leave.
 These can't be set from migrations:
 
 1. **Google provider** — Authentication → Providers → Google: add the Google
-   OAuth client ID and secret. Magic links work without this; the "Continue
-   with Google" button will fail until it's done.
+   OAuth client ID and secret. Magic links work without this. The sign-in page
+   hides "Continue with Google" until it's done: then set `googleSignIn` to
+   `true` in `lib/owner.ts`, which also adds Google to `/privacy`.
 2. **Redirect URLs** — Authentication → URL Configuration: set Site URL to the
    production domain, and add `https://<domain>/auth/callback` plus
    `http://localhost:3000/auth/callback` to the allow list.

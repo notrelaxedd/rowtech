@@ -16,6 +16,13 @@ export const legalCountry = "Ohio, United States";
  */
 export const contactEmail = "polkcade27@sehs.net";
 
+/**
+ * Whether the sign-in page offers Continue with Google. Off until the Google
+ * provider is enabled in Supabase (README, "Auth setup"): until then the
+ * button fails for everyone. /privacy mentions Google only while it's on.
+ */
+export const googleSignIn = false;
+
 /** When /privacy and /terms last changed. Update it with every change to either. */
 export const policiesUpdated = "September 25, 2026";
 

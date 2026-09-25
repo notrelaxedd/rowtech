@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SitePage, wrap } from "@/components/site/site-page";
 import { ContactEmail, inlineLink, LegalSection } from "@/components/site/legal";
-import { legalCountry, legalEntity, policiesUpdated } from "@/lib/owner";
+import { googleSignIn, legalCountry, legalEntity, policiesUpdated } from "@/lib/owner";
 import { pageMetadata } from "@/lib/site";
 
 // What the code collects, and where it sends it. The owner's answers (who runs
@@ -79,11 +79,13 @@ export default function PrivacyPage() {
                 sign-in links. Signing in sets Supabase’s sign-in cookies on this site; they keep you signed in to the
                 dashboard, and nothing else uses them.
               </p>
-              <p>
-                If you choose Continue with Google, you sign in on Google’s own page, and Google tells Supabase which
-                Google account you used, including its email address. Supabase keeps what Google sends with your account.
-                Google isn’t involved when you sign in with an emailed link.
-              </p>
+              {googleSignIn && (
+                <p>
+                  If you choose Continue with Google, you sign in on Google’s own page, and Google tells Supabase which
+                  Google account you used, including its email address. Supabase keeps what Google sends with your
+                  account. Google isn’t involved when you sign in with an emailed link.
+                </p>
+              )}
             </LegalSection>
 
             <LegalSection title="The dashboard">
@@ -167,7 +169,7 @@ export default function PrivacyPage() {
               <ul>
                 <li>Supabase: the database, sign-in and file storage behind everything above.</li>
                 <li>Vercel: hosting, Web Analytics and Speed Insights.</li>
-                <li>Google: sign-in, only for people who choose Continue with Google.</li>
+                {googleSignIn && <li>Google: sign-in, only for people who choose Continue with Google.</li>}
               </ul>
               <p>
                 That’s the whole list. The site’s fonts come from this site, and the dashboard’s map draws only your

@@ -6,6 +6,7 @@ import { ArrowRight, LoaderCircle, Mail } from "lucide-react";
 import { ctaPrimary } from "@/components/site/cta";
 import { cn } from "@/lib/utils";
 import { formField } from "@/components/ui/field";
+import { googleSignIn } from "@/lib/owner";
 import { sendMagicLink, signInWithGoogle, type LoginState } from "./actions";
 
 // The type Google's sign-in button is set in, for that button alone. Next has
@@ -27,30 +28,34 @@ export function LoginForm({ error }: { error?: string }) {
         </p>
       )}
 
-      <form action={signInWithGoogle}>
-        {/* Google's "Sign in with Google" button, dark theme, built to its
-            branding guidelines: 40px high, 12px in from each end, the
-            standard "G" (public/google-g.svg, cut from Google's own button
-            asset) 10px from the text, #131314 with a #8E918F edge, #E3E3E3
-            type in Google Sans Medium 14/20. It takes taps over 44px high on
-            a phone all the same (hit-area, A11Y-005). */}
-        <button
-          type="submit"
-          className={cn(
-            googleSans.className,
-            "hit-area relative flex h-10 w-full items-center justify-center gap-2.5 rounded-[4px] border border-[#8E918F] bg-[#131314] px-3 text-sm leading-5 font-medium text-[#E3E3E3] transition-colors hover:bg-[#242425] active:bg-[#2c2c2d]"
-          )}
-        >
-          <span aria-hidden className="size-5 shrink-0 bg-[url(/google-g.svg)] bg-contain bg-no-repeat" />
-          Continue with Google
-        </button>
-      </form>
+      {googleSignIn && (
+        <>
+          <form action={signInWithGoogle}>
+            {/* Google's "Sign in with Google" button, dark theme, built to its
+                branding guidelines: 40px high, 12px in from each end, the
+                standard "G" (public/google-g.svg, cut from Google's own button
+                asset) 10px from the text, #131314 with a #8E918F edge, #E3E3E3
+                type in Google Sans Medium 14/20. It takes taps over 44px high on
+                a phone all the same (hit-area, A11Y-005). */}
+            <button
+              type="submit"
+              className={cn(
+                googleSans.className,
+                "hit-area relative flex h-10 w-full items-center justify-center gap-2.5 rounded-[4px] border border-[#8E918F] bg-[#131314] px-3 text-sm leading-5 font-medium text-[#E3E3E3] transition-colors hover:bg-[#242425] active:bg-[#2c2c2d]"
+              )}
+            >
+              <span aria-hidden className="size-5 shrink-0 bg-[url(/google-g.svg)] bg-contain bg-no-repeat" />
+              Continue with Google
+            </button>
+          </form>
 
-      <div className="flex items-center gap-4">
-        <span className="h-px flex-1 bg-line" />
-        <span className="readout text-xs text-muted-foreground">or</span>
-        <span className="h-px flex-1 bg-line" />
-      </div>
+          <div className="flex items-center gap-4">
+            <span className="h-px flex-1 bg-line" />
+            <span className="readout text-xs text-muted-foreground">or</span>
+            <span className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      )}
 
       {/* Outside the form: a busy region's announcements can wait until it isn't. */}
       <p aria-live="polite" className="sr-only">
