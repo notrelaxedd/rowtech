@@ -3,10 +3,11 @@ import { readFailed, supabaseServer } from "@/lib/supabase/server";
 import { duration, fmt } from "@/lib/session/analyse";
 import { LocalTime } from "@/components/dash/local-time";
 import { beforeParam, newestFirstPage } from "@/lib/session/older";
+import { count, seatTitle } from "@/lib/session/labels";
 import { UploadForm } from "./upload-form";
 import { HistoryPanel } from "./history-panel";
 
-export const metadata = { title: "Force" };
+export const metadata = { title: "Sessions" };
 
 /** Most session rows a page of the list shows, and the history chart. */
 const LISTED = 200;
@@ -108,16 +109,16 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
                     >
                       <span className="min-w-0">
                         <span className="block truncate font-semibold">
-                          {s.title || (s.kind === "crew" ? `${kids.length} seats` : `Seat ${s.seat_number ?? "?"}`)}
+                          {s.title || (s.kind === "crew" ? count(kids.length, "seat") : seatTitle(s.seat_number))}
                         </span>
                         <span className="readout block text-xs text-muted-foreground">
                           <LocalTime at={s.recorded_at} />
                           {s.boats?.name ? ` · ${s.boats.name}` : ""}
-                          {s.kind === "crew" ? ` · ${kids.length} seats` : s.seat_number !== null ? ` · seat ${s.seat_number}` : ""}
+                          {s.kind === "crew" ? ` · ${count(kids.length, "seat")}` : s.seat_number !== null ? ` · seat ${s.seat_number}` : ""}
                         </span>
                       </span>
                       <span className="readout shrink-0 text-sm text-muted-foreground">
-                        {strokes} strokes{s.duration_ms ? ` · ${duration(s.duration_ms)}` : ""}
+                        {count(strokes, "stroke")}{s.duration_ms ? ` · ${duration(s.duration_ms)}` : ""}
                       </span>
                     </Link>
                   </li>

@@ -842,7 +842,7 @@ test.describe("signed in", () => {
     }
   });
 
-  test("a node whose seat was never set is stored with no seat, and shows as seat ?", async ({ page, context, baseURL }) => {
+  test("a node whose seat was never set is stored with no seat, and says so", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);
     const files = await Promise.all(seatFiles(1).map(async (f) => ({ name: f.split("/").pop()!, buffer: await readFile(f) })));
@@ -851,9 +851,49 @@ test.describe("signed in", () => {
     const id = await upload(page, files.map((f) => ({ ...f, mimeType: "application/octet-stream" })));
 
     expect((await user.db.from("sessions").select("seat_number").eq("id", id).single()).data).toEqual({ seat_number: null });
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Seat ?");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Seat not set");
     await page.goto("/app/force");
-    await expect(page.getByRole("link", { name: /^Seat \?/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Seat not set/ })).toBeVisible();
+
+    // In a crew, the seat's short label says the same (CNT-014).
+    const zip = await crewZip(2, 6);
+    const entries = unzipSync(zip.buffer);
+    const seat6 = JSON.parse(strFromU8(entries["outing/seat-6/meta.json"]));
+    entries["outing/seat-6/meta.json"] = strToU8(JSON.stringify({ ...seat6, seat: 0 }));
+    const crew = await upload(page, { ...zip, buffer: Buffer.from(zipSync(entries)) });
+    await expect(page.getByRole("button", { name: "no seat" })).toBeVisible();
+    await page.goto(`/app/cox/${crew}`);
+    const share = page.locator("section").filter({ has: page.getByRole("heading", { name: "Who’s carrying the boat" }) });
+    await expect(share.getByRole("listitem")).toHaveCount(2);
+    await expect(share.getByRole("listitem").filter({ hasText: "no seat" })).toHaveCount(1);
+    for (const path of ["/app/force", `/app/force/${crew}`, `/app/cox/${crew}`]) {
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await expect(page.locator("main"), path).not.toContainText(/seat \?/i);
+    }
+  });
+
+  // "1 seat", "1 stroke": a count of one is singular (CNT-014).
+  test("a count of one seat or one stroke is singular", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const crew = await upload(page, await crewZip(2, 6));
+    const { data: seats } = await user.db.from("sessions").select("id").eq("parent_id", crew).order("seat_number");
+    expect((await user.db.from("sessions").delete().eq("id", seats![1].id).select("id")).data).toHaveLength(1);
+    const one = Object.entries(await longSeat(3, 1)).map(([name, bytes]) => ({ name, mimeType: "application/octet-stream", buffer: Buffer.from(bytes) }));
+    const single = await upload(page, one);
+
+    // The crew keeps the name it was given ("2 seats"); its count is live.
+    await page.goto("/app/force");
+    const crewRow = page.locator(`a[href="/app/force/${crew}"]`);
+    await expect(crewRow.locator("span.readout").first()).toHaveText(/· 1 seat$/);
+    await expect(crewRow).not.toContainText("1 seats");
+    const singleRow = page.locator(`a[href="/app/force/${single}"]`);
+    await expect(singleRow.locator("span.readout").last()).toHaveText(/^1 stroke\b/);
+    await expect(singleRow).not.toContainText("strokes");
+    await page.goto(`/app/cox/${crew}`);
+    await expect(page.getByText(/· 1 seat$/)).toBeVisible();
+    await expect(page.locator("main")).not.toContainText("1 seats");
   });
 
   test("the team's owner can delete an outing, its seats and their files", async ({ page, context, baseURL }) => {
@@ -930,7 +970,7 @@ test.describe("signed in", () => {
     await other.getByRole("button", { name: "Sign out" }).click();
     await expect(other).toHaveURL(/\/app\/login$/);
 
-    await page.getByRole("link", { name: "Cox" }).click();
+    await page.getByRole("link", { name: "Crew", exact: true }).click();
     await expect(page).toHaveURL(/\/app\/login$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Sign in");
   });
@@ -1014,13 +1054,23 @@ test.describe("signed in", () => {
   const demoImpulse = async (n: number) =>
     parseStrokes((await readFile(`tests/fixtures/demo/seat-${n}/strokes.csv`)).toString()).reduce((a, s) => a + s.impulse, 0);
 
-  test("a crew outing is on the Cox tab, and its page shares the work out seat by seat", async ({ page, context, baseURL }) => {
+  test("a crew outing is on the Crew tab, and its page shares the work out seat by seat", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);
     const single = await upload(page, seatFiles(1));
     const crew = await upload(page, await crewZip(2, 6));
 
-    await page.goto("/app/cox");
+    // The tabs say what their pages list (CNT-014).
+    await page.goto("/app/force");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Sessions");
+    const tabs = page.getByRole("navigation", { name: "Dashboard" }).getByRole("link");
+    await expect(tabs).toHaveText(["Sessions", "Crew"]);
+    await expect(page).toHaveTitle("Sessions · RowTech");
+    await tabs.filter({ hasText: "Crew" }).click();
+    await expect(page).toHaveURL(/\/app\/cox$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Crew outings");
+    await expect(page).toHaveTitle("Crew outings · RowTech");
+    await expect(tabs.filter({ hasText: "Crew" })).toHaveAttribute("aria-current", "page");
     await expect(page.locator(`a[href="/app/cox/${single}"]`)).toHaveCount(0);
     // One outing: nothing to compare it with yet.
     await expect(page.getByRole("link", { name: "Compare two outings →" })).toHaveCount(0);

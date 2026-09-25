@@ -4,7 +4,7 @@ import { duration } from "@/lib/session/analyse";
 import { LocalTime } from "@/components/dash/local-time";
 import { beforeParam, newestFirstPage } from "@/lib/session/older";
 
-export const metadata = { title: "Cox" };
+export const metadata = { title: "Crew outings" };
 
 /** Most outings a page of the list shows. */
 const LISTED = 100;
@@ -22,9 +22,9 @@ export default async function CoxPage({ searchParams }: { searchParams: Promise<
   return (
     <div className="mx-auto w-full max-w-[110rem] space-y-8 px-4 py-8 sm:px-6">
       <div className="max-w-3xl">
-        <h1 className="type-h3 text-2xl">Cox</h1>
+        <h1 className="type-h3 text-2xl">Crew outings</h1>
         <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
-          Outings with the whole crew in them. Upload several seats on the Force tab as one zip, each seat&rsquo;s files
+          Outings with the whole crew in them. Upload several seats on the Sessions tab as one zip, each seat&rsquo;s files
           in a folder of its own, and they land here as one outing. Vieve, the RowTech cox box, will add the GPS track and put every seat on one clock; its session format
           isn&rsquo;t final yet, so the dashboard can&rsquo;t read a Vieve bundle today.
         </p>

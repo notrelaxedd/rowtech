@@ -5,6 +5,7 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import { cn } from "@/lib/utils";
 import { chip } from "@/components/dash/chip";
 import { fmtSplit, nearestFix, splitFromSpeed } from "@/lib/session/track";
+import { seatLabel } from "@/lib/session/labels";
 
 export type TrackPoint = {
   tMs: number;
@@ -161,7 +162,7 @@ export function PieceMap({
             )}
             {forces.length > 0 && (
               <span className="readout text-muted-foreground">
-                {forces.map((f) => `${f.seat ?? "?"}: ${f.peak === null ? "—" : f.peak.toFixed(0)}`).join("  ")}
+                {forces.map((f) => `${f.seat === null ? seatLabel(null) : f.seat}: ${f.peak === null ? "—" : f.peak.toFixed(0)}`).join("  ")}
               </span>
             )}
           </>

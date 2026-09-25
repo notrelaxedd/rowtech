@@ -8,6 +8,7 @@ import { seatStrokes, sessionTrack } from "@/lib/session/load";
 import { thinTrack } from "@/lib/session/track";
 import type { TableRow } from "@/lib/supabase/types";
 import { LocalTime } from "@/components/dash/local-time";
+import { count, seatLabel } from "@/lib/session/labels";
 import { CrewView } from "./crew-view";
 
 export const metadata = { title: "Crew outing" };
@@ -42,7 +43,7 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
         <h1 className="type-h3 mt-3 text-2xl">{crew.title || "Crew outing"}</h1>
         <p className="readout mt-1 text-sm text-muted-foreground">
           <LocalTime at={crew.recorded_at} />
-          {boat ? ` · ${boat}` : ""} · {kids?.length ?? 0} seats
+          {boat ? ` · ${boat}` : ""} · {count(kids?.length ?? 0, "seat")}
         </p>
       </div>
 
@@ -89,7 +90,7 @@ async function Crew({
   const seats = kids.map((k) => ({
     id: k.id,
     seat: k.seat_number,
-    label: k.seat_number !== null ? `seat ${k.seat_number}` : "seat ?",
+    label: seatLabel(k.seat_number),
     side: boatSeats?.find((s) => s.seat_number === k.seat_number)?.side ?? k.side ?? null,
     strokes: strokes.get(k.id) ?? [],
   }));

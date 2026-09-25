@@ -7,6 +7,7 @@ import { SessionFormatError, CURVE_BYTES, CURVE_POINTS } from "../lib/session/fo
 import { collectSessions, ZIP_LIMITS, ZipTooLargeError } from "../lib/session/collect";
 import { summarise, toCsv } from "../lib/session/analyse";
 import { fmtSplit, nearestFix, splitFromSpeed, thinTrack } from "../lib/session/track";
+import { count, seatLabel, seatTitle } from "../lib/session/labels";
 
 const seatDir = (n: number) => path.join(process.cwd(), "tests", "fixtures", "demo", `seat-${n}`);
 const read = (n: number, f: string) => readFile(path.join(seatDir(n), f));
@@ -181,4 +182,17 @@ test("a split is read off the boat's speed, as m:ss.s per 500 m", () => {
   expect(splitFromSpeed(0.2)).toBeNull();
   expect(splitFromSpeed(null)).toBeNull();
   expect(fmtSplit(null)).toBe("—");
+});
+
+// The dashboard's counts and seat names (CNT-014).
+test("counts are singular for one, and a seat never set says so", () => {
+  expect(count(0, "seat")).toBe("0 seats");
+  expect(count(1, "seat")).toBe("1 seat");
+  expect(count(2, "seat")).toBe("2 seats");
+  expect(count(1, "stroke")).toBe("1 stroke");
+  expect(count(147, "stroke")).toBe("147 strokes");
+  expect(seatTitle(3)).toBe("Seat 3");
+  expect(seatTitle(null)).toBe("Seat not set");
+  expect(seatLabel(3)).toBe("seat 3");
+  expect(seatLabel(null)).toBe("no seat");
 });
