@@ -70,6 +70,22 @@ test("the specifications claim no more than what's built", async ({ page }) => {
   }
 });
 
+// The questions a coach asks about Force have a row in its specifications,
+// even while the answer is still to come (BIZ-004, BIZ-008, BIZ-022), and the
+// longer rows wrap on a phone instead of widening the page.
+test("Force's specifications say what it fits, what it doesn't measure and its target price", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto("/force");
+  const labels = await page.locator("#specs dt").allTextContents();
+  for (const label of ["Fits", "Doesn’t measure", "Target price"]) expect(labels).toContain(label);
+  for (const label of ["Fits", "Doesn’t measure", "Target price"]) {
+    await expect(page.locator("#specs dt", { hasText: label }).locator("+ dd")).not.toBeEmpty();
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.goto("/vieve");
+  await expect(page.locator("#specs dt", { hasText: "Target price" })).toHaveCount(1);
+});
+
 // "Wi-Fi", the standard spelling, wherever a page says it (LEG-016, CNT-008).
 test("Wi-Fi is spelled Wi-Fi on the pages", async ({ page }) => {
   for (const path of ["/", "/force", "/vieve"]) {
