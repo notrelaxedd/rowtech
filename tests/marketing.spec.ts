@@ -170,9 +170,12 @@ test("without WebGL, the drawing stays and the page keeps working", async ({ pla
     await page.goto("/force");
     const figure = page.locator("#parts figure");
     await figure.scrollIntoViewIfNeeded();
-    await figure.getByRole("button", { name: "Show the 3D model" }).click();
+    await figure.getByRole("button", { name: "Show the 3D model" }).focus();
+    await page.keyboard.press("Enter");
     // The scene can't start: the offer goes, the drawing stays.
     await expect(figure.getByRole("button", { name: /3D model/ })).toHaveCount(0, { timeout: 15000 });
+    // Focus went with the button: it moves on to the first note, not to the top of the page.
+    await expect(figure.locator("ol:visible button").first()).toBeFocused();
     await expect(figure.getByRole("img", { name: /Force seat node/ })).toBeVisible();
     await expect(figure).not.toContainText("Drag the model");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Force, the seat node.");

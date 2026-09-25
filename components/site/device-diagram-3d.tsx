@@ -73,15 +73,22 @@ export function DeviceDiagram3D({
   const btn = useRef<HTMLButtonElement>(null);
   const pressed = useRef(false);
   const focusModel = useRef(false);
+  const hadFocus = () => pressed.current && document.activeElement === btn.current;
   const load = () => setLive(true);
 
-  // The button goes once the model is there. If it was pressed and focus
-  // went with it, focus moves on to the model rather than back to the top of
-  // the page.
+  // The button goes once the model is there, or once it can't be. If it was
+  // pressed and focus went with it, focus moves on to the model, or failing
+  // that to the first note, rather than back to the top of the page.
   useEffect(() => {
     const lost = !document.activeElement || document.activeElement === document.body;
-    if (shown && focusModel.current && lost) stage.current?.focus();
-  }, [shown]);
+    if (!focusModel.current || !lost) return;
+    focusModel.current = false;
+    if (shown) stage.current?.focus();
+    else if (failed) {
+      const notesShown = wrap.current?.querySelectorAll<HTMLElement>("ol button") ?? [];
+      Array.from(notesShown).find((b) => b.getClientRects().length > 0)?.focus();
+    }
+  }, [shown, failed]);
 
   // The note being looked at decides the view; with none, the model rests.
   useEffect(() => {
@@ -237,7 +244,12 @@ export function DeviceDiagram3D({
             )}
           >
             {live && !failed && (
-              <SceneBoundary onError={() => setFailed(true)}>
+              <SceneBoundary
+                onError={() => {
+                  focusModel.current = hadFocus();
+                  setFailed(true);
+                }}
+              >
                 <DeviceScene kind={kind} rig={rig} active={on} notes={notes} onFrame={onFrame} />
               </SceneBoundary>
             )}
