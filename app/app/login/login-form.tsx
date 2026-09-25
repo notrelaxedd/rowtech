@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { ArrowRight, LoaderCircle, Mail } from "lucide-react";
 import { ctaPrimary, ctaSecondary } from "@/components/site/cta";
 import { cn } from "@/lib/utils";
@@ -12,21 +12,7 @@ const EMPTY: LoginState = { status: "idle", message: "", email: "" };
 export function LoginForm({ error }: { error?: string }) {
   const [state, action, pending] = useActionState(sendMagicLink, EMPTY);
 
-  if (state.status === "sent") {
-    return (
-      <div className="rounded-lg border border-line bg-panel p-6">
-        <p className="readout inline-flex items-center gap-2.5 text-sm">
-          <span aria-hidden className="size-2 rounded-full bg-ok shadow-[0_0_10px_rgb(61_220_110/0.7)]" />
-          <span className="text-ok">SENT</span>
-        </p>
-        <h2 className="type-h3 mt-4">Check your email.</h2>
-        <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
-          If <span className="text-foreground">{state.email}</span> has a dashboard account, a sign-in link is on its way.
-          It works once, and only for a short while.
-        </p>
-      </div>
-    );
-  }
+  if (state.status === "sent") return <Sent email={state.email} />;
 
   return (
     <div className="space-y-5">
@@ -93,6 +79,28 @@ export function LoginForm({ error }: { error?: string }) {
           )}
         </button>
       </form>
+    </div>
+  );
+}
+
+// Replaces the form, and the button that had focus, so focus moves to its
+// heading: a screen reader reads the result, and Tab goes on from here.
+function Sent({ email }: { email: string }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => heading.current?.focus(), []);
+  return (
+    <div className="rounded-lg border border-line bg-panel p-6">
+      <p className="readout inline-flex items-center gap-2.5 text-sm">
+        <span aria-hidden className="size-2 rounded-full bg-ok shadow-[0_0_10px_rgb(61_220_110/0.7)]" />
+        <span className="text-ok">SENT</span>
+      </p>
+      <h2 ref={heading} tabIndex={-1} className="type-h3 mt-4 outline-none">
+        Check your email.
+      </h2>
+      <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
+        If <span className="text-foreground">{email}</span> has a dashboard account, a sign-in link is on its way.
+        It works once, and only for a short while.
+      </p>
     </div>
   );
 }

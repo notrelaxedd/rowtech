@@ -46,7 +46,8 @@ test.describe("signing in", () => {
     // While it sends, a screen reader hears so, and focus stays on the button.
     const form = page.locator("form").filter({ has: page.getByLabel("Email") });
     const sent = await sendWhileHeld(page, form, page.getByRole("button", { name: /email me a link/i }), "Sending your sign-in link…");
-    await expect(page.getByRole("heading", { name: "Check your email." })).toBeVisible();
+    // The result replaces the form, and focus moves to it rather than to the page.
+    await expect(page.getByRole("heading", { name: "Check your email." })).toBeFocused();
     expect(sent.posts()).toBe(1);
     expect(await hasAccount(email)).toBe(false);
   });
