@@ -290,7 +290,7 @@ export function DeviceDiagram3D({
                       pressed.current = true;
                       load();
                     }}
-                    className="underline underline-offset-4 hover:text-foreground"
+                    className="hit-area relative underline underline-offset-4 hover:text-foreground"
                   >
                     {live ? "Loading the 3D model…" : "Show the 3D model"}
                   </button>

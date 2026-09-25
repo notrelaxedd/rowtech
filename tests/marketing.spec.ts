@@ -747,4 +747,11 @@ test("on a phone, small links and buttons take taps over 44x44 px", async ({ pag
   const logo = await tapArea(page.getByRole("link", { name: "RowTech home" }));
   expect(Math.min(logo.width, logo.height)).toBeGreaterThanOrEqual(44);
   expect(logo.misses).toEqual([]);
+  // The product pages' "Show the 3D model", a line of small text under the drawing.
+  for (const path of ["/force", "/vieve"]) {
+    await page.goto(path);
+    const show = await tapArea(page.locator("#parts").getByRole("button", { name: "Show the 3D model" }));
+    expect(Math.min(show.width, show.height), path).toBeGreaterThanOrEqual(44);
+    expect(show.misses, path).toEqual([]);
+  }
 });
