@@ -32,12 +32,13 @@ export function LoginForm({ error }: { error?: string }) {
             branding guidelines: 40px high, 12px in from each end, the
             standard "G" (public/google-g.svg, cut from Google's own button
             asset) 10px from the text, #131314 with a #8E918F edge, #E3E3E3
-            type in Google Sans Medium 14/20. */}
+            type in Google Sans Medium 14/20. It takes taps over 44px high on
+            a phone all the same (hit-area, A11Y-005). */}
         <button
           type="submit"
           className={cn(
             googleSans.className,
-            "flex h-10 w-full items-center justify-center gap-2.5 rounded-[4px] border border-[#8E918F] bg-[#131314] px-3 text-sm leading-5 font-medium text-[#E3E3E3] transition-colors hover:bg-[#242425] active:bg-[#2c2c2d]"
+            "hit-area relative flex h-10 w-full items-center justify-center gap-2.5 rounded-[4px] border border-[#8E918F] bg-[#131314] px-3 text-sm leading-5 font-medium text-[#E3E3E3] transition-colors hover:bg-[#242425] active:bg-[#2c2c2d]"
           )}
         >
           <span aria-hidden className="size-5 shrink-0 bg-[url(/google-g.svg)] bg-contain bg-no-repeat" />
