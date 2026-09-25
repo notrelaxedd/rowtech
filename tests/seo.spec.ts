@@ -9,6 +9,10 @@ const PAGES = [
   { path: "/beta", title: "Apply for the beta · RowTech" },
   { path: "/force", title: "Force, the seat node · RowTech" },
   { path: "/vieve", title: "Vieve, the cox box · RowTech" },
+  { path: "/privacy", title: "Privacy · RowTech" },
+  { path: "/terms", title: "Terms · RowTech" },
+  { path: "/accessibility", title: "Accessibility · RowTech" },
+  { path: "/licenses", title: "Open-source licenses · RowTech" },
 ];
 
 for (const { path, title } of PAGES) {
@@ -24,16 +28,64 @@ for (const { path, title } of PAGES) {
     await expect(meta(page, "og:title")).toHaveAttribute("content", title);
     await expect(meta(page, "twitter:title")).toHaveAttribute("content", title);
     if (path !== "/") {
+      // Short enough that a search result shows it whole (~160 characters).
+      expect(description!.length).toBeLessThanOrEqual(160);
       await expect(meta(page, "og:description")).toHaveAttribute("content", description!);
       await expect(meta(page, "twitter:description")).toHaveAttribute("content", description!);
     }
     // What every page shares.
     await expect(meta(page, "og:site_name")).toHaveAttribute("content", "RowTech");
     await expect(meta(page, "og:type")).toHaveAttribute("content", "website");
-    await expect(meta(page, "og:image").first()).toHaveAttribute("content", /\/og\.png$/);
+    await expect(meta(page, "og:image").first()).toHaveAttribute("content", /\/og\.png\?v=\d+$/);
+    if (path === "/") {
+      // The version is only in the URL; the file it names is served.
+      const image = new URL((await meta(page, "og:image").first().getAttribute("content"))!);
+      const response = await page.request.get(image.pathname + image.search);
+      expect(response.status()).toBe(200);
+      expect(response.headers()["content-type"]).toBe("image/png");
+    }
     await expect(meta(page, "twitter:card")).toHaveAttribute("content", "summary_large_image");
+    // The image's alt text describes the image; it doesn't repeat the title (CNT-020).
+    for (const key of ["og:image:alt", "twitter:image:alt"]) {
+      const alt = await meta(page, key).first().getAttribute("content");
+      expect(alt, key).toBeTruthy();
+      expect(alt!.toLowerCase(), key).not.toContain("the force curve from every seat in the boat");
+      expect(alt, key).not.toBe(title);
+      // The node's screen in the image shows example data, and says so (LEG-010).
+      expect(alt, key).toContain("example data");
+    }
   });
 }
+
+// One apostrophe and one ellipsis, the typographic ones, in what a page shows
+// and in what a search result or a screen reader reads out (CNT-005).
+test("pages use ’ and …, with no straight apostrophes or leaked entities", async ({ page }) => {
+  for (const { path } of PAGES) {
+    await page.goto(path);
+    const read = await page.evaluate(() => [
+      document.body.innerText,
+      ...[...document.querySelectorAll("meta[content]")].map((m) => m.getAttribute("content") ?? ""),
+      ...[...document.querySelectorAll("[aria-label], [alt], [title]")].flatMap((e) =>
+        ["aria-label", "alt", "title"].map((a) => e.getAttribute(a) ?? "")
+      ),
+    ]);
+    for (const text of read) {
+      expect(text, path).not.toMatch(/&(rsquo|hellip|lsquo|ldquo|rdquo|Prime);/);
+      expect(text, path).not.toMatch(/[A-Za-z]'[A-Za-z]/);
+      expect(text, path).not.toContain("...");
+    }
+  }
+  await page.goto("/");
+  await expect(meta(page, "description")).toHaveAttribute("content", /seat’s/);
+});
+
+// The category words a coach searches for, where the page already says what
+// Force is (BIZ-024).
+test("/force names its category in its description and its lead", async ({ page }) => {
+  await page.goto("/force");
+  await expect(meta(page, "description")).toHaveAttribute("content", /rowing force measurement/i);
+  await expect(page.locator("main section").first()).toContainText(/rowing force measurement/i);
+});
 
 test("pages that set no canonical don't inherit the home page's", async ({ page }) => {
   for (const path of ["/app/login", "/no-such-page"]) {
@@ -63,7 +115,7 @@ test("the sitemap lists the public pages and nothing else", async ({ request, ba
   const res = await request.get("/sitemap.xml");
   expect(res.status()).toBe(200);
   const locs = [...(await res.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
-  expect(locs.sort()).toEqual(["/", "/beta", "/force", "/vieve"]);
+  expect(locs.sort()).toEqual(["/", "/accessibility", "/beta", "/force", "/licenses", "/privacy", "/terms", "/vieve"]);
   expect(await res.text()).toContain(`<loc>${baseURL}/force</loc>`);
 });
 

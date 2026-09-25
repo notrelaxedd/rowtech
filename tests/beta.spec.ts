@@ -20,8 +20,26 @@ test("the beta form submits and says what happens next", async ({ page }) => {
   await page.getByRole("button", { name: /apply for the beta/i }).click();
   expect((await sent).postData()).toMatch(/from"\s+hero\s/);
 
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Thanks, Sam Rower. We have your application.");
+  // Received, not saved: it's said for an address that already applied, too.
+  await expect(page.getByText("Application received", { exact: true })).toBeVisible();
   await expect(page.getByText("We read your application.")).toBeVisible();
+});
+
+test("the confirmation thanks people by the name they gave, titles and all", async ({ page }) => {
+  for (const [name, heading] of [
+    ["Coach Jones", "Thanks, Coach Jones."],
+    ["Dr. A. Smith Jr.", "Thanks, Dr. A. Smith Jr."],
+    ["Sam!", "Thanks, Sam."],
+    ["Coach Jones?", "Thanks, Coach Jones."],
+  ]) {
+    await page.goto("/beta");
+    await page.getByLabel("Name").fill(name);
+    await page.getByLabel("Email").fill("sam.rower@example.com");
+    await page.getByLabel("Club, school or program").fill("Riverside RC");
+    await page.getByRole("button", { name: /apply for the beta/i }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${heading} We have your application.`);
+  }
 });
 
 test("every beta link goes to the one /beta, and the form knows which was used", async ({ page, request }) => {
@@ -83,9 +101,44 @@ test("the form says what is wrong rather than failing silently", async ({ page }
   await page.getByLabel("Club, school or program").fill("Riverside RC");
   await page.getByRole("button", { name: /apply for the beta/i }).click();
 
-  await expect(page.getByText(/doesn't look like an email address/i)).toBeVisible();
+  await expect(page.getByText(/doesn’t look like an email address/i)).toBeVisible();
   // What they typed is still there.
   await expect(page.getByLabel("Name")).toHaveValue("Sam");
+});
+
+// The line over the form counts what's wrong (CNT-009).
+test("the form's summary says how many things need fixing", async ({ page }) => {
+  for (const [fields, said] of [
+    [["Sam", "not-an-email", "Riverside RC"], "One thing needs fixing before we can send this."],
+    [["", "not-an-email", "Riverside RC"], "A couple of things need fixing before we can send this."],
+    [["", "not-an-email", ""], "A few things need fixing before we can send this."],
+  ] as const) {
+    await page.goto("/beta");
+    await page.getByLabel("Name").fill(fields[0]);
+    await page.getByLabel("Email").fill(fields[1]);
+    await page.getByLabel("Club, school or program").fill(fields[2]);
+    await page.getByRole("button", { name: /apply for the beta/i }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "fixing before we can send this" })).toHaveText(said);
+  }
+});
+
+// ...and keeps counting as fields are fixed, then goes (CNT-009).
+test("the form's summary recounts as fields are fixed", async ({ page }) => {
+  await page.goto("/beta");
+  await page.getByLabel("Email").fill("not-an-email");
+  await page.getByLabel("Club, school or program").fill("Riverside RC");
+  await page.getByRole("button", { name: /apply for the beta/i }).click();
+  const summary = page.getByRole("alert").filter({ hasText: "fixing before we can send this" });
+  await expect(summary).toHaveText("A couple of things need fixing before we can send this.");
+
+  await page.getByLabel("Name").fill("Sam");
+  await page.getByLabel("Name").blur();
+  await expect(summary).toHaveText("One thing needs fixing before we can send this.");
+
+  await page.getByLabel("Email").fill("sam@example.com");
+  await page.getByLabel("Email").blur();
+  await expect(page.getByLabel("Email")).not.toHaveAttribute("aria-invalid", "true");
+  await expect(summary).toHaveCount(0);
 });
 
 test("a rejected application keeps the same form, with every answer in it", async ({ page }) => {
@@ -100,7 +153,7 @@ test("a rejected application keeps the same form, with every answer in it", asyn
   const form = await page.locator("form").elementHandle();
   await page.getByRole("button", { name: /apply for the beta/i }).click();
 
-  await expect(page.getByText(/doesn't look like an email address/i)).toBeVisible();
+  await expect(page.getByText(/doesn’t look like an email address/i)).toBeVisible();
   expect(await form!.evaluate((el) => el.isConnected)).toBe(true);
   await expect(page.getByLabel("Name")).toHaveValue("Sam Rower");
   await expect(page.getByLabel("Email")).toHaveValue("not-an-email");
@@ -123,7 +176,7 @@ test("an error in an optional field opens the details, even after they were clos
   await page.getByText("Coach", { exact: true }).click();
   await page.getByLabel("Email").fill("not-an-email");
   await page.getByRole("button", { name: /apply for the beta/i }).click();
-  await expect(page.getByText(/doesn't look like an email address/i)).toBeVisible();
+  await expect(page.getByText(/doesn’t look like an email address/i)).toBeVisible();
 
   const details = page.locator("form details");
   await details.locator("summary").click();
@@ -170,10 +223,10 @@ test("a required field says what's wrong as soon as it's left", async ({ page })
   await email.blur();
   await expect(email).toHaveAttribute("aria-invalid", "true");
   await expect(email).toHaveAttribute("aria-describedby", "email-error");
-  await expect(page.locator("#email-error")).toHaveText("That doesn't look like an email address. Check for a typo.");
+  await expect(page.locator("#email-error")).toHaveText("That doesn’t look like an email address. Check for a typo.");
   // Focus has moved on by then, so a screen reader hears it from a live region.
   const said = page.locator('p[aria-live="polite"]');
-  await expect(said).toHaveText("Email: That doesn't look like an email address. Check for a typo.");
+  await expect(said).toHaveText("Email: That doesn’t look like an email address. Check for a typo.");
 
   // Put right, it clears while typing.
   await email.fill("sam.rower@example.com");
@@ -236,6 +289,7 @@ test("the bot trap is nothing a browser would fill in, and a bot that fills it i
   await trap.evaluate((el) => ((el as HTMLInputElement).value = "https://spam.example"));
   await page.getByRole("button", { name: /apply for the beta/i }).click();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
+  await expect(page.getByText("Application received", { exact: true })).toBeVisible();
 });
 
 test("while it sends, a screen reader hears so and focus stays on the button", async ({ page }) => {
@@ -259,7 +313,7 @@ test.describe("without JavaScript", () => {
     await page.getByLabel("Email").fill("not-an-email");
     await page.getByLabel("Club, school or program").fill("Riverside RC");
     await page.getByRole("button", { name: /apply for the beta/i }).click();
-    await expect(page.locator("#email-error")).toHaveText("That doesn't look like an email address. Check for a typo.");
+    await expect(page.locator("#email-error")).toHaveText("That doesn’t look like an email address. Check for a typo.");
     await expect(page.getByLabel("Name")).toHaveValue("Sam Rower");
 
     await page.getByLabel("Email").fill("sam.rower@example.com");

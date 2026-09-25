@@ -48,7 +48,7 @@ test("when Storage doesn't answer, a session page says it didn't load instead of
   const site = info.project.use.baseURL!;
   await signInBrowser(context, user, site);
   await page.goto(`${site}/app/force`);
-  await page.getByLabel("Files").setInputFiles(["meta.json", "strokes.csv", "curves.bin", "events.csv"].map((f) => `public/demo/seat-1/${f}`));
+  await page.getByLabel("Files").setInputFiles(["meta.json", "strokes.csv", "curves.bin", "events.csv"].map((f) => `tests/fixtures/demo/seat-1/${f}`));
   await page.getByRole("button", { name: "Upload" }).click();
   await expect(page).toHaveURL(/\/app\/force\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   const id = page.url().split("/").pop()!;
@@ -65,13 +65,13 @@ test("when a file isn't stored, the upload says so and leaves no file or row beh
   const entries: Record<string, Uint8Array> = {};
   for (const n of [2, 6]) {
     for (const f of ["meta.json", "strokes.csv", "curves.bin", "events.csv"]) {
-      entries[`outing/seat-${n}/${f}`] = new Uint8Array(await readFile(`public/demo/seat-${n}/${f}`));
+      entries[`outing/seat-${n}/${f}`] = new Uint8Array(await readFile(`tests/fixtures/demo/seat-${n}/${f}`));
     }
   }
   await page.goto("/app/force");
   await page.getByLabel("Files").setInputFiles({ name: "outing.zip", mimeType: "application/zip", buffer: Buffer.from(zipSync(entries)) });
   await page.getByRole("button", { name: "Upload" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "events.csv couldn't be stored. Try again in a minute." })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("alert").filter({ hasText: "events.csv couldn’t be stored. Try again in a minute." })).toBeVisible({ timeout: 30_000 });
 
   const { data: team, error } = await user.db.rpc("ensure_own_team", { p_name: "test crew" });
   expect(error).toBeNull();
@@ -110,6 +110,8 @@ test("in production a stray BETA_DRY_RUN doesn't skip saving an application", as
   await page.getByLabel("Club, school or program").fill("Riverside RC");
   await page.getByRole("button", { name: /apply for the beta/i }).click();
 
-  await expect(page.getByRole("alert").filter({ hasText: "your application wasn't saved" })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "your application wasn’t saved" })).toHaveText(
+    "Something went wrong on our side and your application wasn’t saved. Try again in a minute."
+  );
   await expect(page.getByRole("heading", { level: 1 })).not.toContainText("We have your application");
 });

@@ -316,7 +316,10 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
         </div>
       </div>
 
-      <p className="mx-auto mt-8 max-w-4xl text-sm text-muted-foreground">Example data.</p>
+      <p className="mx-auto mt-8 max-w-4xl text-sm text-muted-foreground">
+        Example data, in kilograms as a calibrated node will read. Until a node is calibrated, force reads in raw sensor
+        units.
+      </p>
     </div>
   );
 }

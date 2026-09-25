@@ -1,9 +1,10 @@
-// Builds the bundled sample session for /demo and the Playwright upload test.
+// Builds the synthetic sample session the Playwright tests upload and parse.
+// It lives in tests/fixtures/demo, not public/: it's test data, and served
+// from the site it would be an unlabelled file claiming a calibrated node.
 //
 // It writes exactly what LoadCellNode_v10/storage.cpp writes -- same header,
 // same column order, same %.4f/%.5f shapes, same fixed 128-byte curve records
-// -- so the demo and the tests go through the real parser, not a shortcut.
-// Synthetic, and labelled as sample data everywhere it is shown.
+// -- so the tests go through the real parser, not a shortcut.
 //
 //   node scripts/make-demo-session.mjs
 //
@@ -11,7 +12,7 @@
 import { mkdir, writeFile, rm } from "node:fs/promises";
 import path from "node:path";
 
-const OUT = path.join(process.cwd(), "public", "demo");
+const OUT = path.join(process.cwd(), "tests", "fixtures", "demo");
 
 const SPS = 80;
 const CURVE_POINTS = 64;

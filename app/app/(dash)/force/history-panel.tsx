@@ -16,7 +16,7 @@ const SERIES = [
   { id: "avg_peak", label: "Peak", get: (p: HistoryPoint) => p.avg_peak },
   { id: "avg_rise_rate", label: "Rise rate", get: (p: HistoryPoint) => p.avg_rise_rate },
   { id: "avg_peak_pos_pct", label: "Peak position", get: (p: HistoryPoint) => p.avg_peak_pos_pct },
-  { id: "ratio", label: "Drive : recovery", get: (p: HistoryPoint) => (p.avg_drive_ms ? (p.avg_recovery_ms ?? 0) / p.avg_drive_ms : null) },
+  { id: "ratio", label: "Drive:recovery", get: (p: HistoryPoint) => (p.avg_drive_ms ? (p.avg_recovery_ms ?? 0) / p.avg_drive_ms : null) },
   { id: "consistency_pct", label: "Consistency", get: (p: HistoryPoint) => p.consistency_pct },
 ] as const;
 

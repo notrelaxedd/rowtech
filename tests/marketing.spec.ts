@@ -1,5 +1,6 @@
 import { test, expect, type Locator } from "@playwright/test";
 import { expectSkipLink } from "./support/skip-link";
+import { contactEmail, googleSignIn } from "../lib/owner";
 
 test("the marketing page renders, with the beta offered in four places", async ({ page }) => {
   await page.goto("/");
@@ -9,22 +10,50 @@ test("the marketing page renders, with the beta offered in four places", async (
   await expect(page.getByRole("img", { name: /Force seat node/i }).first()).toBeVisible();
   await expect(page.locator("#hero-peak")).toHaveCount(1);
 
-  for (const id of ["crew", "how", "stroke", "products", "beta-scope", "faq", "beta"]) {
+  for (const id of ["crew", "how", "stroke", "products", "faq", "beta"]) {
     await expect(page.locator(`#${id}`)).toHaveCount(1);
   }
 
   // Vieve is named, and named properly on first mention.
   await expect(page.locator("#crew")).toContainText("Vieve, the RowTech cox box");
   await expect(page.locator("#faq")).toContainText("Vieve");
+  // The Force page has no calibrated numbers to point to yet (BIZ-013).
+  await expect(page.locator("#faq")).toContainText("The Force page says where calibration stands.");
 
   // The beta is offered in the nav, the hero, once mid-page and at the close.
   const froms = await page
     .getByRole("link", { name: /apply for the beta/i })
     .evaluateAll((els) => els.map((e) => e.getAttribute("data-cta")));
   expect(froms.sort()).toEqual(["closing", "hero", "nav", "stroke"]);
+});
 
-  // Built and planned are kept apart.
-  await expect(page.locator("#beta-scope")).toContainText("In the node’s firmware now");
+test("the header links to the product pages only, not to sections of the home page", async ({ page }) => {
+  await page.goto("/");
+  // A CSS locator, so the links behind the phone menu's closed disclosure are counted too.
+  const hrefs = await page.locator("header a[href]").evaluateAll((els) => els.map((e) => e.getAttribute("href")));
+  expect(hrefs.filter((h) => h?.startsWith("/#"))).toEqual([]);
+  expect(hrefs).toEqual(expect.arrayContaining(["/force", "/vieve"]));
+});
+
+// The home page's copy says the same as the form and the dashboard (CNT-003).
+test("the home page agrees with the beta form and the dashboard", async ({ page }) => {
+  await page.goto("/");
+  // The dashboard's words for the two sides of the boat.
+  await expect(page.locator("#crew")).toContainText("port and starboard");
+  await page.goto("/beta");
+  await expect(page.locator("form summary")).toContainText("Tell us about your boats");
+});
+
+// What a node saves and you download is a session, as the dashboard calls it;
+// what was rowed is an outing (CNT-002).
+test("the site calls what you download from a node a session", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#how")).toContainText("Download the session");
+  await expect(page.getByRole("heading", { level: 1 }).locator("..")).toContainText("You download the session at the dock.");
+  for (const path of ["/", "/force"]) {
+    await page.goto(path);
+    await expect(page.locator("main"), path).not.toContainText(/\bpractice\b/i);
+  }
 });
 
 test("specifications live on the product pages, not the home page", async ({ page }) => {
@@ -38,6 +67,125 @@ test("specifications live on the product pages, not the home page", async ({ pag
   await expect(page.locator("#specs")).toContainText("3000 mAh");
   await page.goto("/vieve");
   await expect(page.locator("#specs")).toContainText("$499");
+  // The target price is a spec, not the pitch in the lead (CNT-021).
+  await expect(page.locator("main section").first()).not.toContainText("$499");
+});
+
+// Claims no stronger than what's built (LEG-010): no "any phone", and Vieve's
+// parts are planned. The 3 ms line keeps the site's own wording until the
+// owner says what it measures.
+test("the specifications claim no more than what's built", async ({ page }) => {
+  await page.goto("/force");
+  const force = page.locator("#specs");
+  await expect(force).not.toContainText("any phone");
+  await page.goto("/vieve");
+  for (const row of ["Screen", "GPS", "Battery"]) {
+    await expect(page.locator("#specs dt", { hasText: row }).locator("+ dd")).toContainText(/^Planned/);
+  }
+});
+
+// One style for numbers and units (CNT-007): no cell ends in a full stop, a
+// rate is in Hz, and a percent sign sits against its number.
+test("the specifications and the stroke chart write numbers one way", async ({ page }) => {
+  for (const path of ["/force", "/vieve"]) {
+    await page.goto(path);
+    for (const cell of await page.locator("#specs dd").allTextContents()) {
+      expect(cell.trim(), `${path}: ${cell}`).not.toMatch(/\.$/);
+    }
+    await expect(page.locator("#specs")).not.toContainText("a second");
+  }
+  await page.goto("/");
+  const chart = page.locator("#stroke");
+  await expect(chart).not.toContainText(/\d %/);
+  await expect(chart).not.toContainText(" & ");
+});
+
+// The questions a coach asks about Force have a row in its specifications,
+// even while the answer is still to come (BIZ-004, BIZ-008, BIZ-022), and the
+// longer rows wrap on a phone instead of widening the page.
+test("Force's specifications say what it fits, what it doesn't measure and its target price", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto("/force");
+  const labels = await page.locator("#specs dt").allTextContents();
+  for (const label of ["Fits", "Doesn’t measure", "Target price"]) expect(labels).toContain(label);
+  for (const label of ["Fits", "Doesn’t measure", "Target price"]) {
+    await expect(page.locator("#specs dt", { hasText: label }).locator("+ dd")).not.toBeEmpty();
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  // The Fits row and the home page's fit question give the same answer.
+  await expect(page.locator("#specs dt", { hasText: "Fits" }).locator("+ dd")).toContainText("Vespoli riggers");
+  await page.goto("/vieve");
+  await expect(page.locator("#specs dt", { hasText: "Target price" })).toHaveCount(1);
+  await page.goto("/");
+  await expect(page.locator("#faq")).toContainText("For now it fits Vespoli riggers");
+});
+
+// The closing section says where the build stands and what happens after you
+// apply, and what beta crews get says what happens when a unit fails, with the
+// site's one contact to write to (BIZ-014, BIZ-017, BIZ-020).
+test("the home page has a line for the build status, how the beta works, and failed units", async ({ page }) => {
+  await page.goto("/");
+  const beta = page.locator("#beta");
+  await expect(beta.locator("h2 + p")).toContainText("new parts have been ordered for Force v1.4");
+  await expect(beta.locator("h2 + p")).toContainText("we’ll get in touch to discuss next steps");
+  await expect(beta).toContainText("testing units at the cost of their materials");
+  await expect(beta).toContainText(`If a unit fails, send it back and we’ll replace it. Write to ${contactEmail}.`);
+});
+
+// Another company sells rowing sensors as RowTech Solutions; the FAQ says this
+// RowTech isn't it (BIZ-023: the name stays).
+test("the FAQ says RowTech isn't RowTech Solutions", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#faq summary", { hasText: "Are you RowTech Solutions?" })).toHaveCount(1);
+  await expect(page.locator("#faq")).toContainText("isn’t connected to RowTech Solutions");
+});
+
+// "Wi-Fi", the standard spelling, wherever a page says it (LEG-016, CNT-008).
+test("Wi-Fi is spelled Wi-Fi on the pages", async ({ page }) => {
+  for (const path of ["/", "/force", "/vieve"]) {
+    await page.goto(path);
+    const text = (await page.locator("body").textContent()) ?? "";
+    expect(text, path).not.toContain("WiFi");
+  }
+  await page.goto("/");
+  await expect(page.locator("#how")).toContainText("the node’s own Wi-Fi");
+  await expect(page.locator("#faq summary", { hasText: "Wi-Fi at the boathouse" })).toHaveCount(1);
+  // "Force" at the start of a sentence reads as the product, not the quantity.
+  await expect(page.locator("#faq")).toContainText("Force readings do:");
+  await page.goto("/force");
+  await expect(page.locator("#boathouse dt", { hasText: "Its own Wi-Fi network" })).toHaveCount(1);
+  await expect(page.locator("#specs dt", { hasText: "Network" }).locator("+ dd")).toContainText("Wi-Fi");
+  await expect(page.locator("#parts")).toContainText("its own Wi-Fi network");
+});
+
+// The copy is written for US coaches in US spelling, and so is what a screen
+// reader reads out of the drawings (CNT-017).
+test("the pages use US spelling, in their text and their labels", async ({ page }) => {
+  const british = /\b(coloured|colours?|metres?|kilometres?|centred|centre|programmes?|analysed?)\b/i;
+  for (const path of ["/", "/force", "/vieve", "/beta"]) {
+    await page.goto(path);
+    const text = (await page.locator("body").textContent()) ?? "";
+    const labels = await page.locator("[aria-label]").evaluateAll((els) => els.map((el) => el.getAttribute("aria-label") ?? ""));
+    for (const said of [text, ...labels]) expect(said.match(british)?.[0] ?? null, path).toBeNull();
+  }
+  await page.goto("/vieve");
+  await expect(page.locator('[aria-label*="per 500 meters"]').first()).toBeAttached();
+});
+
+// No node has been calibrated: the kilograms on the home page say they're an
+// example, next to where they're shown (BIZ-005).
+test("the home page's kilograms are labelled as example data, with where calibration stands", async ({ page }) => {
+  await page.goto("/");
+  const hero = page.locator('[data-section="hero"]');
+  await expect(hero.locator("figcaption").filter({ has: page.getByRole("link", { name: "See Force" }) })).toContainText(/example data/i);
+  await expect(hero.locator("figcaption").filter({ hasText: "Example stroke" })).toContainText("calibrated a node yet");
+  await expect(page.locator("#stroke")).toContainText("Until a node is calibrated, force reads in raw sensor units.");
+  // Step 2 and the Force product card draw the same screen (LEG-010).
+  await expect(page.locator("#how figure figcaption")).toContainText(/example data/i);
+  await expect(page.locator("#products li").filter({ hasText: "Force, the seat node" })).toContainText(/example data/i);
+  // The Force page's model shows the same screen (LEG-010).
+  await page.goto("/force");
+  await expect(page.locator("#parts figcaption")).toContainText(/example data/i);
 });
 
 test("reduced motion leaves the pages in their finished state", async ({ page }) => {
@@ -158,6 +306,9 @@ test("the Force page shows the node as a 3D model with its notes around it", asy
   await expect(figure).toContainText("Drag the model, or use the arrow keys, to turn it.");
   await expect(figure.getByRole("img", { name: /Force seat node/ })).toHaveCount(0);
   await expect(page.locator("#parts")).toContainText("Steps through the rower’s screens");
+  // VIEW and TARE have notes. POWER has none until what it does is confirmed (CNT-003).
+  const notes = page.getByRole("list", { name: "Parts of the Force node" });
+  for (const key of ["VIEW", "TARE"]) await expect(notes.getByRole("button", { name: new RegExp(key) })).toHaveCount(1);
 });
 
 // three.js is a quarter of a megabyte gzipped: only fetched when someone
@@ -288,6 +439,14 @@ test("there is no team page for now, and old links to it go home", async ({ page
   await page.goto("/team");
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("The force curve from every seat in the boat.");
+});
+
+// The synthetic sample session is test data: served from the site, its
+// meta.json would claim a calibrated node (CNT-010).
+test("the synthetic sample session isn't served from the site", async ({ request }) => {
+  for (const f of ["meta.json", "strokes.csv", "curves.bin", "events.csv"]) {
+    expect((await request.get(`/demo/seat-1/${f}`, { maxRedirects: 0 })).status(), f).toBe(404);
+  }
 });
 
 test("an address the site doesn't have gets the site's own 404", async ({ page }) => {
@@ -475,12 +634,12 @@ test("only the headline font is preloaded", async ({ request }) => {
 });
 
 // A link to a section on the home page reads as that section's heading does,
-// so landing there confirms the jump (UX-011).
-test("header and footer links to home page sections use their headings' words", async ({ page }) => {
+// so landing there confirms the jump (UX-011). The header links to pages only.
+test("footer links to home page sections use their headings' words", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/");
-  const links = page.locator('header nav a[href^="/#"], footer nav a[href^="/#"]');
-  expect(await links.count()).toBeGreaterThanOrEqual(5);
+  const links = page.locator('footer nav a[href^="/#"]');
+  expect(await links.count()).toBeGreaterThanOrEqual(2);
   for (const link of await links.all()) {
     const label = (await link.textContent())!.trim();
     const id = (await link.getAttribute("href"))!.slice(2);
@@ -491,39 +650,36 @@ test("header and footer links to home page sections use their headings' words", 
 
 // The home page's sections must have their real height from the start, or a
 // link to one of them lands where the section would have been (UX-001).
-test("links to the FAQ land on the FAQ", async ({ page, isMobile }) => {
-  const faq = page.locator("#faq");
+test("links to a home page section land on it", async ({ page }) => {
   // Distance between the section's top and the header's offset, once the
   // scroll has stopped moving (smooth scrolling passes through on its way).
-  const offTarget = () =>
-    faq.evaluate(async (el) => {
+  const offTarget = (id: string) => () =>
+    page.locator(`#${id}`).evaluate(async (el) => {
       const pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop);
       const a = el.getBoundingClientRect().top;
       await new Promise((r) => setTimeout(r, 300));
       const b = el.getBoundingClientRect().top;
       return a === b ? Math.abs(b - pad) : Infinity;
     });
-  const landsOnFaq = async () => {
-    await expect.poll(offTarget, { timeout: 10000 }).toBeLessThanOrEqual(2);
-    await expect(faq.getByRole("heading", { level: 2 })).toBeInViewport();
+  const landsOn = async (id: string) => {
+    await expect.poll(offTarget(id), { timeout: 10000 }).toBeLessThanOrEqual(2);
+    await expect(page.locator(`#${id}`).getByRole("heading", { level: 2 })).toBeInViewport();
   };
-  const clickFaq = async () => {
-    const header = page.locator("header");
-    if (isMobile) await header.getByText("Menu", { exact: true }).click();
-    await header.getByRole("link", { name: "Questions", exact: true }).filter({ visible: true }).click();
-    await expect(page).toHaveURL(/\/#faq$/);
+  const clickHow = async () => {
+    await page.getByRole("navigation", { name: "Footer" }).getByRole("link", { name: "Rigger to phone" }).click();
+    await expect(page).toHaveURL(/\/#how$/);
   };
 
   await page.goto("/#faq");
-  await landsOnFaq();
+  await landsOn("faq");
 
   await page.goto("/");
-  await clickFaq();
-  await landsOnFaq();
+  await clickHow();
+  await landsOn("how");
 
   await page.goto("/force");
-  await clickFaq();
-  await landsOnFaq();
+  await clickHow();
+  await landsOn("how");
 });
 
 // Keyboard users get past the header's links in one step (A11Y-001).
@@ -592,8 +748,8 @@ test("the phone menu closes on Escape, a tap outside, a scroll or a Tab out, and
   await menu.focus();
   await page.keyboard.press("Enter");
   await isOpen();
-  for (let i = 0; i < 5; i++) await page.keyboard.press("Tab");
-  await expect(panel.getByRole("link", { name: "Questions" })).toBeFocused();
+  for (let i = 0; i < 2; i++) await page.keyboard.press("Tab");
+  await expect(panel.getByRole("link", { name: "Vieve" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.locator('header a[data-cta="nav"]')).toBeFocused();
   await isClosed();
@@ -637,7 +793,7 @@ test.describe("without JavaScript", () => {
     await page.goto("/");
     await page.locator("header summary").click();
     const panel = page.locator("header details nav");
-    await expect(panel.getByRole("link", { name: "Questions" })).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Vieve" })).toBeVisible();
     const box = (await panel.boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(375);
@@ -747,6 +903,14 @@ test("on a phone, small links and buttons take taps over 44x44 px", async ({ pag
   const logo = await tapArea(page.getByRole("link", { name: "RowTech home" }));
   expect(Math.min(logo.width, logo.height)).toBeGreaterThanOrEqual(44);
   expect(logo.misses).toEqual([]);
+  // Google's button, when it's on, is drawn 40px high, to its guidelines, but
+  // takes taps over 44px.
+  if (googleSignIn) {
+    const google = await tapArea(page.getByRole("button", { name: "Continue with Google" }));
+    expect(Math.min(google.width, google.height)).toBeGreaterThanOrEqual(44);
+    expect(google.misses).toEqual([]);
+    expect((await page.getByRole("button", { name: "Continue with Google" }).boundingBox())!.height).toBeCloseTo(40, 0);
+  }
   // The product pages' "Show the 3D model", a line of small text under the drawing.
   for (const path of ["/force", "/vieve"]) {
     await page.goto(path);

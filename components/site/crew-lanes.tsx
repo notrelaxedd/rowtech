@@ -119,7 +119,7 @@ export function CrewLanes() {
         </svg>
       </ScrollRegion>
       <figcaption className="mt-3 max-w-[70ch] text-sm text-muted-foreground">
-        <span className="sm:hidden">Swipe the chart sideways to see every seat&rsquo;s offset. </span>
+        <span className="sm:hidden">Swipe the chart sideways to see every seat’s offset. </span>
         Illustration of the crew view. Each ridge is one seat from catch to peak; dots mark each catch, yellow when more
         than 7 ms off the crew average (dotted line). Catch spread here: {SPREAD} ms.
       </figcaption>

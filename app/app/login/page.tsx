@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getViewer } from "@/lib/supabase/server";
 import { Logo } from "@/components/site/logo";
 import { SkipLink } from "@/components/site/skip-link";
+import { PolicyLinks } from "@/components/site/legal";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Sign in", robots: { index: false } };
@@ -13,7 +14,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (viewer.state === "allowed") redirect("/app");
 
   const q = await searchParams;
-  const failed = q.error === "link" ? "That link has expired or was already used. Here's a fresh one." : q.error === "google" ? "Google sign-in didn't come back. Try again, or use a link instead." : "";
+  const failed = q.error === "link" ? "That link has expired or was already used. Enter your email for a new one." : q.error === "google" ? "Google sign-in didn’t come back. Try again, or use a link instead." : "";
 
   return (
     <>
@@ -29,11 +30,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <Link href="/beta" data-cta="login" className="text-trace underline underline-offset-4">
               Apply for the beta
             </Link>{" "}
-            if you&rsquo;re not in yet.
+            if you’re not in yet.
           </p>
           <div className="mt-8">
             <LoginForm error={failed} />
           </div>
+          <p className="mt-8 text-sm text-muted-foreground">
+            <PolicyLinks />
+          </p>
         </div>
       </main>
     </>

@@ -70,7 +70,7 @@ export function ScopeStrip() {
         <div className="rt-stroke-reveal absolute inset-0 overflow-hidden">
           <svg
             role="img"
-            aria-label={`Example force curve of one stroke: ${EXAMPLE.peakKg.toFixed(1)} kg peak at ${EXAMPLE.spm} strokes a minute, drawn left to right the way the node's live screen draws it.`}
+            aria-label={`Example force curve of one stroke: ${EXAMPLE.peakKg.toFixed(1)} kg peak at ${EXAMPLE.spm} strokes a minute, drawn left to right the way the node’s live screen draws it.`}
             viewBox={`0 0 ${W} ${H}`}
             preserveAspectRatio="none"
             className="rt-stroke-hold absolute inset-0 h-full w-full"
@@ -85,7 +85,8 @@ export function ScopeStrip() {
       </div>
       <figcaption className="mx-auto mt-3 flex max-w-7xl flex-wrap items-baseline justify-between gap-x-6 gap-y-1 px-5 text-sm text-muted-foreground sm:px-8">
         <span className="max-w-[62ch]">
-          Example stroke, drawn the way the node&rsquo;s live screen draws it, in kilograms as a calibrated node will read.
+          Example stroke, drawn the way the node’s live screen draws it, in kilograms as a calibrated node will read.
+          We haven’t calibrated a node yet.
         </span>
         <span className="tabular-nums">
           <span className="font-semibold text-foreground">{EXAMPLE.peakKg.toFixed(1)} kg</span> peak,{" "}

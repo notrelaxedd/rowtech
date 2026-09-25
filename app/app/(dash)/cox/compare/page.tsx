@@ -8,7 +8,7 @@ import { PieceMap } from "@/components/dash/piece-map";
 import { sessionTrack } from "@/lib/session/load";
 import { fmtSplit, splitFromSpeed, thinTrack } from "@/lib/session/track";
 
-export const metadata = { title: "Compare pieces" };
+export const metadata = { title: "Compare outings" };
 
 /** Most outings the pickers list. */
 const CREWS = 100;
@@ -74,7 +74,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
 
   const avgOf = (v: number | null) => (v === null ? "—" : fmt(v));
   const ratio = (p: typeof a) =>
-    p && p.avgRecovery !== null && p.avgDrive !== null ? `1 : ${fmt(p.avgRecovery / (p.avgDrive || 1), 2)}` : "—";
+    p && p.avgRecovery !== null && p.avgDrive !== null ? `1:${fmt(p.avgRecovery / (p.avgDrive || 1), 2)}` : "—";
   const cv = (p: typeof a) => (p && p.consistency !== null ? `CV ${fmt(p.consistency)}%` : "—");
   const rows: Array<[string, string, string]> = [
     ["Seats", a ? String(a.seats) : "—", b ? String(b.seats) : "—"],
@@ -83,7 +83,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
     ["Avg split", a ? fmtSplit(a.avgSplit) : "—", b ? fmtSplit(b.avgSplit) : "—"],
     ["Avg peak", a ? avgOf(a.avgPeak) : "—", b ? avgOf(b.avgPeak) : "—"],
     ["Avg impulse", a ? avgOf(a.avgImpulse) : "—", b ? avgOf(b.avgImpulse) : "—"],
-    ["Drive : recovery", ratio(a), ratio(b)],
+    ["Drive:recovery", ratio(a), ratio(b)],
     ["Consistency", cv(a), cv(b)],
   ];
 
@@ -94,11 +94,11 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
           <ArrowLeft aria-hidden className="size-3.5" />
           Crew outings
         </Link>
-        <h1 className="type-h3 mt-3 text-2xl">Two pieces, side by side</h1>
+        <h1 className="type-h3 mt-3 text-2xl">Two outings, side by side</h1>
       </div>
 
       <ComparePicker crews={crews.map((c) => ({ id: c.id, label: c.title || "Crew outing", at: c.recorded_at }))} a={a?.session.id} b={b?.session.id} />
-      {more && <p className="text-sm text-muted-foreground">The lists hold the {CREWS} most recent outings; older ones aren&rsquo;t in them.</p>}
+      {more && <p className="text-sm text-muted-foreground">The lists hold the {CREWS} most recent outings; older ones aren’t in them.</p>}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {[a, b].map((p, i) => (

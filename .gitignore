@@ -51,3 +51,6 @@ graphify-out
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Full-size camera originals: kept locally, never committed or deployed.
+/photos-original

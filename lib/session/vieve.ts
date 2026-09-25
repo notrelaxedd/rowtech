@@ -35,7 +35,7 @@ export function looksLikeVieve(files: NamedFile[]): boolean {
 export class VieveNotSupportedError extends Error {
   constructor() {
     super(
-      "That looks like a Vieve session. Vieve is still in development and its session format isn't final, so the dashboard can't read one yet. Seat node sessions work today."
+      "That looks like a Vieve session. Vieve is still in development and its session format isn’t final, so the dashboard can’t read one yet. Seat node sessions work today."
     );
     this.name = "VieveNotSupportedError";
   }

@@ -36,7 +36,7 @@ export const METRICS: ReadonlyArray<{ id: MetricId; label: string; value: string
     id: "catch",
     label: "Catch",
     value: "≈3 ms",
-    body: `The node marks the catch where force crosses 15% of the rower's recent peak (${f1(M.threshold)} kg here) and interpolates between samples. Samples arrive every 12.5 ms; the catch lands to within about 3 ms. That precision is what makes crew timing possible.`,
+    body: `The node marks the catch where force crosses 15% of the rower’s recent peak (${f1(M.threshold)} kg here) and interpolates between samples. Samples arrive every 12.5 ms; the catch lands to within about 3 ms. That precision is what makes crew timing possible.`,
   },
   {
     id: "rise",
@@ -46,26 +46,26 @@ export const METRICS: ReadonlyArray<{ id: MetricId; label: string; value: string
   },
   {
     id: "peak",
-    label: "Peak & position",
+    label: "Peak and position",
     value: `${f1(M.peakKg)} kg at ${M.peakPct.toFixed(0)}%`,
     body: `The peak, and where it falls in the drive: ${M.peakPct.toFixed(0)}% of the way through here. The shape of the curve says as much about technique as its height.`,
   },
   {
     id: "thirds",
     label: "Work by thirds",
-    value: `${M.thirds.map((v) => Math.round((v / M.impulse) * 100)).join(" / ")} %`,
+    value: M.thirds.map((v) => `${Math.round((v / M.impulse) * 100)}%`).join(" / "),
     body: `Impulse (force × time, ${f1(M.impulse)} kg·s for this stroke) split across the front, middle and finish of the drive, in kg·s on the chart. It shows where the work actually happens.`,
   },
   {
     id: "release",
     label: "Release",
-    value: "½ threshold",
-    body: "Release is called at half the catch threshold. That gap means a wobble at the finish can't split one stroke into two.",
+    value: `${f1(M.threshold / 2)} kg`,
+    body: `Release is called at half the catch threshold (${f1(M.threshold / 2)} kg here). That gap means a wobble at the finish can’t split one stroke into two.`,
   },
   {
     id: "rhythm",
     label: "Rhythm",
-    value: `1 : ${(M.recoveryMs / M.driveMs).toFixed(2)}`,
+    value: `1:${(M.recoveryMs / M.driveMs).toFixed(2)}`,
     body: `Drive ${M.driveMs.toFixed(0)} ms, recovery ${M.recoveryMs.toFixed(0)} ms, at ${EXAMPLE.spm} strokes a minute. Timing like this needs no calibration at all.`,
   },
   {

@@ -13,7 +13,7 @@ export function ForceMount({ className }: { className?: string }) {
       <svg
         viewBox={`0 0 ${W} ${H}`}
         role="img"
-        aria-label="Schematic, concept design: the load cell sits in the rigger's backstay and the Force node clamps to the stay in front of the rower, where the oar handle sweeps over it."
+        aria-label="Schematic, concept design: the load cell sits in the rigger’s backstay and the Force node clamps to the stay in front of the rower, where the oar handle sweeps over it."
         className="block h-full w-full"
       >
         {/* hull edge */}

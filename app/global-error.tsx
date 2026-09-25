@@ -14,7 +14,7 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
           <div className="w-full max-w-md">
             <h1 className="type-h2 text-[2rem]">Something went wrong.</h1>
             <p className="type-body mt-5 text-muted-foreground">
-              The site didn&rsquo;t load. Try again, or come back in a few minutes.
+              The site didn’t load. Try again, or come back in a few minutes.
             </p>
             <div className="mt-8">
               <button type="button" onClick={() => retry()} className={ctaSecondary}>

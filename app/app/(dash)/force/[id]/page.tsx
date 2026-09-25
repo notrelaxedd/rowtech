@@ -7,6 +7,7 @@ import { isUuid } from "@/lib/uuid";
 import { seatStrokes } from "@/lib/session/load";
 import { SessionViewer, type SeatSource } from "@/components/dash/session-viewer";
 import { LocalTime } from "@/components/dash/local-time";
+import { count, seatLabel, seatTitle } from "@/lib/session/labels";
 import { DeleteSession } from "./delete-session";
 import type { TableRow } from "@/lib/supabase/types";
 
@@ -43,7 +44,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
           Sessions
         </Link>
         <h1 className="type-h3 mt-3 text-2xl">
-          {session.title || (session.kind === "crew" ? `${members.length} seats` : `Seat ${session.seat_number ?? "?"}`)}
+          {session.title || (session.kind === "crew" ? count(members.length, "seat") : seatTitle(session.seat_number))}
         </h1>
         <p className="readout mt-1 text-sm text-muted-foreground">
           <LocalTime at={session.recorded_at} />
@@ -83,7 +84,7 @@ async function Seats({ sb, members, title }: { sb: Awaited<ReturnType<typeof sup
     return {
       id: m.id,
       seat: m.seat_number,
-      label: m.seat_number !== null ? `seat ${m.seat_number}` : "seat ?",
+      label: seatLabel(m.seat_number),
       units: m.units ?? "",
       strokes: strokes.get(m.id) ?? [],
       curvesUrl: (file && urls.get(file.path)) || null,

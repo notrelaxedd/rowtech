@@ -5,7 +5,9 @@ import { wrap } from "@/components/site/site-page";
 import { BetaLink, SectionEnd } from "@/components/site/cta";
 import { Hero } from "@/components/site/hero";
 import { CrewLanes } from "@/components/site/crew-lanes";
+import Image from "next/image";
 import Link from "next/link";
+import crewOnTheRiver from "@/assets/photos/crew-on-the-river.jpg";
 import { CurveExplorerIsland, ForceDeviceIsland, VieveDeviceIsland } from "@/components/site/islands";
 import { Status } from "@/components/site/status";
 import { ForceScreen } from "@/components/device/force-screen";
@@ -13,7 +15,9 @@ import { DevicePlaceholder } from "@/components/device/device-placeholder";
 import { CurveExplorerView } from "@/components/site/curve-explorer-view";
 import { SessionFiles } from "@/components/site/session-files";
 import { ForceMount } from "@/components/device/force-mount";
+import { ContactEmail, inlineLink } from "@/components/site/legal";
 import { openGraphBase, siteTitle, siteUrl, twitterBase } from "@/lib/site";
+import { legalCountry, legalEntity } from "@/lib/owner";
 import { cn } from "@/lib/utils";
 
 // The title and description are the root layout's defaults.
@@ -33,12 +37,12 @@ const STEPS = [
   {
     art: "device",
     t: "Row",
-    d: "Each node finds every catch and release on its own and starts recording at the first stroke. The rower sees their own peak and curve.",
+    d: "Each node finds each catch and release on its own and starts recording at the first stroke. The rower sees their own peak and curve.",
   },
   {
     art: "files",
-    t: "Download the practice",
-    d: "At the dock, connect your phone to the node’s own WiFi and download the practice. You get the numbers for every stroke, the force curve of every stroke, and the timing of everything that happened.",
+    t: "Download the session",
+    d: "At the dock, connect your phone to the node’s own Wi-Fi and download the session. You get the numbers for every stroke, the force curve of every stroke, and the timing of everything that happened.",
   },
 ] as const;
 
@@ -49,6 +53,7 @@ const PRODUCTS = [
     status: null,
     line: "One on each seat’s rigger. It records the force curve of every stroke and shows the rower their own.",
     cta: "See Force and its specifications",
+    note: "Concept design. Its screen shows example data, and the Vieve link as designed.",
     drawing: (
       <ForceDeviceIsland
         idPrefix="card-force"
@@ -73,25 +78,9 @@ const PRODUCTS = [
   },
 ] as const;
 
-const BUILT = [
-  "A force curve for every stroke",
-  "Rate, drive and recovery times, and rhythm",
-  "Peak force and where it lands, rise rate, work by thirds",
-  "Stroke-to-stroke consistency",
-  "Sessions saved to microSD on their own, downloadable as files",
-];
-const NEXT = [
-  "Calibration, so every node reads in kilograms",
-  "Vieve: the cox’s voice, GPS time, and the hub every seat reports to",
-  "One clock across the boat, so seats can be compared",
-  "Catch spread and sequencing, seat by seat",
-  "Port and starboard balance",
-  "Sessions uploaded from the boat to the team dashboard",
-];
-
 const FAQ = [
   {
-    q: "Do we need WiFi at the boathouse?",
+    q: "Do we need Wi-Fi at the boathouse?",
     a: "No. Each node runs its own network: join it from a phone or laptop and open a browser. There’s nothing to install.",
   },
   {
@@ -100,15 +89,19 @@ const FAQ = [
   },
   {
     q: "Which boats and riggers does it fit?",
-    a: "The load cell mounts on the rigger backstay. Tell us which boats you row when you apply.",
+    a: "The load cell mounts on the rigger backstay. For now it fits Vespoli riggers, and more are coming soon. Tell us which boats you row when you apply.",
   },
   {
     q: "Where does the data go?",
-    a: "Onto each node’s microSD card, and off it as plain files over the node’s own WiFi.",
+    a: "Onto each node’s microSD card, and off it as plain files over the node’s own Wi-Fi.",
   },
   {
     q: "How accurate is it?",
-    a: "Timing is measured on the node itself, and it doesn’t need calibration. Force does: each node has to be calibrated against known weights, and we haven’t done that yet. Until we do, force reads in raw sensor units. The Force page has the numbers.",
+    a: "Timing is measured on the node itself, and it doesn’t need calibration. Force readings do: each node has to be calibrated against known weights, and we haven’t done that yet. Until we do, force reads in raw sensor units. The Force page says where calibration stands.",
+  },
+  {
+    q: "Are you RowTech Solutions?",
+    a: `No. RowTech (rowtech.app) is run by ${legalEntity} in ${legalCountry} and isn’t connected to RowTech Solutions, a separate company in Europe that also makes rowing sensors.`,
   },
 ];
 
@@ -140,15 +133,12 @@ export default function Home() {
           <div className={cn(wrap, "grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-16")}>
             <div>
               <Status>In development</Status>
-              <h2 className="type-h2 mt-5">See whose catch is early, and who&rsquo;s carrying the boat.</h2>
+              <h2 className="type-h2 mt-5">See whose catch is early, and who’s carrying the boat.</h2>
               <p className="type-body mt-6 max-w-[58ch] text-muted-foreground">
                 A rate meter tells you about the boat. The crew view will show you every seat in it: whose catch lands
-                late, who does the work through the middle of the drive, and whether bow side and stroke side pull evenly.
-              </p>
-              <p className="type-body mt-4 max-w-[58ch] text-muted-foreground">
-                Each node records its own seat today. Comparing seats needs two things we&rsquo;re still building:
-                calibration, so every node reads in kilograms, and Vieve, the RowTech cox box, which puts every seat on
-                one clock.
+                late, who does the work through the middle of the drive, and whether port and starboard pull evenly.
+                It needs two things we’re still building: calibration, so every node reads in kilograms, and Vieve,
+                the RowTech cox box, which puts every seat on one clock.
               </p>
             </div>
             <CrewLanes />
@@ -158,12 +148,7 @@ export default function Home() {
         {/* ---------------------------------------------------- how it works */}
         <section id="how" data-section="how" className="border-t border-line py-24 sm:py-28">
           <div className={wrap}>
-            <div className="max-w-2xl">
-              <h2 className="type-h2">How an outing gets from the rigger to your phone.</h2>
-              <p className="type-lead mt-5 text-muted-foreground">
-                The node records by itself, and you collect the files over its WiFi.
-              </p>
-            </div>
+            <h2 className="type-h2 max-w-2xl">How an outing gets from the rigger to your phone.</h2>
             <ol className="mt-14 grid grid-cols-1 gap-14 md:grid-cols-3 md:gap-8 lg:gap-12">
               {STEPS.map((s, i) => (
                 <li key={s.t}>
@@ -173,9 +158,14 @@ export default function Home() {
                         <ForceMount className="m-0 h-full w-full" />
                       </div>
                     ) : s.art === "device" ? (
-                      <div className="instrument w-full rounded-md p-2">
-                        <ForceScreen idPrefix="step" />
-                      </div>
+                      <figure className="m-0 w-full">
+                        <div className="instrument w-full rounded-md p-2">
+                          <ForceScreen idPrefix="step" />
+                        </div>
+                        <figcaption className="mt-3 text-center text-sm text-muted-foreground">
+                          The screen shows example data, and the Vieve link as designed.
+                        </figcaption>
+                      </figure>
                     ) : (
                       <SessionFiles />
                     )}
@@ -196,7 +186,7 @@ export default function Home() {
               <h2 className="type-h2">One stroke, taken apart.</h2>
               <p className="type-lead mt-5 text-muted-foreground">
                 How fast the blade loads, how high the peak is and where it lands, and where the work goes through the drive.
-                The node measures all of it on every stroke. Pick a measure to see where it lives on the curve.
+                Pick a measure to see where it lives on the curve.
               </p>
             </div>
             <div className="mt-12">
@@ -205,7 +195,7 @@ export default function Home() {
               />
             </div>
             <SectionEnd from="stroke" apply>
-              The node measures every stroke like this, on every seat that has one.
+              The node measures each stroke like this, on every seat that has one.
             </SectionEnd>
           </div>
         </section>
@@ -220,6 +210,7 @@ export default function Home() {
                   <div className="instrument flex aspect-[4/3] items-center justify-center rounded-lg p-6 sm:p-10">
                     {p.drawing}
                   </div>
+                  {"note" in p && <p className="mt-3 text-sm text-muted-foreground">{p.note}</p>}
                   <div className="mt-6">{p.status && <Status>{p.status}</Status>}</div>
                   <h3 className="type-h3 mt-2">{p.name}</h3>
                   <p className="type-body mt-2 max-w-[48ch] text-muted-foreground">{p.line}</p>
@@ -231,46 +222,6 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-          </div>
-        </section>
-
-        {/* ----------------------------------------------- what's in the beta */}
-        <section id="beta-scope" data-section="beta-scope" className="border-t border-line py-24 sm:py-28">
-          <div className={wrap}>
-            <h2 className="type-h2 max-w-3xl">Where the build stands.</h2>
-            <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-line">
-              <div className="lg:pr-12">
-                <h3 className="type-h3">In the node&rsquo;s firmware now</h3>
-                <ul className="mt-6 space-y-3">
-                  {BUILT.map((t) => (
-                    <li key={t} className="type-body flex gap-3">
-                      <span aria-hidden className="mt-[0.72em] h-0.5 w-3 shrink-0 bg-foreground" />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-6 max-w-[52ch] text-sm text-muted-foreground">
-                  Until a node is calibrated, force reads in raw sensor units. Timing, rate and rhythm don&rsquo;t need
-                  calibration.
-                </p>
-                <h3 className="type-h3 mt-10">The team dashboard</h3>
-                <p className="type-body mt-3 max-w-[52ch]">
-                  Upload a node&rsquo;s four session files, or several seats as one outing in a zip with a folder per
-                  seat, and go through it stroke by stroke. So far it has only run on a made-up sample session.
-                </p>
-              </div>
-              <div className="lg:pl-12">
-                <h3 className="type-h3">Coming next</h3>
-                <ul className="mt-6 space-y-3">
-                  {NEXT.map((t) => (
-                    <li key={t} className="type-body flex gap-3 text-muted-foreground">
-                      <span aria-hidden className="mt-[0.72em] h-0.5 w-3 shrink-0 border-t-2 border-dotted border-muted-foreground" />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -297,45 +248,38 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ------------------------------------------------ the beta, plainly */}
-        <section id="beta" data-section="beta" className="border-t border-line py-24 sm:py-28">
-          <div className={wrap}>
-            <h2 className="type-h2 max-w-3xl">Applying for the beta.</h2>
-            <div className="mt-12 grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-10">
-              <div className="border-t border-line pt-6">
-                <h3 className="type-h3">Who it&rsquo;s for</h3>
-                <p className="type-body mt-4 max-w-[48ch] text-muted-foreground">High school, college and club coaches, and their crews.</p>
-              </div>
-              <div className="border-t border-line pt-6">
-                <h3 className="type-h3">Applying</h3>
-                <p className="type-body mt-4 max-w-[48ch] text-muted-foreground">
-                  The form asks for your name, email and program. Which boats you row, where you are and a note are optional.
-                </p>
-              </div>
-              <div className="border-t border-line pt-6">
-                <h3 className="type-h3">What beta crews get</h3>
-                <ul className="type-body mt-4 space-y-2 text-muted-foreground">
-                  <li>Testing units, for now</li>
-                  <li>A direct line to the people building it</li>
-                  <li>Discounted prices on all RowTech products</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* ------------------------------------------------------- closing */}
-        <section data-section="closing" className="border-t border-line">
-          <div className={cn(wrap, "py-24 sm:py-32")}>
+        <section id="beta" data-section="closing" className="border-t border-line">
+          <div className={cn(wrap, "grid grid-cols-1 items-center gap-12 py-24 sm:py-32 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)] lg:gap-16")}>
             <div>
               <h2 className="type-h2 max-w-[16ch]">Tell us about your crew.</h2>
               <p className="type-lead mt-6 max-w-[44ch] text-muted-foreground">
-                We&rsquo;re choosing beta crews now.
+                We’re choosing beta crews now, and new parts have been ordered for Force v1.4. Apply, and we’ll get in
+                touch to discuss next steps.
+              </p>
+              <p className="type-body mt-5 max-w-[48ch] text-muted-foreground">
+                Beta crews get testing units at the cost of their materials, and a direct line to the people building
+                it. Keep your units, or send them back for a discount on the finished product. If a unit fails, send it
+                back and we’ll replace it. Write to <ContactEmail />.
+              </p>
+              <p className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
+                The beta’s terms are on the{" "}
+                <Link href="/terms" className={inlineLink}>
+                  Terms
+                </Link>{" "}
+                page.
               </p>
               <div className="mt-10">
                 <BetaLink from="closing" className="h-14 px-7 text-base max-sm:w-full" />
               </div>
             </div>
+            <Image
+              src={crewOnTheRiver}
+              alt="A crew rowing a boat down a river, with a city skyline behind them."
+              placeholder="blur"
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="aspect-[3/2] w-full rounded-lg object-cover"
+            />
           </div>
         </section>
       </main>

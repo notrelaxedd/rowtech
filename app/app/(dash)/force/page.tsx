@@ -1,12 +1,14 @@
 import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { readFailed, supabaseServer } from "@/lib/supabase/server";
 import { duration, fmt } from "@/lib/session/analyse";
 import { LocalTime } from "@/components/dash/local-time";
 import { beforeParam, newestFirstPage } from "@/lib/session/older";
+import { count, seatTitle } from "@/lib/session/labels";
 import { UploadForm } from "./upload-form";
 import { HistoryPanel } from "./history-panel";
 
-export const metadata = { title: "Force" };
+export const metadata = { title: "Sessions" };
 
 /** Most session rows a page of the list shows, and the history chart. */
 const LISTED = 200;
@@ -80,9 +82,21 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
         <section>
           <h1 className="type-h3 text-2xl">Sessions</h1>
           {top.length === 0 ? (
-            <p className="mt-4 rounded-lg border border-dashed border-line px-4 py-10 text-center text-sm text-muted-foreground">
-              {before ? "No older sessions." : "Nothing here yet. Upload a session from a node and it lands here."}
-            </p>
+            <div className="mt-4 rounded-lg border border-dashed border-line px-4 py-10 text-center text-sm text-muted-foreground">
+              {before ? (
+                <p>No older sessions.</p>
+              ) : (
+                <>
+                  <p>Nothing here yet. Upload a session from a node and it lands here.</p>
+                  {/* Where the files come from, in the words the home page and the specs use. */}
+                  <p className="mx-auto mt-2 max-w-md leading-relaxed">
+                    A node saves each session to its microSD card as four files (<span className="readout">meta.json</span>,{" "}
+                    <span className="readout">strokes.csv</span>, <span className="readout">curves.bin</span> and{" "}
+                    <span className="readout">events.csv</span>), and you download them over the node’s own Wi-Fi.
+                  </p>
+                </>
+              )}
+            </div>
           ) : (
             <ul className="mt-4 divide-y divide-line rounded-lg border border-line bg-panel">
               {top.map((s) => {
@@ -96,16 +110,16 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
                     >
                       <span className="min-w-0">
                         <span className="block truncate font-semibold">
-                          {s.title || (s.kind === "crew" ? `${kids.length} seats` : `Seat ${s.seat_number ?? "?"}`)}
+                          {s.title || (s.kind === "crew" ? count(kids.length, "seat") : seatTitle(s.seat_number))}
                         </span>
                         <span className="readout block text-xs text-muted-foreground">
                           <LocalTime at={s.recorded_at} />
                           {s.boats?.name ? ` · ${s.boats.name}` : ""}
-                          {s.kind === "crew" ? ` · ${kids.length} seats` : s.seat_number !== null ? ` · seat ${s.seat_number}` : ""}
+                          {s.kind === "crew" ? ` · ${count(kids.length, "seat")}` : s.seat_number !== null ? ` · seat ${s.seat_number}` : ""}
                         </span>
                       </span>
                       <span className="readout shrink-0 text-sm text-muted-foreground">
-                        {strokes} strokes{s.duration_ms ? ` · ${duration(s.duration_ms)}` : ""}
+                        {count(strokes, "stroke")}{s.duration_ms ? ` · ${duration(s.duration_ms)}` : ""}
                       </span>
                     </Link>
                   </li>
@@ -116,13 +130,15 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
           {(older || before) && (
             <p className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
               {before && (
-                <Link href="/app/force" className="text-trace underline-offset-4 hover:underline">
-                  ← Newest sessions
+                <Link href="/app/force" className="inline-flex items-center gap-1.5 text-trace underline-offset-4 hover:underline">
+                  <ArrowLeft aria-hidden className="size-3.5" />
+                  Newest sessions
                 </Link>
               )}
               {older && (
-                <Link href={`/app/force?before=${encodeURIComponent(older)}`} className="text-trace underline-offset-4 hover:underline">
-                  Older sessions →
+                <Link href={`/app/force?before=${encodeURIComponent(older)}`} className="inline-flex items-center gap-1.5 text-trace underline-offset-4 hover:underline">
+                  Older sessions
+                  <ArrowRight aria-hidden className="size-3.5" />
                 </Link>
               )}
             </p>
@@ -137,9 +153,9 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
           <h2 className="type-h3 text-lg">Seat by seat, over time</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             {moreHistory
-              ? "The most recent sessions with a seat set, by seat; older ones aren\u2019t in the chart."
+              ? "The most recent sessions with a seat set, by seat; older ones aren’t in the chart."
               : "Every session with a seat set, by seat."} Units are each
-            session&rsquo;s own ({fmt(history.length, 0)} sessions).
+            session’s own ({fmt(history.length, 0)} sessions).
           </p>
           <div className="mt-4">
             <HistoryPanel points={history} />

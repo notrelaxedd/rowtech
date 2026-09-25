@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { readFailed, supabaseServer } from "@/lib/supabase/server";
 import { duration } from "@/lib/session/analyse";
 import { LocalTime } from "@/components/dash/local-time";
 import { beforeParam, newestFirstPage } from "@/lib/session/older";
 
-export const metadata = { title: "Cox" };
+export const metadata = { title: "Crew outings" };
 
 /** Most outings a page of the list shows. */
 const LISTED = 100;
@@ -22,17 +23,17 @@ export default async function CoxPage({ searchParams }: { searchParams: Promise<
   return (
     <div className="mx-auto w-full max-w-[110rem] space-y-8 px-4 py-8 sm:px-6">
       <div className="max-w-3xl">
-        <h1 className="type-h3 text-2xl">Cox</h1>
+        <h1 className="type-h3 text-2xl">Crew outings</h1>
         <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
-          Outings with the whole crew in them. Upload several seats on the Force tab as one zip, each seat&rsquo;s files
-          in a folder of its own, and they land here as one piece. Vieve, the RowTech cox box, will add the GPS track and put every seat on one clock; its session format
-          isn&rsquo;t final yet, so the dashboard can&rsquo;t read a Vieve bundle today.
+          Outings with the whole crew in them. Upload several seats on the Sessions tab as one zip, each seat’s files
+          in a folder of its own, and they land here as one outing. Vieve, the RowTech cox box, will add the GPS track and put every seat on one clock; its session format
+          isn’t final yet, so the dashboard can’t read a Vieve bundle today.
         </p>
       </div>
 
       {crews.length === 0 ? (
         <p className="rounded-lg border border-dashed border-line px-4 py-10 text-center text-sm text-muted-foreground">
-          {before ? "No older outings." : "No crew outings yet. Upload a zip with each seat\u2019s files in a folder of its own and they become one."}
+          {before ? "No older outings." : "No crew outings yet. Upload a zip with each seat’s files in a folder of its own and they become one."}
         </p>
       ) : (
         <>
@@ -61,20 +62,23 @@ export default async function CoxPage({ searchParams }: { searchParams: Promise<
           {(older || before) && (
             <p className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
               {before && (
-                <Link href="/app/cox" className="text-trace underline-offset-4 hover:underline">
-                  ← Newest outings
+                <Link href="/app/cox" className="inline-flex items-center gap-1.5 text-trace underline-offset-4 hover:underline">
+                  <ArrowLeft aria-hidden className="size-3.5" />
+                  Newest outings
                 </Link>
               )}
               {older && (
-                <Link href={`/app/cox?before=${encodeURIComponent(older)}`} className="text-trace underline-offset-4 hover:underline">
-                  Older outings →
+                <Link href={`/app/cox?before=${encodeURIComponent(older)}`} className="inline-flex items-center gap-1.5 text-trace underline-offset-4 hover:underline">
+                  Older outings
+                  <ArrowRight aria-hidden className="size-3.5" />
                 </Link>
               )}
             </p>
           )}
           {crews.length > 1 && (
-            <Link href="/app/cox/compare" className="inline-block text-sm text-trace underline-offset-4 hover:underline">
-              Compare two pieces →
+            <Link href="/app/cox/compare" className="inline-flex items-center gap-1.5 text-sm text-trace underline-offset-4 hover:underline">
+              Compare two outings
+              <ArrowRight aria-hidden className="size-3.5" />
             </Link>
           )}
         </>

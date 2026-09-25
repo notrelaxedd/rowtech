@@ -96,7 +96,7 @@ export function UploadForm() {
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         The four files a node writes (<span className="readout">meta.json</span>, <span className="readout">strokes.csv</span>,{" "}
         <span className="readout">curves.bin</span>, <span className="readout">events.csv</span>), or a zip. For several
-        seats as one outing, upload one zip with each seat&rsquo;s files in a folder of its own.
+        seats as one outing, upload one zip with each seat’s files in a folder of its own.
       </p>
 
       {state.status === "error" && (
@@ -158,13 +158,13 @@ export function UploadForm() {
           <span className="text-sm font-semibold">
             Boat <span className="font-normal text-muted-foreground">(optional)</span>
           </span>
-          <input type="text" name="boat" maxLength={120} placeholder="Club VIII" className={cn(field, "mt-1.5")} />
+          <input type="text" name="boat" maxLength={120} placeholder="Club 8+" className={cn(field, "mt-1.5")} />
         </label>
         <label className="sm:col-span-2">
           <span className="text-sm font-semibold">
-            What was the piece? <span className="font-normal text-muted-foreground">(optional)</span>
+            Session name <span className="font-normal text-muted-foreground">(optional)</span>
           </span>
-          <input type="text" name="title" maxLength={120} placeholder="4 x 750m, rate 28" className={cn(field, "mt-1.5")} />
+          <input type="text" name="title" maxLength={120} placeholder="4 × 750 m, rate 28" className={cn(field, "mt-1.5")} />
         </label>
       </div>
 
@@ -172,7 +172,7 @@ export function UploadForm() {
         {pending ? (
           <>
             <LoaderCircle aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />
-            Reading the session&hellip;
+            Reading the session…
           </>
         ) : (
           <>

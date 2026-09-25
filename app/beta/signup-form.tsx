@@ -5,11 +5,12 @@ import Link from "next/link";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { readAttribution, takeCta, UTM } from "@/components/site/attribution";
 import { ctaPrimary, ctaSecondary } from "@/components/site/cta";
+import { ContactEmail, PolicyLinks } from "@/components/site/legal";
 import { formField } from "@/components/ui/field";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { submitApplication } from "./actions";
-import { BOATS, cleanFrom, EMAIL, EMPTY_STATE, LIMITS, REQUIRED, requiredError, ROLES, type ApplyState, type Field } from "./fields";
+import { BOATS, cleanFrom, EMAIL, EMPTY_STATE, fixSummary, LIMITS, REQUIRED, requiredError, ROLES, type ApplyState, type Field } from "./fields";
 
 const input = cn(formField, "placeholder:text-muted-foreground");
 const chip =
@@ -46,16 +47,28 @@ function Err({ id, msg }: { id: string; msg?: string }) {
   );
 }
 
+/**
+ * "Thanks, Coach Jones.": the name as they wrote it, since a first word can
+ * be a title ("Coach", "Dr."), ending in one full stop even when the name
+ * ends in ".", "!" or "?".
+ */
+function thanks(name = "") {
+  const n = name.trim().replace(/[.!?]+$/, "");
+  return n ? `Thanks, ${n}.` : "Thanks.";
+}
+
 function Done({ name }: { name?: string }) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
   return (
     <div>
-      <p className="text-sm font-semibold text-muted-foreground">Application saved</p>
+      {/* Received, not saved: said for an address that has already applied
+          too, and for the bot trap, where nothing new is stored. */}
+      <p className="text-sm font-semibold text-muted-foreground">Application received</p>
       <h1 ref={heading} tabIndex={-1} className="type-h2 mt-4 outline-none">
-        {`${name ? `Thanks, ${name.split(" ")[0]}.` : "Thanks."} We have your application.`}
+        {`${thanks(name)} We have your application.`}
       </h1>
-      <p className="type-lead mt-5 text-muted-foreground">Here&rsquo;s what happens next.</p>
+      <p className="type-lead mt-5 text-muted-foreground">Here’s what happens next.</p>
       <ol className="mt-8 space-y-6 border-t border-line pt-8">
         {NEXT_STEPS.map((s, i) => (
           <li key={s.t} className="grid grid-cols-[1.75rem_1fr] gap-3">
@@ -68,7 +81,11 @@ function Done({ name }: { name?: string }) {
         ))}
       </ol>
       <p className="mt-8 text-sm text-muted-foreground">
-        No email from us yet? That&rsquo;s expected: we reply personally, not automatically.
+        No email from us yet? That’s expected: we reply personally, not automatically, within 24 to 48
+        hours.
+      </p>
+      <p className="mt-3 text-sm text-muted-foreground">
+        Something to add, or a question? Write to <ContactEmail />.
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/" className={ctaSecondary}>
@@ -145,6 +162,10 @@ export function SignupForm() {
   const e: ApplyState["errors"] = { ...state.errors };
   for (const f of REQUIRED.filter(isRequired)) if (f in here) e[f] = here[f] ?? undefined;
   const v = state.values;
+  // A field-by-field result's summary counts what's still wrong, and goes once
+  // nothing is. Any other message (our side failed) stays as sent.
+  const wrong = Object.values(e).filter(Boolean).length;
+  const summary = Object.keys(state.errors).length ? (wrong ? fixSummary(wrong) : "") : state.message;
   const invalid = (f: Field) => (e[f] ? true : undefined);
   const describe = (f: Field) => (e[f] ? `${f}-error` : undefined);
   const check = (f: Required, value: string) =>
@@ -214,9 +235,9 @@ export function SignupForm() {
         checkRequired();
       }}
     >
-      {state.message && (
+      {summary && (
         <p ref={alert} role="alert" tabIndex={-1} className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[0.9375rem] text-foreground outline-none">
-          {state.message}
+          {summary}
         </p>
       )}
 
@@ -252,7 +273,7 @@ export function SignupForm() {
       >
         <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace [&::-webkit-details-marker]:hidden">
           <span>
-            <span className="font-semibold">Tell us about your boat</span>{" "}
+            <span className="font-semibold">Tell us about your boats</span>{" "}
             <span className="text-sm text-muted-foreground">optional, and it helps us pick crews</span>
           </span>
           <span aria-hidden className="relative size-3.5 shrink-0">
@@ -263,7 +284,7 @@ export function SignupForm() {
 
         <div className="space-y-7 border-t border-line px-4 pt-6 pb-6">
           <fieldset aria-describedby={describe("role")}>
-            <legend className={label}>I&rsquo;m a&hellip; {optional}</legend>
+            <legend className={label}>I’m a… {optional}</legend>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {ROLES.map((r) => (
                 <label key={r.value} className={chip}>
@@ -272,6 +293,9 @@ export function SignupForm() {
                 </label>
               ))}
             </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Rowers under 18 can apply too. If you’re under 13, ask your coach to apply for you.
+            </p>
             <Err id="role-error" msg={e.role} />
           </fieldset>
 
@@ -320,7 +344,7 @@ export function SignupForm() {
           {pending ? (
             <>
               <LoaderCircle aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />
-              Sending&hellip;
+              Sending…
             </>
           ) : (
             <>
@@ -329,7 +353,9 @@ export function SignupForm() {
             </>
           )}
         </button>
-        <p className="text-sm text-muted-foreground">We&rsquo;ll only use this to talk to you about the RowTech beta.</p>
+        <p className="text-sm text-muted-foreground">
+          We use this to talk to you about the beta, and we note which link brought you here. <PolicyLinks />
+        </p>
       </div>
     </form>
     </>

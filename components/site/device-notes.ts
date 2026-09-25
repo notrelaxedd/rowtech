@@ -58,7 +58,7 @@ export const FORCE_NOTES: readonly Note3D[] = [
   {
     id: "inside",
     label: "Inside the case",
-    body: "An Adafruit Feather ESP32-S3 and an HX711 breakout on a RowTech carrier board, a microSD card for every session, and a 3000 mAh battery. The node runs its own WiFi network.",
+    body: "An Adafruit Feather ESP32-S3 and an HX711 breakout on a RowTech carrier board, a microSD card for every session, and a 3000 mAh battery. The node runs its own Wi-Fi network.",
     anchor: [0, 37, 0],
     side: "right",
     view: [-0.2, 0.5],
@@ -103,7 +103,7 @@ export const VIEVE_NOTES: readonly Note3D[] = [
   {
     id: "screen",
     label: "Screen",
-    body: "5″, rated at 1000 nits.",
+    body: "Planned: 5″, 1000 nits.",
     anchor: [-61.2, -6, VZ],
     side: "left",
     view: [0.12, 0.05],
@@ -112,7 +112,7 @@ export const VIEVE_NOTES: readonly Note3D[] = [
   {
     id: "inside",
     label: "Inside the case",
-    body: "A u-blox MAX-M10S GPS at 10 Hz and a 5000 mAh battery. Vieve will carry the cox’s voice out to the boat’s speakers, link to every seat node by radio, stamp each session with GPS time, and upload the outing over WiFi once you’re ashore.",
+    body: "Planned: a u-blox MAX-M10S GPS at 10 Hz and a 5000 mAh battery. Vieve will carry the cox’s voice out to the boat’s speakers, link to every seat node by radio, stamp each session with GPS time, and upload the outing over Wi-Fi once you’re ashore.",
     anchor: [0, 35, 0],
     side: "right",
     view: [-0.2, 0.5],

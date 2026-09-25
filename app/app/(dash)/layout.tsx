@@ -7,6 +7,9 @@ import { signOut } from "../login/actions";
 import { RequestAccess } from "./request-access";
 import { DashNav } from "./dash-nav";
 
+// The site footer's link style: taps over 44px, drawn at the text's size.
+const footerLink = "hit-area relative hover:text-foreground";
+
 export default async function DashLayout({ children }: { children: React.ReactNode }) {
   const viewer = await getViewer();
   // Not "not on the list": Supabase didn't say. app/error.tsx takes it from here.
@@ -36,6 +39,19 @@ export default async function DashLayout({ children }: { children: React.ReactNo
       <main id="main" className="flex-1">
         {children}
       </main>
+      <footer className="border-t border-line">
+        <nav aria-label="Footer" className="mx-auto flex w-full max-w-[110rem] gap-6 px-4 py-5 text-sm text-muted-foreground sm:px-6">
+          <Link href="/privacy" className={footerLink}>
+            Privacy
+          </Link>
+          <Link href="/terms" className={footerLink}>
+            Terms
+          </Link>
+          <Link href="/accessibility" className={footerLink}>
+            Accessibility
+          </Link>
+        </nav>
+      </footer>
     </div>
   );
 }

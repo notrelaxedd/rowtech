@@ -12,7 +12,7 @@ export default function DashNotFound() {
       </Link>
       <h1 className="type-h3 mt-3 text-2xl">Nothing here.</h1>
       <p className="mt-3 max-w-3xl text-[0.9375rem] leading-relaxed text-muted-foreground">
-        There&rsquo;s no session at this address, or it isn&rsquo;t one your team can see.
+        There’s no session at this address, or it isn’t one your team can see.
       </p>
     </div>
   );
