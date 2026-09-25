@@ -16,7 +16,7 @@ export function Hero() {
       <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-7xl flex-col justify-center px-5 py-16 sm:px-8 sm:py-20">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
           <div>
-            <h1 className="type-h1 max-w-[16ch]">Making imperative data available to everyone, seat by seat.</h1>
+            <h1 className="type-h1 max-w-[16ch]">The force curve from every seat in the boat.</h1>
             <p className="type-lead mt-6 max-w-[36rem] text-muted-foreground">
               A Force node on each seat&rsquo;s rigger backstay records the force curve of every stroke and shows it to the
               rower live. You download the practice at the dock.

@@ -4,7 +4,7 @@ import { expectSkipLink } from "./support/skip-link";
 test("the marketing page renders, with the beta offered in four places", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("seat by seat");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("The force curve from every seat in the boat.");
   // The node and its screen are drawn by the server, not fetched as a picture.
   await expect(page.getByRole("img", { name: /Force seat node/i }).first()).toBeVisible();
   await expect(page.locator("#hero-peak")).toHaveCount(1);
@@ -193,7 +193,7 @@ test("there is no team page for now, and old links to it go home", async ({ page
   expect(res.headers()["location"]).toBe("/");
   await page.goto("/team");
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("seat by seat");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("The force curve from every seat in the boat.");
 });
 
 test("an address the site doesn't have gets the site's own 404", async ({ page }) => {
