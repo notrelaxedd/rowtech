@@ -1,22 +1,40 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { Component, useCallback, useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { Note3D, Rig } from "@/components/device3d/types";
 import type { Kind } from "@/components/device3d/scene";
 
-// three.js and the models are their own chunk, fetched when the diagram comes
-// near the viewport. Until then (and without WebGL) the poster stands in, and
-// the notes are readable on their own.
+// three.js and the models are their own chunk, about 250 kB gzipped, so it is
+// fetched only when someone reaches for the model: points at it or its notes,
+// tabs into it, taps it, or presses "Show the 3D model". Until the model has
+// drawn its first frame (and for good without JavaScript or WebGL) the
+// drawing of the device stands in, and the notes are readable on their own.
 const DeviceScene = dynamic(() => import("@/components/device3d/scene"), { ssr: false });
+
+const noSubscribe = () => () => {};
+
+/** If the scene can't start (no WebGL, or its chunk didn't load), the drawing stays. */
+class SceneBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch() {
+    this.props.onError();
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 /**
  * A 3D model with its notes around it: notes on both sides on wide screens,
  * leader lines from each note to the part it describes, numbered markers on
  * the model. Pointing at, focusing or tapping a note outlines the part and
  * turns the model to show it. Drag the model, or use the arrow keys, to turn
- * it yourself.
+ * it yourself. `poster` is the drawing shown until the model is there.
  */
 export function DeviceDiagram3D({
   kind,
@@ -35,7 +53,11 @@ export function DeviceDiagram3D({
 }) {
   const [active, setActive] = useState<string | null>(null);
   const [pinned, setPinned] = useState<string | null>(null);
-  const [near, setNear] = useState(false);
+  // live: the scene has been asked for. shown: it has drawn a frame.
+  const [live, setLive] = useState(false);
+  const [shown, setShown] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const js = useSyncExternalStore(noSubscribe, () => true, () => false);
   const on = active ?? pinned;
   const hintId = useId();
 
@@ -45,17 +67,17 @@ export function DeviceDiagram3D({
   const noteEls = useRef<Array<HTMLButtonElement | null>>([]);
   const lines = useRef<Array<SVGLineElement | null>>([]);
   const dots = useRef<Array<HTMLButtonElement | null>>([]);
+  const firstFrame = useRef(false);
+  // Whether "Show the 3D model" has focus, so the model can take it over.
+  const focusModel = useRef(false);
+  const load = () => setLive(true);
 
-  // Load the 3D scene when the diagram is within a screen of the viewport.
+  // The button goes once the model is there. If focus went with it, it moves
+  // on to the model rather than back to the top of the page.
   useEffect(() => {
-    const el = wrap.current;
-    if (!el) return;
-    const io = new IntersectionObserver((e) => e.some((x) => x.isIntersecting) && (setNear(true), io.disconnect()), {
-      rootMargin: "600px",
-    });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+    const lost = !document.activeElement || document.activeElement === document.body;
+    if (shown && focusModel.current && lost) stage.current?.focus();
+  }, [shown]);
 
   // The note being looked at decides the view; with none, the model rests.
   useEffect(() => {
@@ -68,6 +90,10 @@ export function DeviceDiagram3D({
   // Every frame, the scene says where each anchor is on the stage: move the
   // markers there, and run each leader line from its note to its marker.
   const onFrame = useCallback((pts: Array<[number, number]>) => {
+    if (!firstFrame.current) {
+      firstFrame.current = true;
+      setShown(true);
+    }
     const w = wrap.current, s = stage.current;
     if (!w || !s) return;
     const wr = w.getBoundingClientRect();
@@ -145,7 +171,12 @@ export function DeviceDiagram3D({
 
   return (
     <figure className="m-0">
-      <div ref={wrap} className="relative grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.1fr)_minmax(0,1fr)] lg:gap-6">
+      <div
+        ref={wrap}
+        onPointerEnter={(e) => e.pointerType !== "touch" && load()}
+        onFocusCapture={load}
+        onClick={load}
+        className="relative grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.1fr)_minmax(0,1fr)] lg:gap-6">
         {/* leader lines, wide screens only */}
         <svg aria-hidden className="pointer-events-none absolute inset-0 z-20 hidden h-full w-full overflow-visible lg:block">
           {notes.map((n, i) => (
@@ -168,11 +199,15 @@ export function DeviceDiagram3D({
         <div className="order-1 lg:order-2">
           <div
             ref={stage}
-            role="group"
-            tabIndex={0}
-            aria-label={`3D model: ${label}`}
-            aria-describedby={hintId}
+            // Until the model is there, the stage is just the drawing in it.
+            {...(shown && {
+              role: "application",
+              tabIndex: 0,
+              "aria-label": `3D model: ${label}`,
+              "aria-describedby": hintId,
+            })}
             onPointerDown={(e) => {
+              if (!shown) return;
               drag.current = { x: e.clientX, y: e.clientY };
               e.currentTarget.setPointerCapture(e.pointerId);
             }}
@@ -184,16 +219,25 @@ export function DeviceDiagram3D({
             onPointerUp={() => (drag.current = null)}
             onPointerCancel={() => (drag.current = null)}
             onKeyDown={(e) => {
+              if (!shown) return;
               const step = { ArrowLeft: [-0.15, 0], ArrowRight: [0.15, 0], ArrowUp: [0, -0.1], ArrowDown: [0, 0.1] }[e.key];
               if (!step) return;
               e.preventDefault();
               turn(step[0], step[1]);
             }}
-            className="relative aspect-[4/3] w-full cursor-grab touch-pan-y select-none rounded-lg active:cursor-grabbing"
+            className={cn(
+              "relative aspect-[4/3] w-full touch-pan-y select-none rounded-lg",
+              shown && "cursor-grab active:cursor-grabbing"
+            )}
           >
-            {near ? <DeviceScene kind={kind} rig={rig} active={on} notes={notes} onFrame={onFrame} fallback={poster} /> : poster}
+            {live && !failed && (
+              <SceneBoundary onError={() => setFailed(true)}>
+                <DeviceScene kind={kind} rig={rig} active={on} notes={notes} onFrame={onFrame} />
+              </SceneBoundary>
+            )}
+            {!shown && <div className="absolute inset-0">{poster}</div>}
             {/* numbered markers on the model */}
-            {near &&
+            {shown &&
               notes.map((n, i) => (
                 <button
                   key={n.id}
@@ -216,8 +260,21 @@ export function DeviceDiagram3D({
                 </button>
               ))}
           </div>
-          <p id={hintId} className="mt-2 text-center text-xs text-muted-foreground">
-            Drag the model, or use the arrow keys, to turn it.
+          <p id={hintId} className="mt-2 min-h-4 text-center text-xs text-muted-foreground">
+            {shown
+              ? "Drag the model, or use the arrow keys, to turn it."
+              : js &&
+                !failed && (
+                  <button
+                    type="button"
+                    onClick={load}
+                    onFocus={() => (focusModel.current = true)}
+                    onBlur={(e) => e.relatedTarget && (focusModel.current = false)}
+                    className="underline underline-offset-4 hover:text-foreground"
+                  >
+                    {live ? "Loading the 3D model…" : "Show the 3D model"}
+                  </button>
+                )}
           </p>
         </div>
 

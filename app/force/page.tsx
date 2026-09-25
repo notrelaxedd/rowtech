@@ -3,7 +3,7 @@ import { SitePage, wrap } from "@/components/site/site-page";
 import { BetaLink } from "@/components/site/cta";
 import { DeviceDiagram3D } from "@/components/site/device-diagram-3d";
 import { FORCE_DEFAULT_VIEW, FORCE_NOTES } from "@/components/site/device-notes";
-import { DevicePlaceholder } from "@/components/device/device-placeholder";
+import { ForceDevice } from "@/components/device/force-device";
 import { SpecTable } from "@/components/site/spec-table";
 import { FORCE_SPECS } from "@/lib/specs";
 import { siteUrl } from "@/lib/site";
@@ -68,7 +68,7 @@ export default function ForcePage() {
               caption="Force node, concept design. It's wired to a 50 kg load cell in series on the rigger backstay."
               poster={
                 <div className="flex h-full items-center justify-center p-6">
-                  <DevicePlaceholder ratio={1180 / 800} name="FORCE" />
+                  <ForceDevice idPrefix="poster" className="block h-auto w-full" />
                 </div>
               }
             />

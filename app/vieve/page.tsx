@@ -3,7 +3,7 @@ import { SitePage, wrap } from "@/components/site/site-page";
 import { BetaLink } from "@/components/site/cta";
 import { DeviceDiagram3D } from "@/components/site/device-diagram-3d";
 import { VIEVE_DEFAULT_VIEW, VIEVE_NOTES } from "@/components/site/device-notes";
-import { DevicePlaceholder } from "@/components/device/device-placeholder";
+import { VieveDevice } from "@/components/device/vieve-device";
 import { CoxBoxView } from "@/components/site/cox-box-view";
 import { Status } from "@/components/site/status";
 import { SpecTable } from "@/components/site/spec-table";
@@ -57,7 +57,7 @@ export default function VievePage() {
               caption="Vieve V1, concept design."
               poster={
                 <div className="flex h-full items-center justify-center p-6">
-                  <DevicePlaceholder ratio={1320 / 760} name="VIEVE" />
+                  <VieveDevice idPrefix="poster" className="block h-auto w-full" />
                 </div>
               }
             />

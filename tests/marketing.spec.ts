@@ -46,14 +46,94 @@ test("reduced motion leaves the pages in their finished state", async ({ page })
   await expect(page.locator(".rt-stroke-cursor")).toBeHidden();
   await page.goto("/vieve");
   await expect(page.locator("#clock")).toContainText("8 of 8");
+  // The 3D model still comes up; it goes straight to each view instead of turning.
+  await page.locator("#parts").getByRole("button", { name: "Show the 3D model" }).click();
+  await expect(page.getByRole("application", { name: "3D model: Parts of Vieve" }).locator("canvas")).toBeVisible({ timeout: 15000 });
 });
 
 test("the Force page shows the node as a 3D model with its notes around it", async ({ page }) => {
   await page.goto("/force");
-  const model = page.getByRole("group", { name: "3D model: Parts of the Force node" });
-  await model.scrollIntoViewIfNeeded();
+  const figure = page.locator("#parts figure");
+  await figure.scrollIntoViewIfNeeded();
+  // Until it's asked for, the drawing of the node stands in, with no hint to drag it.
+  await expect(figure.getByRole("img", { name: /Force seat node/ })).toBeVisible();
+  await expect(figure).not.toContainText("Drag the model");
+  await figure.getByRole("button", { name: "Show the 3D model" }).click();
+  const model = page.getByRole("application", { name: "3D model: Parts of the Force node" });
   await expect(model.locator("canvas")).toBeVisible({ timeout: 15000 });
+  await expect(figure).toContainText("Drag the model, or use the arrow keys, to turn it.");
+  await expect(figure.getByRole("img", { name: /Force seat node/ })).toHaveCount(0);
   await expect(page.locator("#parts")).toContainText("Steps through the rower’s screens");
+});
+
+// three.js is a quarter of a megabyte gzipped: only fetched when someone
+// reaches for the model, not because the page loaded (PERF-001).
+test("the 3D model's code loads when someone reaches for it, not with the page", async ({ page }) => {
+  const scripts: Array<Promise<string>> = [];
+  page.on("response", (r) => {
+    if (r.url().endsWith(".js")) scripts.push(r.text().catch(() => ""));
+  });
+  const three = async () => (await Promise.all(scripts)).some((t) => t.includes("WebGLRenderer"));
+
+  await page.goto("/force", { waitUntil: "networkidle" });
+  await page.locator("#parts figure").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1500);
+  expect(await three()).toBe(false);
+  await expect(page.locator("#parts canvas")).toHaveCount(0);
+
+  // Pointing at it is enough.
+  await page.locator("#parts figure").getByRole("img", { name: /Force seat node/ }).hover();
+  await expect(page.locator("#parts canvas")).toBeVisible({ timeout: 15000 });
+  expect(await three()).toBe(true);
+});
+
+// The model is a widget that takes the arrow keys, and says so (A11Y-007).
+test("from the keyboard, the 3D model says it takes the arrow keys, and does", async ({ page }) => {
+  await page.goto("/vieve");
+  const show = page.locator("#parts").getByRole("button", { name: "Show the 3D model" });
+  await show.focus();
+  await page.keyboard.press("Enter");
+  const model = page.getByRole("application", { name: "3D model: Parts of Vieve" });
+  // The button goes; focus goes on to the model instead of being dropped.
+  await expect(model).toBeFocused({ timeout: 15000 });
+  await expect(model).toHaveAccessibleDescription("Drag the model, or use the arrow keys, to turn it.");
+  // The name and the keys are the stage's; the canvas is hidden from screen readers.
+  await expect(model.locator('[aria-hidden="true"] canvas')).toHaveCount(1);
+  const y = await page.evaluate(() => scrollY);
+  await page.keyboard.press("ArrowDown");
+  expect(await page.evaluate(() => scrollY)).toBe(y);
+});
+
+test.describe("without JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+  test("the product pages show the device drawings, and nothing to drag", async ({ page }) => {
+    for (const [path, name] of [["/force", /Force seat node/], ["/vieve", /Vieve V1/]] as const) {
+      await page.goto(path);
+      const figure = page.locator("#parts figure");
+      await expect(figure.getByRole("img", { name })).toBeVisible();
+      await expect(figure).not.toContainText("Drag the model");
+      await expect(figure.getByRole("button", { name: /3D model/ })).toHaveCount(0);
+      await expect(figure.locator("ol:visible").first()).toContainText("Screen");
+    }
+  });
+});
+
+test("without WebGL, the drawing stays and the page keeps working", async ({ playwright, baseURL }) => {
+  const browser = await playwright.chromium.launch({ args: ["--disable-webgl", "--disable-3d-apis"] });
+  try {
+    const page = await browser.newPage({ baseURL });
+    await page.goto("/force");
+    const figure = page.locator("#parts figure");
+    await figure.scrollIntoViewIfNeeded();
+    await figure.getByRole("button", { name: "Show the 3D model" }).click();
+    // The scene can't start: the offer goes, the drawing stays.
+    await expect(figure.getByRole("button", { name: /3D model/ })).toHaveCount(0, { timeout: 15000 });
+    await expect(figure.getByRole("img", { name: /Force seat node/ })).toBeVisible();
+    await expect(figure).not.toContainText("Drag the model");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Force, the seat node.");
+  } finally {
+    await browser.close();
+  }
 });
 
 test("there is no team page for now, and old links to it go home", async ({ page, request }) => {
@@ -112,10 +192,15 @@ test("picking a measure on the stroke chart shows what it is", async ({ page }) 
   await expect(chart.locator('[aria-live="polite"]')).toContainText("How quickly the blade loads");
 });
 
-test("the Vieve page shows it as a 3D model too", async ({ page }) => {
+test("the Vieve page shows it as a 3D model too", async ({ page, isMobile }) => {
   await page.goto("/vieve");
-  const model = page.getByRole("group", { name: "3D model: Parts of Vieve" });
-  await model.scrollIntoViewIfNeeded();
+  const figure = page.locator("#parts figure");
+  await figure.scrollIntoViewIfNeeded();
+  const drawing = figure.getByRole("img", { name: /Vieve V1/ });
+  await expect(drawing).toBeVisible();
+  // A tap or a click on the drawing is enough.
+  await (isMobile ? drawing.tap() : drawing.click());
+  const model = page.getByRole("application", { name: "3D model: Parts of Vieve" });
   await expect(model.locator("canvas")).toBeVisible({ timeout: 15000 });
   await expect(page.locator("#parts")).toContainText("concept design");
 });
