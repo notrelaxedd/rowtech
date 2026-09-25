@@ -162,7 +162,7 @@ export function UploadForm() {
         </label>
         <label className="sm:col-span-2">
           <span className="text-sm font-semibold">
-            What was the piece? <span className="font-normal text-muted-foreground">(optional)</span>
+            Session name <span className="font-normal text-muted-foreground">(optional)</span>
           </span>
           <input type="text" name="title" maxLength={120} placeholder="4 x 750m, rate 28" className={cn(field, "mt-1.5")} />
         </label>

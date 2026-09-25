@@ -37,7 +37,7 @@ export function CrewPanel({
   const [sideError, setSideError] = useState<string | null>(null);
   const [, startSaving] = useTransition();
 
-  // Load share: each seat's impulse as a share of the crew's, over the piece.
+  // Load share: each seat's impulse as a share of the crew's, over the outing.
   // Valid without a shared clock: it compares totals, not moments.
   const share = useMemo(() => {
     const totals = seats.map((s) => ({
@@ -86,7 +86,7 @@ export function CrewPanel({
       <section className="rounded-lg border border-line bg-panel p-4">
         <h3 className="type-h3 text-base">Who&rsquo;s carrying the boat</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Each seat&rsquo;s impulse as a share of the crew&rsquo;s, across the whole piece. Amber is more than 5% off an even share.
+          Each seat&rsquo;s impulse as a share of the crew&rsquo;s, across the whole outing. Amber is more than 5% off an even share.
         </p>
         <ul className="mt-4 space-y-2">
           {share.map((s) => {
@@ -118,7 +118,7 @@ export function CrewPanel({
           </p>
         ) : (
           <p className="mt-1 text-sm text-muted-foreground">
-            Impulse by side over the piece, from the {balance.known} seats you&rsquo;ve set.
+            Impulse by side over the outing, from the {balance.known} seats you&rsquo;ve set.
           </p>
         )}
         {balance.total > 0 && balance.known >= 2 && (
@@ -188,7 +188,7 @@ export function CrewPanel({
         {synced && spread ? (
           <>
             <p className="mt-1 text-sm text-muted-foreground">
-              The last stroke of the piece, each seat against the crew average. Widest spread in the piece: {fmt(spread.worst, 0)} ms.
+              The last stroke of the outing, each seat against the crew average. Widest spread in the outing: {fmt(spread.worst, 0)} ms.
             </p>
             <ul className="mt-4 space-y-1.5">
               {spread.last.offsets

@@ -8,7 +8,7 @@ import { PieceMap } from "@/components/dash/piece-map";
 import { sessionTrack } from "@/lib/session/load";
 import { fmtSplit, splitFromSpeed, thinTrack } from "@/lib/session/track";
 
-export const metadata = { title: "Compare pieces" };
+export const metadata = { title: "Compare outings" };
 
 /** Most outings the pickers list. */
 const CREWS = 100;
@@ -94,7 +94,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
           <ArrowLeft aria-hidden className="size-3.5" />
           Crew outings
         </Link>
-        <h1 className="type-h3 mt-3 text-2xl">Two pieces, side by side</h1>
+        <h1 className="type-h3 mt-3 text-2xl">Two outings, side by side</h1>
       </div>
 
       <ComparePicker crews={crews.map((c) => ({ id: c.id, label: c.title || "Crew outing", at: c.recorded_at }))} a={a?.session.id} b={b?.session.id} />

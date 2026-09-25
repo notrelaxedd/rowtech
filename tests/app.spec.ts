@@ -196,6 +196,32 @@ test.describe("signed in", () => {
     expect(rows).toHaveLength(3);
   });
 
+  // One word for each thing (CNT-002): an upload is a session, what was rowed
+  // is an outing, and a piece (a part of an outing) isn't something the
+  // dashboard has, so it never says so.
+  test("the dashboard calls an upload a session and a crew's an outing, never a piece", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    await page.goto("/app/force");
+    await expect(page.getByLabel("Session name")).toBeVisible();
+    await page.getByLabel("Files").setInputFiles(await crewZip(2, 6));
+    await page.getByLabel("Session name").fill("4 x 750m, rate 28");
+    await page.getByRole("button", { name: "Upload" }).click();
+    await expect(page).toHaveURL(/\/app\/force\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+    const crew = page.url().split("/").pop()!;
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("4 x 750m, rate 28");
+    await upload(page, await crewZip(3, 7));
+
+    for (const path of ["/app/force", "/app/cox", "/app/cox/compare", `/app/cox/${crew}`, `/app/force/${crew}`]) {
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await expect(page.locator("body"), path).not.toContainText(/\bpieces?\b/i);
+    }
+    await page.goto("/app/cox/compare");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Two outings, side by side");
+    await expect(page).toHaveTitle("Compare outings · RowTech");
+  });
+
   // Each session's figures are stored when its strokes are written; they are
   // the ones the session page works out from the same rows.
   test("an outing's figures are the ones its files give, and follow its strokes", async ({ page, context, baseURL }) => {
@@ -997,7 +1023,7 @@ test.describe("signed in", () => {
     await page.goto("/app/cox");
     await expect(page.locator(`a[href="/app/cox/${single}"]`)).toHaveCount(0);
     // One outing: nothing to compare it with yet.
-    await expect(page.getByRole("link", { name: "Compare two pieces →" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Compare two outings →" })).toHaveCount(0);
     const link = page.locator(`a[href="/app/cox/${crew}"]`);
     await expect(link).toContainText("2 seats");
     await expect(link).toContainText("seat clocks");
@@ -1044,7 +1070,7 @@ test.describe("signed in", () => {
     expect((await user.db.from("gps_points").insert(fixes)).error).toBeNull();
 
     await page.goto("/app/cox");
-    await page.getByRole("link", { name: "Compare two pieces →" }).click();
+    await page.getByRole("link", { name: "Compare two outings →" }).click();
     await expect(page).toHaveURL(/\/app\/cox\/compare$/);
     // Nothing picked yet: the two newest.
     await expect(page.getByLabel("First")).toHaveValue(newer);

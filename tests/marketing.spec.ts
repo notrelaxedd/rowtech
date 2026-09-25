@@ -43,6 +43,18 @@ test("the home page agrees with the beta form and the dashboard", async ({ page 
   await expect(page.locator("form summary")).toContainText("Tell us about your boats");
 });
 
+// What a node saves and you download is a session, as the dashboard calls it;
+// what was rowed is an outing (CNT-002).
+test("the site calls what you download from a node a session", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#how")).toContainText("Download the session");
+  await expect(page.getByRole("heading", { level: 1 }).locator("..")).toContainText("You download the session at the dock.");
+  for (const path of ["/", "/force"]) {
+    await page.goto(path);
+    await expect(page.locator("main"), path).not.toContainText(/\bpractice\b/i);
+  }
+});
+
 test("specifications live on the product pages, not the home page", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("main")).not.toContainText("3000 mAh");

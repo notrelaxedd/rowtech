@@ -38,8 +38,8 @@ const STEPS = [
   },
   {
     art: "files",
-    t: "Download the practice",
-    d: "At the dock, connect your phone to the node’s own Wi-Fi and download the practice. You get the numbers for every stroke, the force curve of every stroke, and the timing of everything that happened.",
+    t: "Download the session",
+    d: "At the dock, connect your phone to the node’s own Wi-Fi and download the session. You get the numbers for every stroke, the force curve of every stroke, and the timing of everything that happened.",
   },
 ] as const;
 

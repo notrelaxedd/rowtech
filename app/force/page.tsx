@@ -36,7 +36,7 @@ export default function ForcePage() {
           <h1 className="type-h1 max-w-[16ch]">Force, the seat node.</h1>
           <p className="type-lead mt-6 max-w-[40rem] text-muted-foreground">
             Seat-by-seat rowing force measurement: one node on each seat&rsquo;s rigger backstay. It records the force
-            curve of every stroke, shows the rower their own peak and curve live, and saves the practice for you to
+            curve of every stroke, shows the rower their own peak and curve live, and saves the session for you to
             download at the dock.
           </p>
         </div>

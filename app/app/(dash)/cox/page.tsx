@@ -25,7 +25,7 @@ export default async function CoxPage({ searchParams }: { searchParams: Promise<
         <h1 className="type-h3 text-2xl">Cox</h1>
         <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
           Outings with the whole crew in them. Upload several seats on the Force tab as one zip, each seat&rsquo;s files
-          in a folder of its own, and they land here as one piece. Vieve, the RowTech cox box, will add the GPS track and put every seat on one clock; its session format
+          in a folder of its own, and they land here as one outing. Vieve, the RowTech cox box, will add the GPS track and put every seat on one clock; its session format
           isn&rsquo;t final yet, so the dashboard can&rsquo;t read a Vieve bundle today.
         </p>
       </div>
@@ -74,7 +74,7 @@ export default async function CoxPage({ searchParams }: { searchParams: Promise<
           )}
           {crews.length > 1 && (
             <Link href="/app/cox/compare" className="inline-block text-sm text-trace underline-offset-4 hover:underline">
-              Compare two pieces →
+              Compare two outings →
             </Link>
           )}
         </>

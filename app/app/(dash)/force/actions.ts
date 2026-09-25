@@ -152,7 +152,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
   const title = (fd.get("title") as string | null)?.trim() ?? "";
   // The form says so too, but a request doesn't have to come from the form.
   if (boatName.length > 120) return { status: "error", message: "Keep the boat name under 120 characters." };
-  if (title.length > 120) return { status: "error", message: "Keep the piece's name under 120 characters." };
+  if (title.length > 120) return { status: "error", message: "Keep the session name under 120 characters." };
 
   const sb = await supabaseServer();
   let team: string;
