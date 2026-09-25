@@ -13,7 +13,7 @@ import { DevicePlaceholder } from "@/components/device/device-placeholder";
 import { CurveExplorerView } from "@/components/site/curve-explorer-view";
 import { SessionFiles } from "@/components/site/session-files";
 import { ForceMount } from "@/components/device/force-mount";
-import { inlineLink } from "@/components/site/legal";
+import { ContactEmail, inlineLink } from "@/components/site/legal";
 import { openGraphBase, siteTitle, siteUrl, twitterBase } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -331,7 +331,9 @@ export default function Home() {
                   <li>Testing units, for now</li>
                   <li>A direct line to the people building it</li>
                   <li>[OWNER: what beta crews get on price, if anything]</li>
-                  <li>[OWNER: what happens if a unit fails during the beta, and who to contact]</li>
+                  <li>
+                    [OWNER: what happens if a unit fails during the beta]. Write to <ContactEmail />.
+                  </li>
                 </ul>
                 <p className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
                   The beta&rsquo;s terms are on the{" "}

@@ -1,5 +1,6 @@
 import { test, expect, type Locator } from "@playwright/test";
 import { expectSkipLink } from "./support/skip-link";
+import { contactEmail } from "../lib/owner";
 
 test("the marketing page renders, with the beta offered in four places", async ({ page }) => {
   await page.goto("/");
@@ -87,7 +88,8 @@ test("Force's specifications say what it fits, what it doesn't measure and its t
 });
 
 // The build status and how the beta works sit under their headings, and what
-// happens when a unit fails is one of what beta crews get (BIZ-014, BIZ-017, BIZ-020).
+// happens when a unit fails is one of what beta crews get, with the site's one
+// contact to write to (BIZ-014, BIZ-017, BIZ-020).
 test("the home page has a line for the build status, how the beta works, and failed units", async ({ page }) => {
   await page.goto("/");
   for (const id of ["beta-scope", "beta"]) {
@@ -95,6 +97,7 @@ test("the home page has a line for the build status, how the beta works, and fai
   }
   const get = page.locator("#beta h3", { hasText: "What beta crews get" }).locator("+ ul > li");
   await expect(get).toHaveCount(4);
+  await expect(get.last()).toContainText(`Write to ${contactEmail}.`);
 });
 
 // "Wi-Fi", the standard spelling, wherever a page says it (LEG-016, CNT-008).
