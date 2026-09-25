@@ -34,7 +34,14 @@ for (const { path, title } of PAGES) {
     // What every page shares.
     await expect(meta(page, "og:site_name")).toHaveAttribute("content", "RowTech");
     await expect(meta(page, "og:type")).toHaveAttribute("content", "website");
-    await expect(meta(page, "og:image").first()).toHaveAttribute("content", /\/og\.png$/);
+    await expect(meta(page, "og:image").first()).toHaveAttribute("content", /\/og\.png\?v=\d+$/);
+    if (path === "/") {
+      // The version is only in the URL; the file it names is served.
+      const image = new URL((await meta(page, "og:image").first().getAttribute("content"))!);
+      const response = await page.request.get(image.pathname + image.search);
+      expect(response.status()).toBe(200);
+      expect(response.headers()["content-type"]).toBe("image/png");
+    }
     await expect(meta(page, "twitter:card")).toHaveAttribute("content", "summary_large_image");
     // The image's alt text describes the image; it doesn't repeat the title (CNT-020).
     for (const key of ["og:image:alt", "twitter:image:alt"]) {

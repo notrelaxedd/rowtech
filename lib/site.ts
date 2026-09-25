@@ -16,9 +16,11 @@ export const titleTemplate = "%s · RowTech";
 /**
  * public/og.png, and what's in it: the alt text describes the picture, not
  * the page (the share title already names that). It changes with the image.
+ * So does the version in the URL: the sites a link is shared on keep an
+ * image by its URL, so a new one needs a new URL to show.
  */
 const shareImage = {
-  url: "/og.png",
+  url: "/og.png?v=2",
   width: 1200,
   height: 630,
   alt: "Concept render of a Force node, its screen showing a force curve, next to the home page's headline and an Apply for the beta button.",
