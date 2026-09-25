@@ -35,11 +35,11 @@ const nextConfig: NextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
         ],
       },
-      // The icon and the share image carry no hash in their paths (the page
-      // links the icon with its hash as a query instead), so they're cached
+      // The icons and the share image carry no hash in their paths (the page
+      // links the icons with their hashes as a query instead), so they're cached
       // for a day and then served stale while they're checked, rather than
       // checked on every page view.
-      ...["/icon.svg", "/og.png"].map((source) => ({
+      ...["/icon.svg", "/favicon.ico", "/apple-icon.png", "/og.png"].map((source) => ({
         source,
         headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
       })),

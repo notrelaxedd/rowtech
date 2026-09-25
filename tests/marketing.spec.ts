@@ -453,10 +453,10 @@ test("no page can be framed, and responses carry the basic security headers", as
   }
 });
 
-// The icon and the share image are checked once a day, not on every page
+// The icons and the share image are checked once a day, not on every page
 // view (PERF-008).
-test("the icon and the share image are cached for a day", async ({ request }) => {
-  for (const path of ["/icon.svg", "/og.png"]) {
+test("the icons and the share image are cached for a day", async ({ request }) => {
+  for (const path of ["/icon.svg", "/favicon.ico", "/apple-icon.png", "/og.png"]) {
     const res = await request.get(path);
     expect(res.status(), path).toBe(200);
     expect(res.headers()["cache-control"], path).toBe("public, max-age=86400, stale-while-revalidate=604800");
