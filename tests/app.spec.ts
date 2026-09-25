@@ -139,6 +139,18 @@ test.describe("signed in", () => {
     expect(count).toBe(147);
   });
 
+  test("the team a first upload makes isn't named after the uploader's email", async ({ page, context, baseURL }) => {
+    const user = await makeUser({ prefix: "sam" });
+    await signInBrowser(context, user, baseURL!);
+    await upload(page, seatFiles(1));
+
+    const { data: teams } = await user.db.from("teams").select("name");
+    expect(teams).toHaveLength(1);
+    const local = user.email.split("@")[0];
+    expect(teams![0].name).not.toContain(local);
+    expect(teams![0].name.toLowerCase()).not.toContain("sam");
+  });
+
   test("seats uploaded together become one crew outing, and uploading it again keeps one", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);

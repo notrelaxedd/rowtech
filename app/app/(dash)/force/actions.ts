@@ -30,12 +30,18 @@ const UPLOAD_LIMITS = {
   newSessionsPerDay: 200,
 };
 
+/**
+ * A new team's name. Nothing from the user's email (LEG-018): the team's
+ * members see its name. Teams made before this keep the names they have.
+ */
+const NEW_TEAM_NAME = "My crew";
+
 /** Everything a beta user needs before they can upload: a team of their own. */
-async function teamId(viewer: { email: string }): Promise<string> {
+async function teamId(): Promise<string> {
   const sb = await supabaseServer();
   // Finds the team, or makes it, in one call that is safe to run twice at once
   // (supabase/migrations/*_own_team.sql).
-  const { data, error } = await sb.rpc("ensure_own_team", { p_name: `${viewer.email.split("@")[0]}'s crew` });
+  const { data, error } = await sb.rpc("ensure_own_team", { p_name: NEW_TEAM_NAME });
   if (error || typeof data !== "string") throw new Error(error?.message ?? "could not set up a team");
   return data;
 }
@@ -151,7 +157,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
   const sb = await supabaseServer();
   let team: string;
   try {
-    team = await teamId(viewer);
+    team = await teamId();
   } catch (e) {
     console.error("team setup failed", e);
     return { status: "error", message: "We couldn't set your team up. Try again in a minute." };
