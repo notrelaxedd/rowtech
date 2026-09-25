@@ -17,7 +17,7 @@ export default function AppError({ error, retry }: { error: Error & { digest?: s
         </Link>
         <h1 className="type-h2 mt-8 text-[2rem]">Something went wrong.</h1>
         <p className="type-body mt-5 text-muted-foreground">
-          This page didn&rsquo;t load. Try again, or come back in a few minutes.
+          This page didn’t load. Try again, or come back in a few minutes.
         </p>
         <div className="mt-8">
           <button type="button" onClick={() => retry()} className={cn(ctaSecondary, "max-sm:w-full")}>

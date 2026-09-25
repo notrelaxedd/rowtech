@@ -37,7 +37,7 @@ export default function TermsPage() {
             <LegalSection title="The beta">
               <p>[OWNER: who can take part in the beta, how crews are chosen, and how long the beta runs]</p>
               <p>
-                [OWNER: what &ldquo;Testing units, for now&rdquo; means: whether units are lent or given, who owns them,
+                [OWNER: what “Testing units, for now” means: whether units are lent or given, who owns them,
                 when they go back, and who is responsible for loss, damage or injury while one is in use]
               </p>
               <p>[OWNER: what beta crews are asked to do in return, if anything]</p>
@@ -47,14 +47,14 @@ export default function TermsPage() {
               <p>The dashboard is for beta crews: an account works only while its email address is on the beta list.</p>
               <p>[OWNER: acceptable use: what may and may not be uploaded to, or done with, the dashboard]</p>
               <p>
-                [OWNER: what a coach must have from their rowers (or the rowers&rsquo; parents) before uploading data about
+                [OWNER: what a coach must have from their rowers (or the rowers’ parents) before uploading data about
                 them]
               </p>
             </LegalSection>
 
             <LegalSection title="Your data">
               <p>
-                What&rsquo;s collected and where it&rsquo;s kept is on the{" "}
+                What’s collected and where it’s kept is on the{" "}
                 <Link href="/privacy" className={inlineLink}>
                   Privacy
                 </Link>{" "}
@@ -64,11 +64,11 @@ export default function TermsPage() {
             </LegalSection>
 
             <LegalSection title="Liability">
-              <p>[OWNER: warranties, and the limits of RowTech&rsquo;s liability, including for a testing unit used on the water]</p>
+              <p>[OWNER: warranties, and the limits of RowTech’s liability, including for a testing unit used on the water]</p>
             </LegalSection>
 
             <LegalSection title="Governing law">
-              <p>[OWNER: which country&rsquo;s or state&rsquo;s law governs these terms, and where disputes are settled]</p>
+              <p>[OWNER: which country’s or state’s law governs these terms, and where disputes are settled]</p>
             </LegalSection>
 
             <LegalSection title="Changes">

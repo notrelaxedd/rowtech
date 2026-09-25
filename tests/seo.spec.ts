@@ -55,6 +55,28 @@ for (const { path, title } of PAGES) {
   });
 }
 
+// One apostrophe and one ellipsis, the typographic ones, in what a page shows
+// and in what a search result or a screen reader reads out (CNT-005).
+test("pages use ’ and …, with no straight apostrophes or leaked entities", async ({ page }) => {
+  for (const { path } of PAGES) {
+    await page.goto(path);
+    const read = await page.evaluate(() => [
+      document.body.innerText,
+      ...[...document.querySelectorAll("meta[content]")].map((m) => m.getAttribute("content") ?? ""),
+      ...[...document.querySelectorAll("[aria-label], [alt], [title]")].flatMap((e) =>
+        ["aria-label", "alt", "title"].map((a) => e.getAttribute(a) ?? "")
+      ),
+    ]);
+    for (const text of read) {
+      expect(text, path).not.toMatch(/&(rsquo|hellip|lsquo|ldquo|rdquo|Prime);/);
+      expect(text, path).not.toMatch(/[A-Za-z]'[A-Za-z]/);
+      expect(text, path).not.toContain("...");
+    }
+  }
+  await page.goto("/");
+  await expect(meta(page, "description")).toHaveAttribute("content", /seat’s/);
+});
+
 // The category words a coach searches for, where the page already says what
 // Force is (BIZ-024).
 test("/force names its category in its description and its lead", async ({ page }) => {

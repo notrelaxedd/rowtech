@@ -20,7 +20,7 @@ export default function AccessibilityPage() {
           <h1 className="type-h1">Accessibility.</h1>
           <p className="type-lead mt-6 text-muted-foreground">
             What this site and the RowTech dashboard do for accessibility, and where to write when something
-            doesn&rsquo;t work for you.
+            doesn’t work for you.
           </p>
           <p className="mt-4 text-sm text-muted-foreground">Last updated: [OWNER: the date this statement was written]</p>
 
@@ -35,11 +35,11 @@ export default function AccessibilityPage() {
             <LegalSection title="What the site does">
               <ul>
                 <li>
-                  The site&rsquo;s and the dashboard&rsquo;s pages start with a Skip to content link. The first Tab on a
-                  page shows it, and it takes you past the header to the page&rsquo;s content.
+                  The site’s and the dashboard’s pages start with a Skip to content link. The first Tab on a
+                  page shows it, and it takes you past the header to the page’s content.
                 </li>
                 <li>
-                  On a phone, the site&rsquo;s Menu opens and closes with a keyboard as well as by touch, and works
+                  On a phone, the site’s Menu opens and closes with a keyboard as well as by touch, and works
                   without JavaScript. Escape closes it and puts focus back on Menu.
                 </li>
                 <li>
@@ -48,7 +48,7 @@ export default function AccessibilityPage() {
                   by dragging.
                 </li>
                 <li>
-                  If your device is set to reduce motion, the site&rsquo;s animations stop: the force curves and the
+                  If your device is set to reduce motion, the site’s animations stop: the force curves and the
                   Force screen are drawn still, and the 3D models turn without easing.
                 </li>
               </ul>
@@ -56,7 +56,7 @@ export default function AccessibilityPage() {
 
             <LegalSection title="Reporting a problem">
               <p>
-                If something on the site or in the dashboard doesn&rsquo;t work for you, write to <ContactEmail />.
+                If something on the site or in the dashboard doesn’t work for you, write to <ContactEmail />.
               </p>
               <p>[OWNER: what happens after someone reports a problem, and how soon they hear back]</p>
             </LegalSection>

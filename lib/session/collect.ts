@@ -35,7 +35,7 @@ export const ZIP_LIMITS = {
 
 export class ZipTooLargeError extends Error {
   constructor() {
-    super("That zip holds more than one upload can take. Zip one outing's session folders at a time.");
+    super("That zip holds more than one upload can take. Zip one outing’s session folders at a time.");
     this.name = "ZipTooLargeError";
   }
 }

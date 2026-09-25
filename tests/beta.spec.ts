@@ -101,7 +101,7 @@ test("the form says what is wrong rather than failing silently", async ({ page }
   await page.getByLabel("Club, school or program").fill("Riverside RC");
   await page.getByRole("button", { name: /apply for the beta/i }).click();
 
-  await expect(page.getByText(/doesn't look like an email address/i)).toBeVisible();
+  await expect(page.getByText(/doesn’t look like an email address/i)).toBeVisible();
   // What they typed is still there.
   await expect(page.getByLabel("Name")).toHaveValue("Sam");
 });
@@ -153,7 +153,7 @@ test("a rejected application keeps the same form, with every answer in it", asyn
   const form = await page.locator("form").elementHandle();
   await page.getByRole("button", { name: /apply for the beta/i }).click();
 
-  await expect(page.getByText(/doesn't look like an email address/i)).toBeVisible();
+  await expect(page.getByText(/doesn’t look like an email address/i)).toBeVisible();
   expect(await form!.evaluate((el) => el.isConnected)).toBe(true);
   await expect(page.getByLabel("Name")).toHaveValue("Sam Rower");
   await expect(page.getByLabel("Email")).toHaveValue("not-an-email");
@@ -176,7 +176,7 @@ test("an error in an optional field opens the details, even after they were clos
   await page.getByText("Coach", { exact: true }).click();
   await page.getByLabel("Email").fill("not-an-email");
   await page.getByRole("button", { name: /apply for the beta/i }).click();
-  await expect(page.getByText(/doesn't look like an email address/i)).toBeVisible();
+  await expect(page.getByText(/doesn’t look like an email address/i)).toBeVisible();
 
   const details = page.locator("form details");
   await details.locator("summary").click();
@@ -223,10 +223,10 @@ test("a required field says what's wrong as soon as it's left", async ({ page })
   await email.blur();
   await expect(email).toHaveAttribute("aria-invalid", "true");
   await expect(email).toHaveAttribute("aria-describedby", "email-error");
-  await expect(page.locator("#email-error")).toHaveText("That doesn't look like an email address. Check for a typo.");
+  await expect(page.locator("#email-error")).toHaveText("That doesn’t look like an email address. Check for a typo.");
   // Focus has moved on by then, so a screen reader hears it from a live region.
   const said = page.locator('p[aria-live="polite"]');
-  await expect(said).toHaveText("Email: That doesn't look like an email address. Check for a typo.");
+  await expect(said).toHaveText("Email: That doesn’t look like an email address. Check for a typo.");
 
   // Put right, it clears while typing.
   await email.fill("sam.rower@example.com");
@@ -313,7 +313,7 @@ test.describe("without JavaScript", () => {
     await page.getByLabel("Email").fill("not-an-email");
     await page.getByLabel("Club, school or program").fill("Riverside RC");
     await page.getByRole("button", { name: /apply for the beta/i }).click();
-    await expect(page.locator("#email-error")).toHaveText("That doesn't look like an email address. Check for a typo.");
+    await expect(page.locator("#email-error")).toHaveText("That doesn’t look like an email address. Check for a typo.");
     await expect(page.getByLabel("Name")).toHaveValue("Sam Rower");
 
     await page.getByLabel("Email").fill("sam.rower@example.com");

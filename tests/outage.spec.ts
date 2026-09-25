@@ -71,7 +71,7 @@ test("when a file isn't stored, the upload says so and leaves no file or row beh
   await page.goto("/app/force");
   await page.getByLabel("Files").setInputFiles({ name: "outing.zip", mimeType: "application/zip", buffer: Buffer.from(zipSync(entries)) });
   await page.getByRole("button", { name: "Upload" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "events.csv couldn't be stored. Try again in a minute." })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("alert").filter({ hasText: "events.csv couldn’t be stored. Try again in a minute." })).toBeVisible({ timeout: 30_000 });
 
   const { data: team, error } = await user.db.rpc("ensure_own_team", { p_name: "test crew" });
   expect(error).toBeNull();
@@ -110,8 +110,8 @@ test("in production a stray BETA_DRY_RUN doesn't skip saving an application", as
   await page.getByLabel("Club, school or program").fill("Riverside RC");
   await page.getByRole("button", { name: /apply for the beta/i }).click();
 
-  await expect(page.getByRole("alert").filter({ hasText: "your application wasn't saved" })).toHaveText(
-    "Something went wrong on our side and your application wasn't saved. Try again in a minute."
+  await expect(page.getByRole("alert").filter({ hasText: "your application wasn’t saved" })).toHaveText(
+    "Something went wrong on our side and your application wasn’t saved. Try again in a minute."
   );
   await expect(page.getByRole("heading", { level: 1 })).not.toContainText("We have your application");
 });

@@ -85,7 +85,7 @@ export function LoginForm({ error }: { error?: string }) {
           {pending ? (
             <>
               <LoaderCircle aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />
-              Sending&hellip;
+              Sending…
             </>
           ) : (
             <>

@@ -85,9 +85,9 @@ export function CrewPanel({
   return (
     <div className="space-y-6">
       <section className="rounded-lg border border-line bg-panel p-4">
-        <h3 className="type-h3 text-base">Who&rsquo;s carrying the boat</h3>
+        <h3 className="type-h3 text-base">Who’s carrying the boat</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Each seat&rsquo;s impulse as a share of the crew&rsquo;s, across the whole outing. Amber is more than 5% off an even share.
+          Each seat’s impulse as a share of the crew’s, across the whole outing. Amber is more than 5% off an even share.
         </p>
         <ul className="mt-4 space-y-2">
           {share.map((s) => {
@@ -115,11 +115,11 @@ export function CrewPanel({
         <h3 className="type-h3 text-base">Port and starboard</h3>
         {balance.known < 2 ? (
           <p className="mt-1 text-sm text-muted-foreground">
-            Set which side each seat rows and the balance appears. The node doesn&rsquo;t know which rigger it&rsquo;s on.
+            Set which side each seat rows and the balance appears. The node doesn’t know which rigger it’s on.
           </p>
         ) : (
           <p className="mt-1 text-sm text-muted-foreground">
-            Impulse by side over the outing, from the {balance.known} seats you&rsquo;ve set.
+            Impulse by side over the outing, from the {balance.known} seats you’ve set.
           </p>
         )}
         {balance.total > 0 && balance.known >= 2 && (
@@ -226,7 +226,7 @@ export function CrewPanel({
         ) : (
           <p className="mt-1 max-w-[62ch] text-sm leading-relaxed text-muted-foreground">
             Every seat node keeps its own clock, counting from the moment it booted, so catch times from two nodes
-            can&rsquo;t be compared: the difference between them is mostly when each one was switched on. Vieve puts the
+            can’t be compared: the difference between them is mostly when each one was switched on. Vieve puts the
             whole crew on one clock, to within 5 ms across an eight, and this panel fills in from the first outing with
             it in the boat.
           </p>

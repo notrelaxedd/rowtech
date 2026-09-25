@@ -92,7 +92,7 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
                   <p className="mx-auto mt-2 max-w-md leading-relaxed">
                     A node saves each session to its microSD card as four files (<span className="readout">meta.json</span>,{" "}
                     <span className="readout">strokes.csv</span>, <span className="readout">curves.bin</span> and{" "}
-                    <span className="readout">events.csv</span>), and you download them over the node&rsquo;s own Wi-Fi.
+                    <span className="readout">events.csv</span>), and you download them over the node’s own Wi-Fi.
                   </p>
                 </>
               )}
@@ -153,9 +153,9 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
           <h2 className="type-h3 text-lg">Seat by seat, over time</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             {moreHistory
-              ? "The most recent sessions with a seat set, by seat; older ones aren\u2019t in the chart."
+              ? "The most recent sessions with a seat set, by seat; older ones aren’t in the chart."
               : "Every session with a seat set, by seat."} Units are each
-            session&rsquo;s own ({fmt(history.length, 0)} sessions).
+            session’s own ({fmt(history.length, 0)} sessions).
           </p>
           <div className="mt-4">
             <HistoryPanel points={history} />

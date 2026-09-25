@@ -14,7 +14,7 @@ export const metadata: Metadata = pageMetadata({
   // The template adds the brand once.
   title: "Vieve, the cox box",
   description:
-    "Vieve, the RowTech cox box, is in development: the cox's voice to the boat's speakers, and the hub every seat node reports to. Specifications and parts.",
+    "Vieve, the RowTech cox box, is in development: the cox’s voice to the boat’s speakers, and the hub every seat node reports to. Specifications and parts.",
   path: "/vieve",
 });
 
@@ -26,7 +26,7 @@ export default function VievePage() {
           <Status>In development</Status>
           <h1 className="type-h1 mt-5 max-w-[16ch]">Vieve, the RowTech cox box.</h1>
           <p className="type-lead mt-6 max-w-[40rem] text-muted-foreground">
-            Vieve will carry the cox&rsquo;s voice to the boat&rsquo;s speakers and be the hub every seat node reports to.
+            Vieve will carry the cox’s voice to the boat’s speakers and be the hub every seat node reports to.
           </p>
         </div>
       </section>
@@ -48,7 +48,7 @@ export default function VievePage() {
 
       <section id="parts" className="border-t border-line py-24 sm:py-28">
         <div className={wrap}>
-          <h2 className="type-h2 max-w-3xl">What&rsquo;s on it, and in it.</h2>
+          <h2 className="type-h2 max-w-3xl">What’s on it, and in it.</h2>
           <div className="mt-12">
             <DeviceDiagram3D
               kind="vieve"

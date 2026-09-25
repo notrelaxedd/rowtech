@@ -18,13 +18,13 @@ export function Hero() {
           <div>
             <h1 className="type-h1 max-w-[16ch]">The force curve from every seat in the boat.</h1>
             <p className="type-lead mt-6 max-w-[36rem] text-muted-foreground">
-              A Force node on each seat&rsquo;s rigger backstay records the force curve of every stroke and shows it to the
+              A Force node on each seat’s rigger backstay records the force curve of every stroke and shows it to the
               rower live. You download the session at the dock.
             </p>
             <div className="mt-8">
               <BetaLink from="hero" className="max-sm:w-full" />
             </div>
-            <p className="mt-5 text-sm text-muted-foreground">For high school, college and club coaches. We&rsquo;re choosing beta crews now.</p>
+            <p className="mt-5 text-sm text-muted-foreground">For high school, college and club coaches. We’re choosing beta crews now.</p>
           </div>
 
           <figure className="m-0 [perspective:2000px] max-lg:mx-auto max-lg:max-w-md">

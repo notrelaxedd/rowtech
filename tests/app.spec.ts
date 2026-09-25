@@ -60,7 +60,7 @@ test("the sign-in form says an address that isn't one might have a typo", async 
   await page.goto("/app/login");
   await page.getByLabel("Email").fill("not-an-email");
   await page.getByRole("button", { name: /email me a link/i }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "look like an email" })).toHaveText("That doesn't look like an email address. Check for a typo.");
+  await expect(page.getByRole("alert").filter({ hasText: "look like an email" })).toHaveText("That doesn’t look like an email address. Check for a typo.");
 });
 
 test.describe("signing in", () => {
@@ -699,12 +699,12 @@ test.describe("signed in", () => {
     }
     await page.getByLabel("Files").setInputFiles({ name: "outing.zip", mimeType: "application/zip", buffer: Buffer.from(zipSync(entries)) });
     await page.getByRole("button", { name: "Upload" }).click();
-    const alert = page.getByRole("alert").filter({ hasText: "2 seats couldn't be read." });
+    const alert = page.getByRole("alert").filter({ hasText: "2 seats couldn’t be read." });
     await expect(alert).toBeVisible({ timeout: 30_000 });
     const reasons = alert.getByRole("listitem");
     await expect(reasons).toHaveCount(2);
-    await expect(reasons.nth(0)).toContainText("outing/seat-1: strokes.csv doesn't have the header this firmware writes.");
-    await expect(reasons.nth(1)).toContainText("outing/seat-2: strokes.csv doesn't have the header this firmware writes.");
+    await expect(reasons.nth(0)).toContainText("outing/seat-1: strokes.csv doesn’t have the header this firmware writes.");
+    await expect(reasons.nth(1)).toContainText("outing/seat-2: strokes.csv doesn’t have the header this firmware writes.");
     // The header lines have no spaces, and still don't push the page sideways.
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect((await user.db.from("sessions").select("id")).data).toEqual([]);
@@ -764,7 +764,7 @@ test.describe("signed in", () => {
       await page.getByLabel("Files").setInputFiles(seatFiles(1));
       await page.getByLabel("When was it rowed?").fill("2026-01-15T21:30");
       await page.getByRole("button", { name: "Upload" }).click();
-      await expect(page.getByText("That date and time couldn't be read. Pick it again.")).toBeVisible();
+      await expect(page.getByText("That date and time couldn’t be read. Pick it again.")).toBeVisible();
       expect((await user.db.from("sessions").select("id")).data).toEqual([]);
     });
   });
@@ -980,7 +980,7 @@ test.describe("signed in", () => {
       return d.accept();
     });
     await page.getByRole("button", { name: "Delete session" }).click();
-    await expect(page.getByRole("alert").filter({ hasText: "Only the team's owner or a coach can delete a session." })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("alert").filter({ hasText: "Only the team’s owner or a coach can delete a session." })).toBeVisible({ timeout: 30_000 });
     expect(asked).toBe(true);
     await expect(page).toHaveURL(new RegExp(`/app/force/${id}$`));
     expect((await owner.db.from("sessions").select("id")).data).toEqual([{ id }]);
@@ -1244,7 +1244,7 @@ test.describe("signed in", () => {
     await revoke(user.email);
 
     await outing.getByRole("listitem").filter({ hasText: "seat 2" }).getByRole("button", { name: "P" }).click();
-    await expect(outing.getByRole("alert").filter({ hasText: "That side wasn't saved. Try again in a minute." })).toBeVisible();
+    await expect(outing.getByRole("alert").filter({ hasText: "That side wasn’t saved. Try again in a minute." })).toBeVisible();
     await expect(outing.getByRole("listitem").filter({ hasText: "seat 2" }).getByRole("button", { name: "P" })).toHaveAttribute("aria-pressed", "false");
 
     page.once("dialog", (d) => d.accept());

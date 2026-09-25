@@ -32,8 +32,8 @@ export default function LicensesPage() {
             .
           </p>
           <p className="type-body mt-4 text-muted-foreground">
-            Tools that only build and test the site aren&rsquo;t listed, and neither are the machine-specific builds of
-            Next.js&rsquo;s compiler and sharp&rsquo;s image library.
+            Tools that only build and test the site aren’t listed, and neither are the machine-specific builds of
+            Next.js’s compiler and sharp’s image library.
           </p>
 
           <div className="mt-14">

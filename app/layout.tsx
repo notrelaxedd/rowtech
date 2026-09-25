@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     template: titleTemplate,
   },
   description:
-    "A Force node on each seat's rigger backstay records the force curve of every stroke and shows it to the rower live. Vieve, the RowTech cox box, is in development. Coaches: apply for the beta.",
+    "A Force node on each seat’s rigger backstay records the force curve of every stroke and shows it to the rower live. Vieve, the RowTech cox box, is in development. Coaches: apply for the beta.",
   applicationName: "RowTech",
   openGraph: openGraphBase,
   twitter: twitterBase,

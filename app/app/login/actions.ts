@@ -25,7 +25,7 @@ function callbackUrl(next: string) {
  */
 export async function sendMagicLink(_prev: LoginState, fd: FormData): Promise<LoginState> {
   const email = (fd.get("email") as string | null)?.trim().toLowerCase() ?? "";
-  if (!email || !EMAIL.test(email)) return { status: "error", message: "That doesn't look like an email address. Check for a typo.", email };
+  if (!email || !EMAIL.test(email)) return { status: "error", message: "That doesn’t look like an email address. Check for a typo.", email };
 
   const sb = await supabaseServer();
   const { error } = await sb.auth.signInWithOtp({
@@ -35,7 +35,7 @@ export async function sendMagicLink(_prev: LoginState, fd: FormData): Promise<Lo
   // otp_disabled: no account for this address. Nothing is sent; say the same.
   if (error && error.code !== "otp_disabled") {
     console.error("magic link failed", error);
-    return { status: "error", message: "We couldn't send that link. Try again in a minute.", email };
+    return { status: "error", message: "We couldn’t send that link. Try again in a minute.", email };
   }
   return { status: "sent", message: "", email };
 }

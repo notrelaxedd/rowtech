@@ -142,13 +142,13 @@ export default function Home() {
           <div className={cn(wrap, "grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-16")}>
             <div>
               <Status>In development</Status>
-              <h2 className="type-h2 mt-5">See whose catch is early, and who&rsquo;s carrying the boat.</h2>
+              <h2 className="type-h2 mt-5">See whose catch is early, and who’s carrying the boat.</h2>
               <p className="type-body mt-6 max-w-[58ch] text-muted-foreground">
                 A rate meter tells you about the boat. The crew view will show you every seat in it: whose catch lands
                 late, who does the work through the middle of the drive, and whether port and starboard pull evenly.
               </p>
               <p className="type-body mt-4 max-w-[58ch] text-muted-foreground">
-                Each node records its own seat today. Comparing seats needs two things we&rsquo;re still building:
+                Each node records its own seat today. Comparing seats needs two things we’re still building:
                 calibration, so every node reads in kilograms, and Vieve, the RowTech cox box, which puts every seat on
                 one clock.
               </p>
@@ -249,7 +249,7 @@ export default function Home() {
             <p className="type-lead mt-5 max-w-2xl text-muted-foreground">[OWNER: dated build status]</p>
             <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-line">
               <div className="lg:pr-12">
-                <h3 className="type-h3">In the node&rsquo;s firmware now</h3>
+                <h3 className="type-h3">In the node’s firmware now</h3>
                 <ul className="mt-6 space-y-3">
                   {BUILT.map((t) => (
                     <li key={t} className="type-body flex gap-3">
@@ -259,12 +259,12 @@ export default function Home() {
                   ))}
                 </ul>
                 <p className="mt-6 max-w-[52ch] text-sm text-muted-foreground">
-                  Until a node is calibrated, force reads in raw sensor units. Timing, rate and rhythm don&rsquo;t need
+                  Until a node is calibrated, force reads in raw sensor units. Timing, rate and rhythm don’t need
                   calibration.
                 </p>
                 <h3 className="type-h3 mt-10">The team dashboard</h3>
                 <p className="type-body mt-3 max-w-[52ch]">
-                  Upload a node&rsquo;s session files (three data files and a meta file), or several seats as one outing in
+                  Upload a node’s session files (three data files and a meta file), or several seats as one outing in
                   a zip with a folder per seat, and go through it stroke by stroke. So far it has only run on a made-up
                   sample session.
                 </p>
@@ -316,7 +316,7 @@ export default function Home() {
             </p>
             <div className="mt-12 grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-10">
               <div className="border-t border-line pt-6">
-                <h3 className="type-h3">Who it&rsquo;s for</h3>
+                <h3 className="type-h3">Who it’s for</h3>
                 <p className="type-body mt-4 max-w-[48ch] text-muted-foreground">High school, college and club coaches, and their crews.</p>
               </div>
               <div className="border-t border-line pt-6">
@@ -336,7 +336,7 @@ export default function Home() {
                   </li>
                 </ul>
                 <p className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
-                  The beta&rsquo;s terms are on the{" "}
+                  The beta’s terms are on the{" "}
                   <Link href="/terms" className={inlineLink}>
                     Terms
                   </Link>{" "}
@@ -353,7 +353,7 @@ export default function Home() {
             <div>
               <h2 className="type-h2 max-w-[16ch]">Tell us about your crew.</h2>
               <p className="type-lead mt-6 max-w-[44ch] text-muted-foreground">
-                We&rsquo;re choosing beta crews now.
+                We’re choosing beta crews now.
               </p>
               <div className="mt-10">
                 <BetaLink from="closing" className="h-14 px-7 text-base max-sm:w-full" />

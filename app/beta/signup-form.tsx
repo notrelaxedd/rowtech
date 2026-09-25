@@ -68,7 +68,7 @@ function Done({ name }: { name?: string }) {
       <h1 ref={heading} tabIndex={-1} className="type-h2 mt-4 outline-none">
         {`${thanks(name)} We have your application.`}
       </h1>
-      <p className="type-lead mt-5 text-muted-foreground">Here&rsquo;s what happens next.</p>
+      <p className="type-lead mt-5 text-muted-foreground">Here’s what happens next.</p>
       <ol className="mt-8 space-y-6 border-t border-line pt-8">
         {NEXT_STEPS.map((s, i) => (
           <li key={s.t} className="grid grid-cols-[1.75rem_1fr] gap-3">
@@ -81,7 +81,7 @@ function Done({ name }: { name?: string }) {
         ))}
       </ol>
       <p className="mt-8 text-sm text-muted-foreground">
-        No email from us yet? That&rsquo;s expected: we reply personally, not automatically. [OWNER: how soon
+        No email from us yet? That’s expected: we reply personally, not automatically. [OWNER: how soon
         applicants can expect to hear back]
       </p>
       <p className="mt-3 text-sm text-muted-foreground">
@@ -284,7 +284,7 @@ export function SignupForm() {
 
         <div className="space-y-7 border-t border-line px-4 pt-6 pb-6">
           <fieldset aria-describedby={describe("role")}>
-            <legend className={label}>I&rsquo;m a&hellip; {optional}</legend>
+            <legend className={label}>I’m a… {optional}</legend>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {ROLES.map((r) => (
                 <label key={r.value} className={chip}>
@@ -344,7 +344,7 @@ export function SignupForm() {
           {pending ? (
             <>
               <LoaderCircle aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />
-              Sending&hellip;
+              Sending…
             </>
           ) : (
             <>

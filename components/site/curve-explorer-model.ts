@@ -36,7 +36,7 @@ export const METRICS: ReadonlyArray<{ id: MetricId; label: string; value: string
     id: "catch",
     label: "Catch",
     value: "≈3 ms",
-    body: `The node marks the catch where force crosses 15% of the rower's recent peak (${f1(M.threshold)} kg here) and interpolates between samples. Samples arrive every 12.5 ms; interpolated, the catch has a resolution of about 3 ms. That precision is what makes crew timing possible.`,
+    body: `The node marks the catch where force crosses 15% of the rower’s recent peak (${f1(M.threshold)} kg here) and interpolates between samples. Samples arrive every 12.5 ms; interpolated, the catch has a resolution of about 3 ms. That precision is what makes crew timing possible.`,
   },
   {
     id: "rise",
@@ -60,7 +60,7 @@ export const METRICS: ReadonlyArray<{ id: MetricId; label: string; value: string
     id: "release",
     label: "Release",
     value: `${f1(M.threshold / 2)} kg`,
-    body: `Release is called at half the catch threshold (${f1(M.threshold / 2)} kg here). That gap means a wobble at the finish can't split one stroke into two.`,
+    body: `Release is called at half the catch threshold (${f1(M.threshold / 2)} kg here). That gap means a wobble at the finish can’t split one stroke into two.`,
   },
   {
     id: "rhythm",

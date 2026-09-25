@@ -98,7 +98,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
       </div>
 
       <ComparePicker crews={crews.map((c) => ({ id: c.id, label: c.title || "Crew outing", at: c.recorded_at }))} a={a?.session.id} b={b?.session.id} />
-      {more && <p className="text-sm text-muted-foreground">The lists hold the {CREWS} most recent outings; older ones aren&rsquo;t in them.</p>}
+      {more && <p className="text-sm text-muted-foreground">The lists hold the {CREWS} most recent outings; older ones aren’t in them.</p>}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {[a, b].map((p, i) => (

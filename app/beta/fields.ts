@@ -47,7 +47,7 @@ export function requiredError(f: "name" | "email" | "organization", value: strin
     if (v.length > LIMITS.name) return `Keep it under ${LIMITS.name} characters.`;
   } else if (f === "email") {
     if (!v) return "We need an email address to reply to.";
-    if (v.length > LIMITS.email || !EMAIL.test(v)) return "That doesn't look like an email address. Check for a typo.";
+    if (v.length > LIMITS.email || !EMAIL.test(v)) return "That doesn’t look like an email address. Check for a typo.";
   } else if (f === "organization") {
     if (!v) return "Which club, school or program do you row with?";
     if (v.length > LIMITS.organization) return `Keep it under ${LIMITS.organization} characters.`;

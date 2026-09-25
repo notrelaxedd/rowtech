@@ -21,7 +21,7 @@ export default function NotFound() {
         <div className={wrap}>
           <h1 className="type-h1 max-w-[16ch]">Page not found.</h1>
           <p className="type-lead mt-6 max-w-[40rem] text-muted-foreground">
-            There&rsquo;s no page at this address. The link may be mistyped, or the page may have moved.
+            There’s no page at this address. The link may be mistyped, or the page may have moved.
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
             {ways.map((w) => (

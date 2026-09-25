@@ -53,7 +53,7 @@ const PEAK_AT = (() => {
 export function forceScreenLabel(seat: number, peakKg: number, avgKg: number) {
   return `Seat ${seat}: peak force ${peakKg.toFixed(1)} kilograms against a ten-stroke average of ${avgKg.toFixed(
     1
-  )}, with this stroke's force curve drawn over the last one.`;
+  )}, with this stroke’s force curve drawn over the last one.`;
 }
 
 export const FORCE_SCREEN_DEFAULTS = { peakKg: M.peakKg, avgKg: AVG };

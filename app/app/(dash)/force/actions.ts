@@ -48,7 +48,7 @@ async function teamId(): Promise<string> {
 
 class TooManyFilesError extends Error {
   constructor() {
-    super("That's more files than one upload takes. Upload one outing at a time: four files a seat, or a zip.");
+    super("That’s more files than one upload takes. Upload one outing at a time: four files a seat, or a zip.");
   }
 }
 
@@ -86,7 +86,7 @@ function readRecordedAt(v: FormDataEntryValue | null, typed: FormDataEntryValue 
 
 export async function uploadSession(_prev: UploadState, fd: FormData): Promise<UploadState> {
   const viewer = await getViewer();
-  if (viewer.state === "error") return { status: "error", message: "The upload couldn't be saved. Try again in a minute." };
+  if (viewer.state === "error") return { status: "error", message: "The upload couldn’t be saved. Try again in a minute." };
   if (viewer.state !== "allowed") return { status: "error", message: "Sign in with a beta account to upload." };
 
   let folders: Map<string, SessionFolder>;
@@ -96,11 +96,11 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     if (e instanceof VieveNotSupportedError || e instanceof ZipTooLargeError || e instanceof TooManyFilesError) {
       return { status: "error", message: e.message };
     }
-    return { status: "error", message: "That zip couldn't be opened." };
+    return { status: "error", message: "That zip couldn’t be opened." };
   }
 
   if (folders.size > UPLOAD_LIMITS.seats) {
-    return { status: "error", message: "That's more than nine seats. Upload one outing at a time." };
+    return { status: "error", message: "That’s more than nine seats. Upload one outing at a time." };
   }
 
   const parsed: Array<{ key: string; session: ParsedSession; raw: SessionFolder & { meta: Uint8Array } }> = [];
@@ -124,12 +124,12 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
       // Named after its folder when there are several; on its own, the
       // reason starts the sentence (a format error starts with a file name).
       const where = folders.size > 1 ? `${key}: ` : "";
-      const why = e instanceof SessionFormatError ? e.message : `${where ? "that" : "That"} session couldn't be read.`;
+      const why = e instanceof SessionFormatError ? e.message : `${where ? "that" : "That"} session couldn’t be read.`;
       unread.push(`${where}${why}`);
     }
   }
   if (unread.length === 1) return { status: "error", message: unread[0] };
-  if (unread.length > 1) return { status: "error", message: `${unread.length} seats couldn't be read.`, errors: unread };
+  if (unread.length > 1) return { status: "error", message: `${unread.length} seats couldn’t be read.`, errors: unread };
 
   const long = parsed.find(({ session }) => session.strokes.length > UPLOAD_LIMITS.strokes);
   if (long) {
@@ -146,11 +146,11 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
 
   const keys = parsed.map(({ session }) => `${session.meta.deviceId}/${session.meta.uuid}`);
   if (new Set(keys).size !== keys.length) {
-    return { status: "error", message: "Two of those folders hold the same session. Pick each seat's folder once." };
+    return { status: "error", message: "Two of those folders hold the same session. Pick each seat’s folder once." };
   }
 
   const recordedAt = readRecordedAt(fd.get("recorded_at"), fd.get("recorded_local"));
-  if (!recordedAt) return { status: "error", message: "That date and time couldn't be read. Pick it again." };
+  if (!recordedAt) return { status: "error", message: "That date and time couldn’t be read. Pick it again." };
   const boatName = (fd.get("boat") as string | null)?.trim() ?? "";
   const title = (fd.get("title") as string | null)?.trim() ?? "";
   // The form says so too, but a request doesn't have to come from the form.
@@ -163,7 +163,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     team = await teamId();
   } catch (e) {
     console.error("team setup failed", e);
-    return { status: "error", message: "We couldn't set your team up. Try again in a minute." };
+    return { status: "error", message: "We couldn’t set your team up. Try again in a minute." };
   }
 
   // A session already uploaded keeps its id, so its files stay where they are;
@@ -175,7 +175,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     .in("session_uuid", parsed.map((p) => p.session.meta.uuid));
   if (lookupError) {
     console.error("upload: session lookup failed", { code: lookupError.code, message: lookupError.message });
-    return { status: "error", message: "The upload couldn't be saved. Try again in a minute." };
+    return { status: "error", message: "The upload couldn’t be saved. Try again in a minute." };
   }
   const idOf = new Map((known ?? []).map((r) => [`${r.device_id}/${r.session_uuid}`, r.id]));
   const seats = parsed.map(({ session, raw }) => {
@@ -194,7 +194,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
       .gte("created_at", since);
     if (countError || count === null) {
       console.error("upload: quota check failed", { code: countError?.code, message: countError?.message });
-      return { status: "error", message: "The upload couldn't be saved. Try again in a minute." };
+      return { status: "error", message: "The upload couldn’t be saved. Try again in a minute." };
     }
     if (count + newSessions > UPLOAD_LIMITS.newSessionsPerDay) {
       return { status: "error", message: "Your team has uploaded as many sessions as one day allows. Try again tomorrow." };
@@ -249,7 +249,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
     const notStored = uploads.flatMap((u, i) => (results[i] === null ? [] : [{ path: u.path, message: results[i] }]));
     console.error("upload: files not stored", notStored);
     await discard();
-    return { status: "error", message: `${uploads[failed].name} couldn't be stored. Try again in a minute.` };
+    return { status: "error", message: `${uploads[failed].name} couldn’t be stored. Try again in a minute.` };
   }
 
   // Then every row -- boat, crew, seats, strokes, file rows -- in one
@@ -281,7 +281,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
   if (saveError || !saved) {
     console.error("upload: rows not saved", { code: saveError?.code, message: saveError?.message });
     await discard();
-    return { status: "error", message: "The upload couldn't be saved. Try again in a minute." };
+    return { status: "error", message: "The upload couldn’t be saved. Try again in a minute." };
   }
 
   // A crew upload shows on /app/cox and its compare page too.
@@ -292,7 +292,7 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
 
 export type DeleteResult = { ok: true } | { ok: false; message: string };
 
-const NOT_DELETED: DeleteResult = { ok: false, message: "The session wasn't deleted. Try again in a minute." };
+const NOT_DELETED: DeleteResult = { ok: false, message: "The session wasn’t deleted. Try again in a minute." };
 
 /**
  * Removes a session, its seats if it is a crew session, and their files. A
@@ -315,7 +315,7 @@ export async function deleteSession(id: string): Promise<DeleteResult> {
     console.error("delete: lookup failed", { message: (sessionError ?? kidsError ?? filesError)?.message });
     return NOT_DELETED;
   }
-  if (!session) return { ok: false, message: "That session isn't there any more." };
+  if (!session) return { ok: false, message: "That session isn’t there any more." };
 
   // The rows first, so a failure leaves everything as it was. The seats, their
   // strokes and file rows go with the session (the foreign keys cascade).
@@ -326,7 +326,7 @@ export async function deleteSession(id: string): Promise<DeleteResult> {
   }
   // The row is there (it was just read), so RLS kept it: only owners and
   // coaches delete sessions (supabase/migrations/*_team_roles.sql).
-  if (!deleted?.length) return { ok: false, message: "Only the team's owner or a coach can delete a session." };
+  if (!deleted?.length) return { ok: false, message: "Only the team’s owner or a coach can delete a session." };
 
   // Then the files. If this fails they are orphaned in Storage, but no row
   // points at a file that's gone.

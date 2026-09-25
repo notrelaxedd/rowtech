@@ -134,7 +134,7 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
     return {
       status: "error",
       errors: {},
-      message: "Something went wrong on our side and your application wasn't saved. Try again in a minute.",
+      message: "Something went wrong on our side and your application wasn’t saved. Try again in a minute.",
       values,
     };
   }
