@@ -104,6 +104,47 @@ test("the hero screen runs through a stroke and its counter stays at 147", async
   expect(seen).not.toContain("childList");
 });
 
+// The hero screen holds still until the page has loaded and the browser is
+// idle (PERF-003). Idle callbacks are held back here, so the screen must not
+// move after load until they are let go.
+test("the hero screen waits for load and an idle moment before it moves", async ({ page }) => {
+  type Win = { __idle: (() => void)[]; __moves: { loaded: boolean }[]; __loaded: boolean };
+  await page.addInitScript(() => {
+    const w = window as unknown as Win;
+    w.__idle = [];
+    w.__moves = [];
+    w.__loaded = false;
+    addEventListener("load", () => (w.__loaded = true));
+    // Held, not run: the test lets them go.
+    window.requestIdleCallback = ((cb: IdleRequestCallback) => {
+      w.__idle.push(() => cb({ didTimeout: false, timeRemaining: () => 50 }));
+      return w.__idle.length;
+    }) as typeof window.requestIdleCallback;
+    window.cancelIdleCallback = () => {};
+    // Only what the animator writes: the parser's own insertions are childList.
+    const ids = ["hero-sweep", "hero-cursor", "hero-peak"];
+    new MutationObserver((ms) => {
+      for (const m of ms) {
+        const el = m.target instanceof Element ? m.target : m.target.parentElement;
+        if (el && ids.some((id) => el.closest(`#${id}`))) w.__moves.push({ loaded: w.__loaded });
+      }
+    }).observe(document, { subtree: true, attributes: true, characterData: true });
+  });
+  await page.goto("/");
+  await page.waitForFunction(() => (window as unknown as Win).__loaded);
+  // Longer than a whole stroke: an animator that had started would have moved.
+  await page.waitForTimeout(3000);
+  expect(await page.evaluate(() => (window as unknown as Win).__moves.length)).toBe(0);
+
+  await page.evaluate(() => {
+    const w = window as unknown as Win;
+    for (const run of w.__idle.splice(0)) run();
+  });
+  await page.waitForFunction(() => (window as unknown as Win).__moves.length > 0, null, { timeout: 10000 });
+  const moves = await page.evaluate(() => (window as unknown as Win).__moves);
+  expect(moves.every((m) => m.loaded)).toBe(true);
+});
+
 test("the Force page shows the node as a 3D model with its notes around it", async ({ page }) => {
   await page.goto("/force");
   const figure = page.locator("#parts figure");
