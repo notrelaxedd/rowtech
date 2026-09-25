@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { readAttribution, takeCta, UTM } from "@/components/site/attribution";
 import { ctaPrimary, ctaSecondary } from "@/components/site/cta";
+import { PolicyLinks } from "@/components/site/legal";
 import { formField } from "@/components/ui/field";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
@@ -329,7 +330,9 @@ export function SignupForm() {
             </>
           )}
         </button>
-        <p className="text-sm text-muted-foreground">We&rsquo;ll only use this to talk to you about the RowTech beta.</p>
+        <p className="text-sm text-muted-foreground">
+          We use this to talk to you about the beta, and we note which link brought you here. <PolicyLinks />
+        </p>
       </div>
     </form>
     </>
