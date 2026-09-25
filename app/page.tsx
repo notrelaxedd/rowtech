@@ -15,6 +15,7 @@ import { SessionFiles } from "@/components/site/session-files";
 import { ForceMount } from "@/components/device/force-mount";
 import { ContactEmail, inlineLink } from "@/components/site/legal";
 import { openGraphBase, siteTitle, siteUrl, twitterBase } from "@/lib/site";
+import { legalCountry, legalEntity } from "@/lib/owner";
 import { cn } from "@/lib/utils";
 
 // The title and description are the root layout's defaults.
@@ -111,6 +112,10 @@ const FAQ = [
   {
     q: "How accurate is it?",
     a: "Timing is measured on the node itself, and it doesn’t need calibration. Force readings do: each node has to be calibrated against known weights, and we haven’t done that yet. Until we do, force reads in raw sensor units. The Force page says where calibration stands.",
+  },
+  {
+    q: "Are you RowTech Solutions?",
+    a: `No. RowTech (rowtech.app) is run by ${legalEntity} in ${legalCountry} and isn’t connected to RowTech Solutions, a separate company in Europe that also makes rowing sensors.`,
   },
 ];
 
