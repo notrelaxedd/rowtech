@@ -13,17 +13,28 @@ export const siteTitle = "RowTech: the force curve from every seat in the boat";
 /** Every tab title, site and dashboard alike: the page's, then the brand. */
 export const titleTemplate = "%s · RowTech";
 
+/**
+ * public/og.png, and what's in it: the alt text describes the picture, not
+ * the page (the share title already names that). It changes with the image.
+ */
+const shareImage = {
+  url: "/og.png",
+  width: 1200,
+  height: 630,
+  alt: "Concept render of a Force node, its screen showing a force curve, next to the home page's headline and an Apply for the beta button.",
+};
+
 // What every page shares when it's shared. Next replaces a parent's openGraph
 // and twitter wholesale when a page sets its own, so pages spread these in.
 export const openGraphBase = {
   siteName: "RowTech",
   locale: "en_US",
   type: "website",
-  images: [{ url: "/og.png", width: 1200, height: 630, alt: siteTitle }],
+  images: [shareImage],
 } satisfies Metadata["openGraph"];
 export const twitterBase = {
   card: "summary_large_image",
-  images: ["/og.png"],
+  images: [shareImage],
 } satisfies Metadata["twitter"];
 
 /**

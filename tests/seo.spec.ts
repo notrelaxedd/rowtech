@@ -34,6 +34,13 @@ for (const { path, title } of PAGES) {
     await expect(meta(page, "og:type")).toHaveAttribute("content", "website");
     await expect(meta(page, "og:image").first()).toHaveAttribute("content", /\/og\.png$/);
     await expect(meta(page, "twitter:card")).toHaveAttribute("content", "summary_large_image");
+    // The image's alt text describes the image; it doesn't repeat the title (CNT-020).
+    for (const key of ["og:image:alt", "twitter:image:alt"]) {
+      const alt = await meta(page, key).first().getAttribute("content");
+      expect(alt, key).toBeTruthy();
+      expect(alt!.toLowerCase(), key).not.toContain("the force curve from every seat in the boat");
+      expect(alt, key).not.toBe(title);
+    }
   });
 }
 
