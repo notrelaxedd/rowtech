@@ -53,6 +53,8 @@ test("specifications live on the product pages, not the home page", async ({ pag
   await expect(page.locator("#specs")).toContainText("3000 mAh");
   await page.goto("/vieve");
   await expect(page.locator("#specs")).toContainText("$499");
+  // The target price is a spec, not the pitch in the lead (CNT-021).
+  await expect(page.locator("main section").first()).not.toContainText("$499");
 });
 
 // Claims no stronger than what's built (LEG-010): the 3 ms is the interpolation's

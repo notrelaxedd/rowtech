@@ -27,7 +27,6 @@ export default function VievePage() {
           <h1 className="type-h1 mt-5 max-w-[16ch]">Vieve, the RowTech cox box.</h1>
           <p className="type-lead mt-6 max-w-[40rem] text-muted-foreground">
             Vieve will carry the cox&rsquo;s voice to the boat&rsquo;s speakers and be the hub every seat node reports to.
-            The target price is $499.
           </p>
         </div>
       </section>
