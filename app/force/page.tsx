@@ -6,7 +6,7 @@ import { FORCE_DEFAULT_VIEW, FORCE_NOTES } from "@/components/site/device-notes"
 import { ForceDevice } from "@/components/device/force-device";
 import { SpecTable } from "@/components/site/spec-table";
 import { FORCE_SPECS } from "@/lib/specs";
-import { pageMetadata, siteUrl } from "@/lib/site";
+import { pageMetadata } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
   title: "Force, the seat node",
@@ -26,21 +26,11 @@ const BOATHOUSE = [
   },
 ] as const;
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Product",
-  name: "RowTech Force",
-  brand: { "@type": "Organization", name: "RowTech", url: siteUrl },
-  category: "Rowing force measurement",
-  image: `${siteUrl}/og.png`,
-  url: `${siteUrl}/force`,
-  description:
-    "A seat node for rowing: a 50 kg load cell in the rigger backstay and a 3.5-inch screen. It records the force curve of every stroke and saves each session to microSD. In beta.",
-};
-
+// No Product structured data: Google only uses it with an offer, a review or
+// a rating, and Force isn't on sale. Add it with a real offer when it is.
 export default function ForcePage() {
   return (
-    <SitePage jsonLd={jsonLd}>
+    <SitePage>
       <section className="py-20 sm:py-28">
         <div className={wrap}>
           <h1 className="type-h1 max-w-[16ch]">Force, the seat node.</h1>

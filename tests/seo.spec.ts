@@ -61,3 +61,16 @@ test("the sitemap lists the public pages and nothing else", async ({ request, ba
   expect(locs.sort()).toEqual(["/", "/beta", "/force", "/vieve"]);
   expect(await res.text()).toContain(`<loc>${baseURL}/force</loc>`);
 });
+
+test("structured data: the home page's Organization, and no Product without an offer", async ({ page }) => {
+  const blocks = async () =>
+    (await page.locator('script[type="application/ld+json"]').allTextContents()).map((t) => JSON.parse(t));
+  await page.goto("/");
+  const home = await blocks();
+  expect(home).toHaveLength(1);
+  expect(home[0]["@graph"].map((n: { "@type": string }) => n["@type"])).toEqual(["Organization"]);
+  for (const path of ["/force", "/vieve", "/beta"]) {
+    await page.goto(path);
+    expect(JSON.stringify(await blocks())).not.toContain('"Product"');
+  }
+});
