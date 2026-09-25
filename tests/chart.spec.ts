@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { gridTicks, niceStep, paddedRange } from "../lib/chart";
+import { impulseCv, measureStroke, recentStrokes } from "../lib/stroke";
 
 test("the curve's grid is a handful of round lines, in kg or raw counts", () => {
   expect(niceStep(13.44)).toBe(20);
@@ -43,4 +44,16 @@ test("a chart's value axis is never upside down, and negative data isn't cut off
   expect(paddedRange(50, 50, 0.2)).toEqual({ bottom: 40, top: 60 });
   expect(paddedRange(2, 60, 0.2).bottom).toBe(0);
   expect(paddedRange(0, 0, 0.2)).toEqual({ bottom: 0, top: 0.2 });
+});
+
+// The home page's stroke chart prints what the model measures, not constants
+// typed in beside it (CNT-018).
+test("the stroke chart's figures are the ones measured from its curve", async ({ page }) => {
+  const m = measureStroke();
+  expect(Math.round(m.driveMs)).toBe(782);
+  await page.goto("/");
+  const chart = page.locator("#stroke");
+  await expect(chart).toContainText(`${m.rise.toFixed(0)} kg/s`);
+  await expect(chart).toContainText(`${m.peakKg.toFixed(1)} kg at ${m.peakPct.toFixed(0)}%`);
+  await expect(chart).toContainText(`CV ${impulseCv(recentStrokes()).toFixed(1)}%`);
 });
