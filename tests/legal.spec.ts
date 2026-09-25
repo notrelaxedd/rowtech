@@ -63,6 +63,20 @@ test.describe("signed in, but not on the beta list", () => {
   });
 });
 
+test.describe("signed in to the dashboard", () => {
+  test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
+
+  test("every dashboard page links to Privacy and Terms", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    for (const path of ["/app/force", "/app/cox"]) {
+      await page.goto(path);
+      await expect(page.getByRole("navigation", { name: "Dashboard" })).toBeVisible();
+      await expectPolicyLinks(page.getByRole("navigation", { name: "Footer" }));
+    }
+  });
+});
+
 // Owner placeholders are for people reading the page, never for crawlers or
 // share previews. Built in two parts so this file isn't itself a hit when the
 // owners search the code for placeholders still to fill in.
