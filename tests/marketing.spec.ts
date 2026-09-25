@@ -353,6 +353,21 @@ test("no page can be framed, and responses carry the basic security headers", as
   }
 });
 
+// A link to a section on the home page reads as that section's heading does,
+// so landing there confirms the jump (UX-011).
+test("header and footer links to home page sections use their headings' words", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/");
+  const links = page.locator('header nav a[href^="/#"], footer nav a[href^="/#"]');
+  expect(await links.count()).toBeGreaterThanOrEqual(5);
+  for (const link of await links.all()) {
+    const label = (await link.textContent())!.trim();
+    const id = (await link.getAttribute("href"))!.slice(2);
+    const heading = (await page.locator(`#${id} h2`).first().textContent())!.toLowerCase();
+    for (const word of label.toLowerCase().split(/\s+/)) expect(heading, `${label} -> #${id}`).toContain(word);
+  }
+});
+
 // The home page's sections must have their real height from the start, or a
 // link to one of them lands where the section would have been (UX-001).
 test("links to the FAQ land on the FAQ", async ({ page, isMobile }) => {
@@ -374,7 +389,7 @@ test("links to the FAQ land on the FAQ", async ({ page, isMobile }) => {
   const clickFaq = async () => {
     const header = page.locator("header");
     if (isMobile) await header.getByText("Menu", { exact: true }).click();
-    await header.getByRole("link", { name: "FAQ", exact: true }).filter({ visible: true }).click();
+    await header.getByRole("link", { name: "Questions", exact: true }).filter({ visible: true }).click();
     await expect(page).toHaveURL(/\/#faq$/);
   };
 
@@ -440,7 +455,7 @@ test("the phone menu closes on Escape, a tap outside, a scroll or a Tab out, and
   await page.keyboard.press("Enter");
   await isOpen();
   for (let i = 0; i < 5; i++) await page.keyboard.press("Tab");
-  await expect(panel.getByRole("link", { name: "FAQ" })).toBeFocused();
+  await expect(panel.getByRole("link", { name: "Questions" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.locator('header a[data-cta="nav"]')).toBeFocused();
   await isClosed();
@@ -484,7 +499,7 @@ test.describe("without JavaScript", () => {
     await page.goto("/");
     await page.locator("header summary").click();
     const panel = page.locator("header details nav");
-    await expect(panel.getByRole("link", { name: "FAQ" })).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Questions" })).toBeVisible();
     const box = (await panel.boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(375);

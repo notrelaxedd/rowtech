@@ -16,12 +16,12 @@ export function SiteFooter() {
         {/* Each link takes taps over 44px, drawn (and focus-ringed) at its
             text's size; rows sit far enough apart for those not to overlap. */}
         <nav aria-label="Footer" className="flex flex-wrap gap-6 text-sm text-muted-foreground">
-          <Link href="/#how" className={link}>How it works</Link>
+          <Link href="/#how" className={link}>Rigger to phone</Link>
           <Link href="/force" className={link}>Force</Link>
           <Link href="/force#specs" className={link}>Force specifications</Link>
           <Link href="/vieve" className={link}>Vieve</Link>
           <Link href="/vieve#specs" className={link}>Vieve specifications</Link>
-          <Link href="/#beta" className={link}>The beta</Link>
+          <Link href="/#beta" className={link}>Applying for the beta</Link>
         </nav>
       </div>
       <div className="mx-auto max-w-7xl px-5 pb-10 text-xs text-muted-foreground sm:px-8">
