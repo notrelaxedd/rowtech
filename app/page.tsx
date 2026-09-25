@@ -206,7 +206,7 @@ export default function Home() {
               />
             </div>
             <SectionEnd from="stroke" apply>
-              The node measures every stroke like this, on every seat that has one.
+              The node measures each stroke like this, on every seat that has one.
             </SectionEnd>
           </div>
         </section>

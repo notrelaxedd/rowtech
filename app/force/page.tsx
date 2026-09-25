@@ -55,7 +55,7 @@ export default function ForcePage() {
               label="Parts of the Force node"
               notes={FORCE_NOTES}
               defaultView={FORCE_DEFAULT_VIEW}
-              caption="Force node, concept design. It's wired to a 50 kg load cell in series on the rigger backstay."
+              caption="Force node, concept design, wired to a 50 kg load cell in series on the rigger backstay. Its screen shows example data, and the Vieve link as designed."
               poster={
                 <div className="flex h-full items-center justify-center p-6">
                   <ForceDevice idPrefix="poster" className="block h-auto w-full" />
