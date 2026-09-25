@@ -417,17 +417,21 @@ test("on a phone, small links and buttons take taps over 44x44 px", async ({ pag
     ["Force card", page.getByRole("link", { name: "See Force and its specifications" })],
     ["Vieve card", page.getByRole("link", { name: "See Vieve and its specifications" })],
   ];
-  for (const link of await page.getByRole("navigation", { name: "Footer" }).getByRole("link").all())
-    targets.push([`footer ${await link.textContent()}`, link]);
+  const footerLinks = await page.getByRole("navigation", { name: "Footer" }).getByRole("link").all();
+  for (const link of footerLinks) targets.push([`footer ${await link.textContent()}`, link]);
   for (const [name, target] of targets) {
     const a = await tapArea(target);
     expect(a.width, name).toBeGreaterThanOrEqual(44);
     expect(a.height, name).toBeGreaterThanOrEqual(44);
     expect(a.misses, name).toEqual([]);
   }
+  // The footer links are still drawn at their text's height, so a focus ring
+  // sits around the words, not the whole tap box.
+  for (const link of footerLinks) expect((await link.boundingBox())!.height).toBeLessThanOrEqual(24);
 
-  // The stroke chart's numbered markers. Where two sit closer than 44px, the
-  // later one takes the taps they share; none are lost to the chart under them.
+  // The stroke chart's numbered markers. A tap anywhere on a drawn marker picks
+  // that marker. Around it, a tap within 22px picks it, or, where two sit
+  // closer than 44px, one of the two; none are lost to the chart under them.
   const chart = page.locator("#stroke");
   await chart.scrollIntoViewIfNeeded();
   // The server's copy is static; wait for the live one to swap in.

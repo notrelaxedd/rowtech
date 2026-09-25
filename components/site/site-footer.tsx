@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Logo } from "./logo";
 
-const link = "hit-area relative py-3 hover:text-foreground";
+const link = "hit-area relative hover:text-foreground";
 
 export function SiteFooter() {
   return (
@@ -13,9 +13,9 @@ export function SiteFooter() {
             Seat-by-seat force measurement for rowing. In beta.
           </p>
         </div>
-        {/* Each link is a 44px-tall target; the nav's negative margin keeps
-            the footer's outer spacing as it was. */}
-        <nav aria-label="Footer" className="-my-3 flex flex-wrap gap-x-6 text-sm text-muted-foreground">
+        {/* Each link takes taps over 44px, drawn (and focus-ringed) at its
+            text's size; rows sit far enough apart for those not to overlap. */}
+        <nav aria-label="Footer" className="flex flex-wrap gap-6 text-sm text-muted-foreground">
           <Link href="/#how" className={link}>How it works</Link>
           <Link href="/force" className={link}>Force</Link>
           <Link href="/force#specs" className={link}>Force specifications</Link>
