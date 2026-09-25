@@ -45,7 +45,7 @@ export default function ForcePage() {
       <section id="parts" className="border-t border-line py-24 sm:py-28">
         <div className={wrap}>
           <div className="max-w-3xl">
-            <h2 className="type-h2">What the rower sees on the water.</h2>
+            <h2 className="type-h2">What the rower will see on the water.</h2>
             <p className="type-lead mt-5 text-muted-foreground">
               Their own peak and their own curve, on a 3.5″ screen, with three keys down its edge.
             </p>
