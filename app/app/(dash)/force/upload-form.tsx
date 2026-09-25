@@ -158,13 +158,13 @@ export function UploadForm() {
           <span className="text-sm font-semibold">
             Boat <span className="font-normal text-muted-foreground">(optional)</span>
           </span>
-          <input type="text" name="boat" maxLength={120} placeholder="Club VIII" className={cn(field, "mt-1.5")} />
+          <input type="text" name="boat" maxLength={120} placeholder="Club 8+" className={cn(field, "mt-1.5")} />
         </label>
         <label className="sm:col-span-2">
           <span className="text-sm font-semibold">
             Session name <span className="font-normal text-muted-foreground">(optional)</span>
           </span>
-          <input type="text" name="title" maxLength={120} placeholder="4 x 750m, rate 28" className={cn(field, "mt-1.5")} />
+          <input type="text" name="title" maxLength={120} placeholder="4 × 750 m, rate 28" className={cn(field, "mt-1.5")} />
         </label>
       </div>
 

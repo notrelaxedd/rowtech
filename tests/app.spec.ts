@@ -278,7 +278,7 @@ test.describe("signed in", () => {
     // A seat with no figures is left out of the outing's, not counted as 0.
     await page.reload();
     await expect(cell("Avg peak")).toHaveText(fmt(summaries[1].avgPeak));
-    await expect(cell("Drive : recovery")).toHaveText(`1 : ${fmt(summaries[1].avgRecoveryMs / summaries[1].avgDriveMs, 2)}`);
+    await expect(cell("Drive:recovery")).toHaveText(`1:${fmt(summaries[1].avgRecoveryMs / summaries[1].avgDriveMs, 2)}`);
     await expect(cell("Consistency")).toHaveText(`CV ${fmt(summaries[1].consistencyPct!)}%`);
     // Two strokes have no CV; with no seat left that has one, it's a dash.
     const other = rows![1].session_id;

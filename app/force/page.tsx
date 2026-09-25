@@ -22,7 +22,7 @@ const BOATHOUSE = [
   },
   {
     t: "Calibration, and where it stands",
-    d: "The firmware calibrates against up to five known weights and reports its own worst-case error. We haven’t calibrated a node yet, so for now force reads in raw sensor units. The timing measures don’t need calibration.",
+    d: "The firmware calibrates against up to 5 known weights and reports its own worst-case error. We haven’t calibrated a node yet, so for now force reads in raw sensor units. The timing measures don’t need calibration.",
   },
 ] as const;
 

@@ -83,6 +83,22 @@ test("the specifications claim no more than what's built", async ({ page }) => {
   }
 });
 
+// One style for numbers and units (CNT-007): no cell ends in a full stop, a
+// rate is in Hz, and a percent sign sits against its number.
+test("the specifications and the stroke chart write numbers one way", async ({ page }) => {
+  for (const path of ["/force", "/vieve"]) {
+    await page.goto(path);
+    for (const cell of await page.locator("#specs dd").allTextContents()) {
+      expect(cell.trim(), `${path}: ${cell}`).not.toMatch(/\.$/);
+    }
+    await expect(page.locator("#specs")).not.toContainText("a second");
+  }
+  await page.goto("/");
+  const chart = page.locator("#stroke");
+  await expect(chart).not.toContainText(/\d %/);
+  await expect(chart).not.toContainText(" & ");
+});
+
 // The questions a coach asks about Force have a row in its specifications,
 // even while the answer is still to come (BIZ-004, BIZ-008, BIZ-022), and the
 // longer rows wrap on a phone instead of widening the page.

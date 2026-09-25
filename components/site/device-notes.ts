@@ -112,7 +112,7 @@ export const VIEVE_NOTES: readonly Note3D[] = [
   {
     id: "screen",
     label: "Screen",
-    body: "Planned: 5″, rated at 1000 nits.",
+    body: "Planned: 5″, 1000 nits.",
     anchor: [-61.2, -6, VZ],
     side: "left",
     view: [0.12, 0.05],

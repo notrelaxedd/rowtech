@@ -74,7 +74,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
 
   const avgOf = (v: number | null) => (v === null ? "—" : fmt(v));
   const ratio = (p: typeof a) =>
-    p && p.avgRecovery !== null && p.avgDrive !== null ? `1 : ${fmt(p.avgRecovery / (p.avgDrive || 1), 2)}` : "—";
+    p && p.avgRecovery !== null && p.avgDrive !== null ? `1:${fmt(p.avgRecovery / (p.avgDrive || 1), 2)}` : "—";
   const cv = (p: typeof a) => (p && p.consistency !== null ? `CV ${fmt(p.consistency)}%` : "—");
   const rows: Array<[string, string, string]> = [
     ["Seats", a ? String(a.seats) : "—", b ? String(b.seats) : "—"],
@@ -83,7 +83,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
     ["Avg split", a ? fmtSplit(a.avgSplit) : "—", b ? fmtSplit(b.avgSplit) : "—"],
     ["Avg peak", a ? avgOf(a.avgPeak) : "—", b ? avgOf(b.avgPeak) : "—"],
     ["Avg impulse", a ? avgOf(a.avgImpulse) : "—", b ? avgOf(b.avgImpulse) : "—"],
-    ["Drive : recovery", ratio(a), ratio(b)],
+    ["Drive:recovery", ratio(a), ratio(b)],
     ["Consistency", cv(a), cv(b)],
   ];
 
