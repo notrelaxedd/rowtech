@@ -44,6 +44,14 @@ for (const { path, title } of PAGES) {
   });
 }
 
+// The category words a coach searches for, where the page already says what
+// Force is (BIZ-024).
+test("/force names its category in its description and its lead", async ({ page }) => {
+  await page.goto("/force");
+  await expect(meta(page, "description")).toHaveAttribute("content", /rowing force measurement/i);
+  await expect(page.locator("main section").first()).toContainText(/rowing force measurement/i);
+});
+
 test("pages that set no canonical don't inherit the home page's", async ({ page }) => {
   for (const path of ["/app/login", "/no-such-page"]) {
     await page.goto(path);

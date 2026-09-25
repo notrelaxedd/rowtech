@@ -11,7 +11,7 @@ import { pageMetadata } from "@/lib/site";
 export const metadata: Metadata = pageMetadata({
   title: "Force, the seat node",
   description:
-    "The Force node sits on each seat's rigger backstay, records the force curve of every stroke and shows it to the rower live. Specifications and parts.",
+    "Seat-by-seat rowing force measurement: the Force node sits on each seat's rigger backstay, records the force curve of every stroke and shows it to the rower live. Specifications and parts.",
   path: "/force",
 });
 
@@ -35,8 +35,9 @@ export default function ForcePage() {
         <div className={wrap}>
           <h1 className="type-h1 max-w-[16ch]">Force, the seat node.</h1>
           <p className="type-lead mt-6 max-w-[40rem] text-muted-foreground">
-            One on each seat&rsquo;s rigger backstay. It records the force curve of every stroke, shows the rower their
-            own peak and curve live, and saves the practice for you to download at the dock.
+            Seat-by-seat rowing force measurement: one node on each seat&rsquo;s rigger backstay. It records the force
+            curve of every stroke, shows the rower their own peak and curve live, and saves the practice for you to
+            download at the dock.
           </p>
         </div>
       </section>
