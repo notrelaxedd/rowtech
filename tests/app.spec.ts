@@ -26,6 +26,8 @@ test("a stale magic link says so instead of failing quietly", async ({ page }) =
   await page.goto("/auth/callback");
   await expect(page).toHaveURL(/\/app\/login\?error=link/);
   await expect(page.getByRole("alert").first()).toContainText(/expired|already used/i);
+  // No new link is sent by itself: the page says how to get one (CNT-003).
+  await expect(page.getByRole("alert").first()).toContainText("Enter your email for a new one.");
 });
 
 test("/api/health answers 200 when Supabase does, and is never cached", async ({ request }) => {

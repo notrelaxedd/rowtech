@@ -91,6 +91,15 @@ export const FORCE_NOTES: readonly Note3D[] = [
     view: [-0.45, 0.1],
     outline: ring(36.6, -10.2, 6.3, 14.3),
   },
+  {
+    id: "power",
+    label: "POWER",
+    body: "Hold it to switch the node on or off.",
+    anchor: [36.6, -22.6, 14.2],
+    side: "right",
+    view: [-0.45, 0.1],
+    outline: ring(36.6, -22.6, 6.3, 14.3),
+  },
 ];
 
 // Vieve: screen top-left at (-56.8, 24), 0.0925 units per screen px.

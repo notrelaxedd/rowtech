@@ -15,7 +15,7 @@ export function RequestAccess({ email, signOut }: { email: string; signOut: () =
         <h1 className="type-h2 mt-8 text-[2rem]">The dashboard is for beta crews.</h1>
         <p className="type-body mt-5 text-muted-foreground">
           You&rsquo;re signed in as <span className="text-foreground">{email}</span>, which isn&rsquo;t on the beta list
-          yet. Apply and tell us about your boat: we&rsquo;ll turn your account on when your crew joins.
+          yet. Apply and tell us about your boats: we&rsquo;ll turn your account on when your crew joins.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/beta" data-cta="app" className={cn(ctaPrimary, "max-sm:w-full")}>

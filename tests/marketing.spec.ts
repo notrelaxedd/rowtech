@@ -27,6 +27,19 @@ test("the marketing page renders, with the beta offered in four places", async (
   await expect(page.locator("#beta-scope")).toContainText("In the node’s firmware now");
 });
 
+// The home page's copy says the same as the form and the dashboard (CNT-003).
+test("the home page agrees with the beta form and the dashboard", async ({ page }) => {
+  await page.goto("/");
+  // The dashboard's words for the two sides of the boat.
+  await expect(page.locator("#crew")).toContainText("port and starboard");
+  // The form's optional questions, the role among them.
+  await expect(page.locator("#beta")).toContainText("Your role, which boats you row, where you are and a note are optional.");
+  // A node writes four files: the three drawn in step 3, and a meta file.
+  await expect(page.locator("#beta-scope")).toContainText("three data files and a meta file");
+  await page.goto("/beta");
+  await expect(page.locator("form summary")).toContainText("Tell us about your boats");
+});
+
 test("specifications live on the product pages, not the home page", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("main")).not.toContainText("3000 mAh");
@@ -181,6 +194,9 @@ test("the Force page shows the node as a 3D model with its notes around it", asy
   await expect(figure).toContainText("Drag the model, or use the arrow keys, to turn it.");
   await expect(figure.getByRole("img", { name: /Force seat node/ })).toHaveCount(0);
   await expect(page.locator("#parts")).toContainText("Steps through the rower’s screens");
+  // All three keys the page mentions have a note (CNT-003).
+  const notes = page.getByRole("list", { name: "Parts of the Force node" });
+  for (const key of ["VIEW", "TARE", "POWER"]) await expect(notes.getByRole("button", { name: new RegExp(key) })).toHaveCount(1);
 });
 
 // three.js is a quarter of a megabyte gzipped: only fetched when someone

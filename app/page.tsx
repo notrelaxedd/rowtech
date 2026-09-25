@@ -144,7 +144,7 @@ export default function Home() {
               <h2 className="type-h2 mt-5">See whose catch is early, and who&rsquo;s carrying the boat.</h2>
               <p className="type-body mt-6 max-w-[58ch] text-muted-foreground">
                 A rate meter tells you about the boat. The crew view will show you every seat in it: whose catch lands
-                late, who does the work through the middle of the drive, and whether bow side and stroke side pull evenly.
+                late, who does the work through the middle of the drive, and whether port and starboard pull evenly.
               </p>
               <p className="type-body mt-4 max-w-[58ch] text-muted-foreground">
                 Each node records its own seat today. Comparing seats needs two things we&rsquo;re still building:
@@ -256,8 +256,9 @@ export default function Home() {
                 </p>
                 <h3 className="type-h3 mt-10">The team dashboard</h3>
                 <p className="type-body mt-3 max-w-[52ch]">
-                  Upload a node&rsquo;s four session files, or several seats as one outing in a zip with a folder per
-                  seat, and go through it stroke by stroke. So far it has only run on a made-up sample session.
+                  Upload a node&rsquo;s session files (three data files and a meta file), or several seats as one outing in
+                  a zip with a folder per seat, and go through it stroke by stroke. So far it has only run on a made-up
+                  sample session.
                 </p>
               </div>
               <div className="lg:pl-12">
@@ -310,7 +311,7 @@ export default function Home() {
               <div className="border-t border-line pt-6">
                 <h3 className="type-h3">Applying</h3>
                 <p className="type-body mt-4 max-w-[48ch] text-muted-foreground">
-                  The form asks for your name, email and program. Which boats you row, where you are and a note are optional.
+                  The form asks for your name, email and program. Your role, which boats you row, where you are and a note are optional.
                 </p>
               </div>
               <div className="border-t border-line pt-6">

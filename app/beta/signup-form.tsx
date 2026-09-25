@@ -269,7 +269,7 @@ export function SignupForm() {
       >
         <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace [&::-webkit-details-marker]:hidden">
           <span>
-            <span className="font-semibold">Tell us about your boat</span>{" "}
+            <span className="font-semibold">Tell us about your boats</span>{" "}
             <span className="text-sm text-muted-foreground">optional, and it helps us pick crews</span>
           </span>
           <span aria-hidden className="relative size-3.5 shrink-0">
