@@ -304,6 +304,28 @@ test("on a phone, the stroke chart's label and chips sit clear", async ({ page }
   expect(last.width).toBeCloseTo((await list.boundingBox())!.width, 0);
 });
 
+// The crew view scrolls sideways on a phone, and is a Tab stop so the
+// keyboard can scroll it; where it fits, it isn't one (A11Y-008).
+test("the crew view is a Tab stop only while it scrolls", async ({ page }) => {
+  const region = page.getByRole("region", { name: /^Crew view illustration/ });
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/");
+  await region.scrollIntoViewIfNeeded();
+  await expect(region).toHaveAttribute("tabindex", "0");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(region).not.toHaveAttribute("tabindex");
+  await page.setViewportSize({ width: 375, height: 812 });
+  await expect(region).toHaveAttribute("tabindex", "0");
+});
+
+test.describe("without JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+  test("the crew view is a Tab stop, since it may scroll", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("region", { name: /^Crew view illustration/ })).toHaveAttribute("tabindex", "0");
+  });
+});
+
 test("the Vieve page shows it as a 3D model too", async ({ page, isMobile }) => {
   await page.goto("/vieve");
   const figure = page.locator("#parts figure");

@@ -1,4 +1,5 @@
 import { EXAMPLE, driveShape, toPath } from "@/lib/stroke";
+import { ScrollRegion } from "./scroll-region";
 
 // Illustration of the crew view in development: eight seats, one stroke, drawn
 // as a ridgeline from the catch to the peak. Each ridge rises into the lane
@@ -49,7 +50,7 @@ export function CrewLanes() {
   const ms = (v: number) => Math.abs(Math.round(v - MEAN));
   return (
     <figure className="m-0">
-      <div role="region" className="instrument overflow-x-auto rounded-lg" tabIndex={0} aria-label="Crew view illustration, scrolls sideways on narrow screens">
+      <ScrollRegion className="instrument overflow-x-auto rounded-lg" label="Crew view illustration, scrolls sideways on narrow screens">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           role="img"
@@ -116,7 +117,7 @@ export function CrewLanes() {
             );
           })}
         </svg>
-      </div>
+      </ScrollRegion>
       <figcaption className="mt-3 max-w-[70ch] text-sm text-muted-foreground">
         <span className="sm:hidden">Swipe the chart sideways to see every seat&rsquo;s offset. </span>
         Illustration of the crew view. Each ridge is one seat from catch to peak; dots mark each catch, yellow when more
