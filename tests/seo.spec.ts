@@ -42,3 +42,22 @@ test("pages that set no canonical don't inherit the home page's", async ({ page 
     await expect(meta(page, "og:url")).toHaveCount(0);
   }
 });
+
+test("robots.txt keeps crawlers out of the dashboard and points to the sitemap", async ({ request, baseURL }) => {
+  const res = await request.get("/robots.txt");
+  expect(res.status()).toBe(200);
+  const body = await res.text();
+  expect(body).toMatch(/^User-Agent: \*$/m);
+  expect(body).toMatch(/^Allow: \/$/m);
+  expect(body).toMatch(/^Disallow: \/app\/$/m);
+  expect(body).toMatch(/^Disallow: \/auth\/$/m);
+  expect(body).toMatch(new RegExp(`^Sitemap: ${baseURL}/sitemap\\.xml$`, "m"));
+});
+
+test("the sitemap lists the public pages and nothing else", async ({ request, baseURL }) => {
+  const res = await request.get("/sitemap.xml");
+  expect(res.status()).toBe(200);
+  const locs = [...(await res.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+  expect(locs.sort()).toEqual(["/", "/beta", "/force", "/vieve"]);
+  expect(await res.text()).toContain(`<loc>${baseURL}/force</loc>`);
+});
