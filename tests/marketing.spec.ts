@@ -51,6 +51,29 @@ test("reduced motion leaves the pages in their finished state", async ({ page })
   await expect(page.getByRole("application", { name: "3D model: Parts of Vieve" }).locator("canvas")).toBeVisible({ timeout: 15000 });
 });
 
+// The hero screen replays the page's example stroke, so its stroke counter
+// says 147 as the rest of the page and the share image do (LEAD-007).
+// It changes the big number's text in place: replacing the text node instead
+// restyles the whole page on every frame (PERF-003).
+test("the hero screen runs through a stroke and its counter stays at 147", async ({ page }) => {
+  await page.goto("/");
+  type Seen = { __peak: string[] };
+  await page.evaluate(() => {
+    const seen: string[] = ((window as unknown as Seen).__peak = []);
+    const peak = document.getElementById("hero-peak")!;
+    new MutationObserver((ms) => seen.push(...ms.map((m) => m.type))).observe(peak, { childList: true, characterData: true, subtree: true });
+  });
+  // The screen comes up with a finished stroke; the next drive clears the
+  // peak, which then climbs back to the stroke's own.
+  await page.waitForFunction(() => document.getElementById("hero-peak")?.textContent !== "61.4", null, { timeout: 15000 });
+  await page.waitForFunction(() => document.getElementById("hero-peak")?.textContent === "61.4", null, { timeout: 15000 });
+  const screen = page.locator("#hero-peak").locator("xpath=ancestor::*[local-name()='svg'][1]");
+  await expect(screen).toContainText(/STROKE\s*147(?!\d)/);
+  const seen = await page.evaluate(() => (window as unknown as Seen).__peak);
+  expect(seen).toContain("characterData");
+  expect(seen).not.toContain("childList");
+});
+
 test("the Force page shows the node as a 3D model with its notes around it", async ({ page }) => {
   await page.goto("/force");
   const figure = page.locator("#parts figure");

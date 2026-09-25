@@ -183,7 +183,7 @@ export function ForceScreen({
               {label}
             </text>
             <text x={x} y={H - 16} fill={SCREEN.value} fontFamily={sans} fontSize={30} fontWeight={700} style={{ fontStretch: "108%" }}>
-              <tspan id={label === "STROKE" ? `${idPrefix}-stroke` : undefined}>{value}</tspan>
+              {value}
               {unit && (
                 <tspan fill={SCREEN.label} fontFamily={mono} fontSize={13} fontWeight={400}>
                   {" "}
