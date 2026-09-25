@@ -80,7 +80,8 @@ function Done({ name }: { name?: string }) {
         ))}
       </ol>
       <p className="mt-8 text-sm text-muted-foreground">
-        No email from us yet? That&rsquo;s expected: we reply personally, not automatically.
+        No email from us yet? That&rsquo;s expected: we reply personally, not automatically. [OWNER: how soon
+        applicants can expect to hear back]
       </p>
       <p className="mt-3 text-sm text-muted-foreground">
         Something to add, or a question? Write to <ContactEmail />.
