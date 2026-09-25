@@ -1,4 +1,4 @@
-import type { PointerEvent, ReactNode, Ref } from "react";
+import { Fragment, type PointerEvent, type ReactNode, type Ref } from "react";
 import { EXAMPLE, strokeForce } from "@/lib/stroke";
 import { cn } from "@/lib/utils";
 import {
@@ -79,31 +79,55 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
             </div>
 
             <div ref={chartRef} onPointerMove={on?.move} onPointerLeave={on?.leave} className="relative select-none">
-              {/* each measure, pinned to the part of the curve it's read from */}
+              {/* each measure, pinned to the part of the curve it's read from.
+                  Picked by a click or a key, not by pointing, so the words
+                  under the chart don't change as the mouse crosses it. */}
               {PINS.map((p, i) => {
                 const m = metric(p.id);
                 const lit_ = active === p.id;
+                const pick = setActive && (() => setActive(p.id));
+                const place = { left: `${(p.chip[0] / W) * 100}%`, top: `${(p.chip[1] / H) * 100}%` };
+                const look = cn(
+                  "absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-md border transition-colors duration-200",
+                  lit_ ? "border-trace bg-[#0b3a44] text-foreground" : "border-line bg-panel/95 text-muted-foreground hover:border-trace/60 hover:text-foreground"
+                );
                 return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    aria-pressed={lit_}
-                    aria-label={`${m.label}: ${m.value}`}
-                    onClick={setActive && (() => setActive(p.id))}
-                    onPointerEnter={setActive && (() => setActive(p.id))}
-                    className={cn(
-                      "absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-md border text-left transition-colors duration-200",
-                      "flex size-7 items-center justify-center text-xs font-bold tabular-nums sm:block sm:size-auto sm:px-2.5 sm:py-1.5 sm:font-normal",
-                      lit_ ? "border-trace bg-[#0b3a44] text-foreground" : "border-line bg-panel/95 text-muted-foreground hover:border-trace/60 hover:text-foreground"
-                    )}
-                    style={{ left: `${(p.chip[0] / W) * 100}%`, top: `${(p.chip[1] / H) * 100}%` }}
-                  >
-                    <span className="sm:hidden">{i + 1}</span>
-                    <span className="hidden whitespace-nowrap sm:block">
-                      <span className="block text-xs font-semibold text-foreground">{m.label}</span>
-                      <span className="block text-xs tabular-nums text-trace">{m.value}</span>
-                    </span>
-                  </button>
+                  <Fragment key={p.id}>
+                    {/* Phones: a numbered marker for pointing at. The chips
+                        under the chart are the same choices for the keyboard
+                        and screen readers, so it's out of both. */}
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      aria-hidden
+                      onClick={pick}
+                      className={cn(look, "flex size-7 items-center justify-center text-xs font-bold tabular-nums sm:hidden")}
+                      style={place}
+                    >
+                      {i + 1}
+                    </button>
+                    {/* Wider screens: the measure's name and value, which are
+                        also its accessible name. */}
+                    <button
+                      type="button"
+                      aria-pressed={lit_}
+                      onClick={pick}
+                      className={cn(look, "hidden px-2.5 py-1.5 text-left text-xs whitespace-nowrap tabular-nums sm:block")}
+                      style={place}
+                    >
+                      <span className="block font-semibold text-foreground">{m.label}</span>{" "}
+                      <span className="block text-trace">{m.value}</span>
+                    </button>
+                    {/* Phones: an invisible 44px tap box around the marker, in a
+                        layer under all of them, so where two are close a tap on
+                        either drawn marker still picks that one. */}
+                    <span
+                      aria-hidden
+                      onClick={pick}
+                      className="absolute size-11 -translate-x-1/2 -translate-y-1/2 sm:hidden"
+                      style={place}
+                    />
+                  </Fragment>
                 );
               })}
             <svg
@@ -163,9 +187,6 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
               {/* catch: threshold, raw samples, interpolated crossing */}
               <g className={fade} style={{ opacity: lit("catch") }}>
                 <line x1={PX0} x2={PX1} y1={y(M.threshold)} y2={y(M.threshold)} stroke="var(--warn)" strokeOpacity={0.7} strokeDasharray="4 4" />
-                <text x={PX1} y={y(M.threshold) - 6} textAnchor="end" className="fill-warn tabular-nums text-[10px] max-sm:text-[17px]">
-                  catch threshold
-                </text>
                 {NEAR_CATCH.map(([t, kg]) => (
                   <circle key={t} cx={x(t)} cy={y(kg)} r={3} fill="var(--background)" stroke="white" strokeWidth={1.25} />
                 ))}
@@ -205,6 +226,18 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
                   <circle cx={p.at[0]} cy={p.at[1]} r={3.5} fill="var(--panel)" stroke={active === p.id ? "var(--trace)" : "var(--foreground)"} strokeWidth={1.5} />
                 </g>
               ))}
+              {/* The threshold's label, drawn over the leader lines with a halo.
+                  Below lg it sits under the line, clear of marker 7 on phones
+                  and of the Rhythm callout, which the chart shrinks under. */}
+              <text
+                x={PX1}
+                y={y(M.threshold) - 6}
+                textAnchor="end"
+                className={cn("rt-halo fill-warn tabular-nums text-[10px] max-sm:translate-y-[25px] max-sm:text-[17px] sm:max-lg:translate-y-[19px]", fade)}
+                style={{ opacity: lit("catch") }}
+              >
+                catch threshold
+              </text>
               {cursor}
             </svg>
             </div>
@@ -251,11 +284,12 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
             </div>
           </div>
 
+          {/* Seven in two columns: the last one takes the whole row. */}
           <ol aria-label="Stroke metrics" className="mt-4 grid grid-cols-2 gap-2 sm:hidden">
             {PINS.map((p, i) => {
               const m = metric(p.id);
               return (
-                <li key={p.id}>
+                <li key={p.id} className="last:col-span-2">
                   <button
                     type="button"
                     aria-pressed={active === p.id}
@@ -282,7 +316,10 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
         </div>
       </div>
 
-      <p className="mx-auto mt-8 max-w-4xl text-sm text-muted-foreground">Example data.</p>
+      <p className="mx-auto mt-8 max-w-4xl text-sm text-muted-foreground">
+        Example data, in kilograms as a calibrated node will read. Until a node is calibrated, force reads in raw sensor
+        units.
+      </p>
     </div>
   );
 }

@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { href: "/app/force", label: "Force" },
-  { href: "/app/cox", label: "Cox" },
+  { href: "/app/force", label: "Sessions" },
+  { href: "/app/cox", label: "Crew" },
 ];
 
 export function DashNav() {

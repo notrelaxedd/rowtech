@@ -15,7 +15,7 @@ export function DeleteSession({ id, seats }: { id: string; seats: number }) {
 
   const remove = () => {
     const what = seats ? `this outing and its ${seats} seat${seats === 1 ? "" : "s"}` : "this session";
-    if (!confirm(`Delete ${what}, with every stroke and file? This can't be undone.`)) return;
+    if (!confirm(`Delete ${what}, with every stroke and file? This can’t be undone.`)) return;
     setMessage(null);
     startDeleting(async () => {
       const result = await deleteSession(id);

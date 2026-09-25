@@ -11,7 +11,10 @@ export const ctaSecondary = cn(
   "border border-foreground/25 text-foreground hover:border-foreground/50 hover:bg-foreground/[0.04]"
 );
 
-/** Every entry into the funnel says where it came from (`?from=`). */
+/**
+ * Every entry into the funnel says where it came from (`data-cta`), while all
+ * of them go to the one /beta: the form picks the tag up in the browser.
+ */
 export function BetaLink({
   from,
   children = "Apply for the beta",
@@ -22,7 +25,7 @@ export function BetaLink({
   className?: string;
 }) {
   return (
-    <Link href={`/beta?from=${from}`} data-cta={from} className={cn(ctaPrimary, className)}>
+    <Link href="/beta" data-cta={from} className={cn(ctaPrimary, className)}>
       {children}
     </Link>
   );

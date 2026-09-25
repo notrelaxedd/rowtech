@@ -54,7 +54,7 @@ export function CoxBoxView({ lit = 8 }: { /** Seats drawn on the clock, bow firs
         </svg>
         <div className="mt-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <p className="text-sm text-muted-foreground">
-            Bow to stern: <span className="font-semibold text-foreground">{lit} of 8</span>{" "}seats on Vieve&rsquo;s clock
+            Bow to stern: <span className="font-semibold text-foreground">{lit} of 8</span>{" "}seats on Vieve’s clock
           </p>
           <p className="flex items-baseline gap-2">
             <span className="text-sm text-muted-foreground">Target: every seat within</span>

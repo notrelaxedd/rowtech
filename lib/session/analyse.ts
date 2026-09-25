@@ -71,7 +71,7 @@ export const METRICS = [
   { id: "peakPos", label: "Peak position", unit: "%", get: (s: StrokeRow) => s.peakPosPct },
   { id: "driveMs", label: "Drive", unit: " ms", get: (s: StrokeRow) => s.driveMs },
   { id: "recoveryMs", label: "Recovery", unit: " ms", get: (s: StrokeRow) => s.recoveryMs },
-  { id: "ratio", label: "Drive : recovery", unit: "", get: (s: StrokeRow) => (s.driveMs ? s.recoveryMs / s.driveMs : 0) },
+  { id: "ratio", label: "Drive:recovery", unit: "", get: (s: StrokeRow) => (s.driveMs ? s.recoveryMs / s.driveMs : 0) },
 ] as const;
 
 export type MetricId = (typeof METRICS)[number]["id"];

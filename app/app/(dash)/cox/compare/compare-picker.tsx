@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 /** "Title · date", with the date in the viewer's zone and locale. */
 const optionText = (label: string, at: string) => `${label} · ${new Date(at).toLocaleDateString()}`;
 
-/** Which two pieces to lay side by side. Kept in the URL, so it can be shared. */
+/** Which two outings to lay side by side. Kept in the URL, so it can be shared. */
 export function ComparePicker({
   crews,
   a,

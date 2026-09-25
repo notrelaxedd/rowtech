@@ -1,7 +1,7 @@
 "use server";
 
 import { supabaseAnon } from "@/lib/supabase/anon";
-import { BOATS, EMAIL, LIMITS, ROLES, type ApplyState, type Values } from "./fields";
+import { BOATS, cleanFrom, fixSummary, LIMITS, requiredError, ROLES, type ApplyState, type Values } from "./fields";
 
 type Application = {
   name: string;
@@ -77,25 +77,25 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
   };
 
   // Honeypot: a field people never see. Bots that fill it get the success
-  // screen and nothing is stored.
-  if (text(fd, "website")) return { status: "ok", errors: {}, message: "", values };
+  // screen and nothing is stored. Logged, without anything they sent, so a
+  // run of these (or a real person caught by it) shows up.
+  if (text(fd, "leave_blank")) {
+    console.warn("beta application dropped: honeypot filled", { from: cleanFrom(text(fd, "from")) || null });
+    return { status: "ok", errors: {}, message: "", values };
+  }
 
   const errors: ApplyState["errors"] = {};
-  if (!values.name) errors.name = "Tell us your name.";
-  else if (values.name.length > LIMITS.name) errors.name = `Keep it under ${LIMITS.name} characters.`;
-  if (!values.email) errors.email = "We need an email address to reply to.";
-  else if (values.email.length > LIMITS.email || !EMAIL.test(values.email))
-    errors.email = "That doesn't look like an email address. Check for a typo.";
-  if (!values.organization) errors.organization = "Which club, school or program do you row with?";
-  else if (values.organization.length > LIMITS.organization)
-    errors.organization = `Keep it under ${LIMITS.organization} characters.`;
+  for (const f of ["name", "email", "organization"] as const) {
+    const msg = requiredError(f, values[f] ?? "");
+    if (msg) errors[f] = msg;
+  }
   if (values.role && !ROLES.some((r) => r.value === values.role)) errors.role = "Pick one of the options.";
   if (boats.some((b) => !(BOATS as readonly string[]).includes(b))) errors.boats = "Pick from the boats listed.";
   if (values.location && values.location.length > LIMITS.location) errors.location = `Keep it under ${LIMITS.location} characters.`;
   if (values.message && values.message.length > LIMITS.message) errors.message = `Keep it under ${LIMITS.message} characters.`;
 
   if (Object.keys(errors).length) {
-    return { status: "error", errors, message: "A couple of things need fixing before we can send this.", values };
+    return { status: "error", errors, message: fixSummary(Object.keys(errors).length), values };
   }
 
   const application: Application = {
@@ -106,7 +106,7 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
     boat_types: boats.length ? boats : null,
     location: values.location || null,
     message: values.message || null,
-    from_cta: clip(text(fd, "from").replace(/[^a-z0-9_-]/gi, ""), LIMITS.from),
+    from_cta: cleanFrom(text(fd, "from")) || null,
     utm_source: clip(text(fd, "utm_source"), LIMITS.utm),
     utm_medium: clip(text(fd, "utm_medium"), LIMITS.utm),
     utm_campaign: clip(text(fd, "utm_campaign"), LIMITS.utm),
@@ -134,7 +134,7 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
     return {
       status: "error",
       errors: {},
-      message: "Something went wrong on our side and your application wasn't saved. Please try again in a minute.",
+      message: "Something went wrong on our side and your application wasn’t saved. Try again in a minute.",
       values,
     };
   }

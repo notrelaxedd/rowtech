@@ -2,22 +2,21 @@
 // device mock-ups rendered by loadcell/ui_screens_v9/render_tft.py, so the
 // numbers on the page match the numbers on the pictured screens.
 
+// Only the stroke model's inputs live here. What the page shows (drive and
+// recovery times, peak position, impulse, thirds, rise rate, consistency) is
+// measured from the curve by measureStroke() and impulseCv(), never typed in.
 export const EXAMPLE = {
   spm: 28.4,
   strokes: 147,
-  driveMs: 782,
-  recoveryMs: 1329,
   peakKg: 61.42,
-  peakPct: 38,
-  impulse: 28.914,
-  riseKgPerS: 182.6,
-  cvPct: 3.2,
-  thirds: [8.412, 13.905, 6.598] as const,
+  // Where the force pulse peaks, as a fraction of it from onset to zero. The
+  // peak position shown is measured from catch to release, so it differs.
+  pulsePeak: 0.38,
   catchFrac: 0.15, // catch threshold as a fraction of the reference peak
 } as const
 
 /** Normalised drive shape, 0..1 over the drive, peaking at `peakPos`. */
-export function driveShape(u: number, peakPos: number = EXAMPLE.peakPct / 100) {
+export function driveShape(u: number, peakPos: number = EXAMPLE.pulsePeak) {
   if (u <= 0 || u >= 1) return 0
   const s = u < peakPos ? u / peakPos : 1 - (u - peakPos) / (1 - peakPos)
   return Math.sin((s * Math.PI) / 2) ** 1.6
@@ -75,12 +74,12 @@ export function toPath(pts: Array<[number, number]>, tol = 0) {
 const SPS = 80
 const PERIOD = 60 / EXAMPLE.spm
 // Onset-to-zero length of the force pulse. Chosen so the threshold-to-threshold
-// drive the detector reports comes out at EXAMPLE.driveMs.
+// drive the detector reports comes out at 782 ms.
 const PULSE_S = 0.924
 
 export type StrokeVariant = { k: number; pp: number; ds: number }
 
-export function strokeForce(t: number, v: StrokeVariant = { k: 1, pp: 0.38, ds: 1 }) {
+export function strokeForce(t: number, v: StrokeVariant = { k: 1, pp: EXAMPLE.pulsePeak, ds: 1 }) {
   const d = PULSE_S * v.ds
   if (t < 0) return 0
   if (t < d) return EXAMPLE.peakKg * v.k * driveShape(t / d, v.pp)
@@ -149,7 +148,7 @@ export function measureStroke(v?: StrokeVariant, phase = 0.0047): Measured {
 export function recentStrokes(): StrokeVariant[] {
   return Array.from({ length: 8 }, (_, i) =>
     i === 0
-      ? { k: 1, pp: 0.38, ds: 1 }
+      ? { k: 1, pp: EXAMPLE.pulsePeak, ds: 1 }
       : { k: 0.955 + 0.09 * hash01(i * 7), pp: 0.36 + 0.04 * hash01(i * 13), ds: 0.975 + 0.05 * hash01(i * 19) }
   )
 }

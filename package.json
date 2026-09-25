@@ -12,7 +12,8 @@
     "lint": "eslint",
     "test": "playwright test",
     "demo:build": "node scripts/make-demo-session.mjs",
-    "db:types": "node scripts/db-types.mjs"
+    "db:types": "node scripts/db-types.mjs",
+    "licenses": "node scripts/licenses.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",

@@ -11,3 +11,6 @@ node_modules
 
 # The board design, if it ever lands in this repo: not part of the site.
 hardware/
+
+# Full-size originals of the site's photos.
+photos-original

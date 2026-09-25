@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
     // form, the magic link) will read before they run.
     serverActions: { bodySizeLimit: "8mb" },
   },
+  async redirects() {
+    return [
+      // The team page is off the site for now and will come back, so this is
+      // temporary (307): old links to it land on the home page meanwhile.
+      { source: "/team", destination: "/", permanent: false },
+    ];
+  },
   async headers() {
     return [
       {
@@ -28,6 +35,14 @@ const nextConfig: NextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
         ],
       },
+      // The icons and the share image carry no hash in their paths (the page
+      // links the icons with their hashes as a query instead), so they're cached
+      // for a day and then served stale while they're checked, rather than
+      // checked on every page view.
+      ...["/icon.svg", "/favicon.ico", "/apple-icon.png", "/og.png"].map((source) => ({
+        source,
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      })),
     ];
   },
   images: {
