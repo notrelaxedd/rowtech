@@ -96,8 +96,9 @@ export default function PrivacyPage() {
                 <li>which side each seat rows, if you set it.</li>
               </ul>
               <p>
-                Your first upload makes a team named after your email address, from the part before the @:
-                sam@example.com makes &ldquo;sam&rsquo;s crew&rdquo;. Everyone on a team can see everything uploaded to it.
+                If you aren&rsquo;t on a team yet, your first upload makes one named after your email address, from the
+                part before the @: sam@example.com makes &ldquo;sam&rsquo;s crew&rdquo;. Everyone on a team can see
+                everything uploaded to it.
               </p>
               <p>
                 The dashboard has a place for a GPS track of each outing, which will come from Vieve, the RowTech cox box.
