@@ -530,6 +530,11 @@
     "license": "MIT"
   },
   {
+    "name": "shadcn",
+    "version": "4.2.0",
+    "license": "MIT"
+  },
+  {
     "name": "sharp",
     "version": "0.35.4",
     "license": "Apache-2.0"
@@ -572,6 +577,11 @@
   {
     "name": "tailwind-merge",
     "version": "3.5.0",
+    "license": "MIT"
+  },
+  {
+    "name": "tailwindcss",
+    "version": "4.2.2",
     "license": "MIT"
   },
   {

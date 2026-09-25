@@ -10,7 +10,7 @@ import packages from "@/lib/licenses.json";
 // match package-lock.json.
 export const metadata: Metadata = pageMetadata({
   title: "Open-source licenses",
-  description: "The open-source packages the RowTech site and dashboard are built with, and their licenses.",
+  description: "The open-source packages the RowTech site and dashboard use, and their licenses.",
   path: "/licenses",
 });
 
@@ -21,7 +21,8 @@ export default function LicensesPage() {
         <div className="max-w-3xl pt-20 pb-24 sm:pt-28 sm:pb-28">
           <h1 className="type-h1">Open-source licenses.</h1>
           <p className="type-lead mt-6 text-muted-foreground">
-            The RowTech site and dashboard are built with the {packages.length} open-source packages below.
+            The RowTech site and dashboard use the {packages.length} open-source packages below, in the code they run
+            and in their stylesheet.
           </p>
           <p className="type-body mt-4 text-muted-foreground">
             Their license texts and copyright notices, as each package ships them, are in{" "}
@@ -29,6 +30,10 @@ export default function LicensesPage() {
               one plain-text file
             </a>
             .
+          </p>
+          <p className="type-body mt-4 text-muted-foreground">
+            Tools that only build and test the site aren&rsquo;t listed, and neither are the machine-specific builds of
+            Next.js&rsquo;s compiler and sharp&rsquo;s image library.
           </p>
 
           <div className="mt-14">

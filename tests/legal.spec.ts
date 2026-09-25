@@ -72,8 +72,10 @@ test("/licenses lists the shipped packages with their licenses, and links to the
     const row = main.locator("dl > div").filter({ has: page.locator("dt", { hasText: new RegExp(`^${name} \\d`) }) });
     await expect(row.first().locator("dd"), name).toHaveText("MIT");
   }
-  // devDependencies aren't shipped.
-  await expect(main.locator("dt", { hasText: /^(typescript|eslint|@playwright\/test) / })).toHaveCount(0);
+  // Tailwind's CSS is in the served stylesheet, so it's listed though it's a devDependency.
+  await expect(main.locator("dt", { hasText: /^tailwindcss \d/ })).toHaveCount(1);
+  // Build and test tools aren't, nor shadcn's command-line tool's own dependencies.
+  await expect(main.locator("dt", { hasText: /^(typescript|eslint|@playwright\/test|ts-morph) / })).toHaveCount(0);
 
   const link = main.getByRole("link", { name: "one plain-text file" });
   await expect(link).toHaveAttribute("href", "/licenses.txt");
