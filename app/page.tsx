@@ -39,7 +39,7 @@ const STEPS = [
   {
     art: "files",
     t: "Download the practice",
-    d: "At the dock, connect your phone to the node’s own WiFi and download the practice. You get the numbers for every stroke, the force curve of every stroke, and the timing of everything that happened.",
+    d: "At the dock, connect your phone to the node’s own Wi-Fi and download the practice. You get the numbers for every stroke, the force curve of every stroke, and the timing of everything that happened.",
   },
 ] as const;
 
@@ -93,7 +93,7 @@ const NEXT = [
 
 const FAQ = [
   {
-    q: "Do we need WiFi at the boathouse?",
+    q: "Do we need Wi-Fi at the boathouse?",
     a: "No. Each node runs its own network: join it from a phone or laptop and open a browser. There’s nothing to install.",
   },
   {
@@ -106,11 +106,11 @@ const FAQ = [
   },
   {
     q: "Where does the data go?",
-    a: "Onto each node’s microSD card, and off it as plain files over the node’s own WiFi.",
+    a: "Onto each node’s microSD card, and off it as plain files over the node’s own Wi-Fi.",
   },
   {
     q: "How accurate is it?",
-    a: "Timing is measured on the node itself, and it doesn’t need calibration. Force does: each node has to be calibrated against known weights, and we haven’t done that yet. Until we do, force reads in raw sensor units. The Force page says where calibration stands.",
+    a: "Timing is measured on the node itself, and it doesn’t need calibration. Force readings do: each node has to be calibrated against known weights, and we haven’t done that yet. Until we do, force reads in raw sensor units. The Force page says where calibration stands.",
   },
 ];
 
@@ -163,7 +163,7 @@ export default function Home() {
             <div className="max-w-2xl">
               <h2 className="type-h2">How an outing gets from the rigger to your phone.</h2>
               <p className="type-lead mt-5 text-muted-foreground">
-                The node records by itself, and you collect the files over its WiFi.
+                The node records by itself, and you collect the files over its Wi-Fi.
               </p>
             </div>
             <ol className="mt-14 grid grid-cols-1 gap-14 md:grid-cols-3 md:gap-8 lg:gap-12">

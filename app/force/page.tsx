@@ -17,7 +17,7 @@ export const metadata: Metadata = pageMetadata({
 
 const BOATHOUSE = [
   {
-    t: "Its own WiFi network",
+    t: "Its own Wi-Fi network",
     d: "Each node runs its own network. Join it from a phone, open a browser, and the node’s page is there. There’s no app to install.",
   },
   {

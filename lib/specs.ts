@@ -10,7 +10,7 @@ export const FORCE_SPECS: readonly Spec[] = [
   ["Screen", "3.5″ 480×320 TFT"],
   ["Keys", "VIEW, TARE, POWER"],
   ["Seat number", "Set on the node’s own web page"],
-  ["Network", "Its own WiFi network; download from a phone or laptop"],
+  ["Network", "Its own Wi-Fi network; download from a phone or laptop"],
   ["Storage", "microSD. Per session: strokes.csv, curves.bin, events.csv, meta.json"],
   ["Battery", "3000 mAh"],
 ];

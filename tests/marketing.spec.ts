@@ -70,6 +70,24 @@ test("the specifications claim no more than what's built", async ({ page }) => {
   }
 });
 
+// "Wi-Fi", the standard spelling, wherever a page says it (LEG-016, CNT-008).
+test("Wi-Fi is spelled Wi-Fi on the pages", async ({ page }) => {
+  for (const path of ["/", "/force", "/vieve"]) {
+    await page.goto(path);
+    const text = (await page.locator("body").textContent()) ?? "";
+    expect(text, path).not.toContain("WiFi");
+  }
+  await page.goto("/");
+  await expect(page.locator("#how")).toContainText("the node’s own Wi-Fi");
+  await expect(page.locator("#faq summary", { hasText: "Wi-Fi at the boathouse" })).toHaveCount(1);
+  // "Force" at the start of a sentence reads as the product, not the quantity.
+  await expect(page.locator("#faq")).toContainText("Force readings do:");
+  await page.goto("/force");
+  await expect(page.locator("#boathouse dt", { hasText: "Its own Wi-Fi network" })).toHaveCount(1);
+  await expect(page.locator("#specs dt", { hasText: "Network" }).locator("+ dd")).toContainText("Wi-Fi");
+  await expect(page.locator("#parts")).toContainText("its own Wi-Fi network");
+});
+
 // No node has been calibrated: the kilograms on the home page say they're an
 // example, next to where they're shown (BIZ-005).
 test("the home page's kilograms are labelled as example data, with where calibration stands", async ({ page }) => {
