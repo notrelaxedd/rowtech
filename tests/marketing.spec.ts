@@ -331,6 +331,14 @@ test("there is no team page for now, and old links to it go home", async ({ page
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("The force curve from every seat in the boat.");
 });
 
+// The synthetic sample session is test data: served from the site, its
+// meta.json would claim a calibrated node (CNT-010).
+test("the synthetic sample session isn't served from the site", async ({ request }) => {
+  for (const f of ["meta.json", "strokes.csv", "curves.bin", "events.csv"]) {
+    expect((await request.get(`/demo/seat-1/${f}`, { maxRedirects: 0 })).status(), f).toBe(404);
+  }
+});
+
 test("an address the site doesn't have gets the site's own 404", async ({ page }) => {
   const res = await page.goto("/no-such-page");
   expect(res?.status()).toBe(404);

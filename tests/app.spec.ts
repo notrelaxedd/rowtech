@@ -92,7 +92,7 @@ test.describe("signed in", () => {
   test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
 
   const seatFiles = (n: number) =>
-    ["meta.json", "strokes.csv", "curves.bin", "events.csv"].map((f) => `public/demo/seat-${n}/${f}`);
+    ["meta.json", "strokes.csv", "curves.bin", "events.csv"].map((f) => `tests/fixtures/demo/seat-${n}/${f}`);
 
   /** Files of the given names and sizes, for the picker. */
   const sized = (files: Array<[name: string, bytes: number]>) =>
@@ -102,7 +102,7 @@ test.describe("signed in", () => {
     const entries: Record<string, Uint8Array> = {};
     for (const n of seats) {
       for (const f of ["meta.json", "strokes.csv", "curves.bin", "events.csv"]) {
-        entries[`outing/seat-${n}/${f}`] = new Uint8Array(await readFile(`public/demo/seat-${n}/${f}`));
+        entries[`outing/seat-${n}/${f}`] = new Uint8Array(await readFile(`tests/fixtures/demo/seat-${n}/${f}`));
       }
     }
     return { name: "outing.zip", mimeType: "application/zip", buffer: Buffer.from(zipSync(entries)) };
@@ -179,7 +179,7 @@ test.describe("signed in", () => {
     expect(rows?.map((r) => r.seat_number)).toEqual([2, 6]);
     const summaries: SessionSummary[] = [];
     for (const row of rows ?? []) {
-      const s = summarise(parseStrokes((await readFile(`public/demo/seat-${row.seat_number}/strokes.csv`)).toString()));
+      const s = summarise(parseStrokes((await readFile(`tests/fixtures/demo/seat-${row.seat_number}/strokes.csv`)).toString()));
       summaries.push(s);
       expect(row.strokes).toBe(s.strokes);
       // First catch to the last release, not to the longest drive.
@@ -244,7 +244,7 @@ test.describe("signed in", () => {
   test("an outing whose strokes span more than 24.8 days still uploads", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);
-    const [meta, csv] = await Promise.all(["meta.json", "strokes.csv"].map((f) => readFile(`public/demo/seat-1/${f}`)));
+    const [meta, csv] = await Promise.all(["meta.json", "strokes.csv"].map((f) => readFile(`tests/fixtures/demo/seat-1/${f}`)));
     const rows = csv.toString().trim().split("\n");
     const last = rows[rows.length - 1].split(",");
     last[2] = String(2_200_000_000); // catch_ms
@@ -266,7 +266,7 @@ test.describe("signed in", () => {
   test("Export CSV gives back the node's strokes.csv, raw counts and all", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);
-    const [meta, csv] = await Promise.all(["meta.json", "strokes.csv"].map((f) => readFile(`public/demo/seat-1/${f}`)));
+    const [meta, csv] = await Promise.all(["meta.json", "strokes.csv"].map((f) => readFile(`tests/fixtures/demo/seat-1/${f}`)));
     const [header, ...rows] = csv.toString().trim().split("\n");
     const counts = rows.map((row) => {
       const p = row.split(",");
@@ -292,7 +292,7 @@ test.describe("signed in", () => {
   /** Seat n's demo session, stretched to `strokes` strokes (with curves), as a new session. */
   async function longSeat(n: number, strokes: number) {
     const [meta, csv, curves] = await Promise.all(
-      ["meta.json", "strokes.csv", "curves.bin"].map((f) => readFile(`public/demo/seat-${n}/${f}`))
+      ["meta.json", "strokes.csv", "curves.bin"].map((f) => readFile(`tests/fixtures/demo/seat-${n}/${f}`))
     );
     const [header, ...rows] = csv.toString().trim().split("\n");
     const lines = [header];
@@ -615,7 +615,7 @@ test.describe("signed in", () => {
     await page.goto("/app/force");
     const entries: Record<string, Uint8Array> = {};
     for (const n of [1, 2]) {
-      entries[`outing/seat-${n}/meta.json`] = new Uint8Array(await readFile(`public/demo/seat-${n}/meta.json`));
+      entries[`outing/seat-${n}/meta.json`] = new Uint8Array(await readFile(`tests/fixtures/demo/seat-${n}/meta.json`));
       entries[`outing/seat-${n}/strokes.csv`] = strToU8(`not,the,header\n1,2,3\n`);
     }
     await page.getByLabel("Files").setInputFiles({ name: "outing.zip", mimeType: "application/zip", buffer: Buffer.from(zipSync(entries)) });
@@ -955,9 +955,9 @@ test.describe("signed in", () => {
     await expect(page.getByText("· 0 seats")).toBeVisible();
   });
   /** Seat n's demo strokes, summed up the way the pages do it. */
-  const demoSummary = async (n: number) => summarise(parseStrokes((await readFile(`public/demo/seat-${n}/strokes.csv`)).toString()));
+  const demoSummary = async (n: number) => summarise(parseStrokes((await readFile(`tests/fixtures/demo/seat-${n}/strokes.csv`)).toString()));
   const demoImpulse = async (n: number) =>
-    parseStrokes((await readFile(`public/demo/seat-${n}/strokes.csv`)).toString()).reduce((a, s) => a + s.impulse, 0);
+    parseStrokes((await readFile(`tests/fixtures/demo/seat-${n}/strokes.csv`)).toString()).reduce((a, s) => a + s.impulse, 0);
 
   test("a crew outing is on the Cox tab, and its page shares the work out seat by seat", async ({ page, context, baseURL }) => {
     const user = await makeUser();

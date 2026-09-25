@@ -8,7 +8,7 @@ import { collectSessions, ZIP_LIMITS, ZipTooLargeError } from "../lib/session/co
 import { summarise, toCsv } from "../lib/session/analyse";
 import { fmtSplit, nearestFix, splitFromSpeed, thinTrack } from "../lib/session/track";
 
-const seatDir = (n: number) => path.join(process.cwd(), "public", "demo", `seat-${n}`);
+const seatDir = (n: number) => path.join(process.cwd(), "tests", "fixtures", "demo", `seat-${n}`);
 const read = (n: number, f: string) => readFile(path.join(seatDir(n), f));
 
 async function bundle(n: number) {
