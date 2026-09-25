@@ -316,3 +316,71 @@ test("the first Tab on every page is a link past the header to the content", asy
     await test.step(path, () => expectSkipLink(page));
   }
 });
+
+// The phone menu behaves like one: it says whether it's open, and a change of
+// mind closes it, whichever way it comes (UX-004, A11Y-004). Its panel stays
+// on a 375px screen (FMT-001).
+test("the phone menu closes on Escape, a tap outside, a scroll or a Tab out, and fits the screen", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/");
+  const menu = page.locator("header summary");
+  const panel = page.locator("header details nav");
+  const isOpen = async () => {
+    await expect(menu).toHaveAttribute("aria-expanded", "true");
+    await expect(panel).toBeVisible();
+  };
+  const isClosed = async () => {
+    await expect(menu).toHaveAttribute("aria-expanded", "false");
+    await expect(panel).toBeHidden();
+  };
+
+  await isClosed();
+  await expect(menu).toHaveAttribute("aria-controls", (await panel.getAttribute("id"))!);
+  await menu.click();
+  await isOpen();
+  const box = (await panel.boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(375);
+
+  // Escape, from a link in the menu, hands focus back to "Menu".
+  await panel.getByRole("link", { name: "Force", exact: true }).focus();
+  await page.keyboard.press("Escape");
+  await isClosed();
+  await expect(menu).toBeFocused();
+
+  await menu.click();
+  await isOpen();
+  await page.getByRole("heading", { level: 1 }).click({ position: { x: 5, y: 5 } });
+  await isClosed();
+
+  // From the keyboard: Tab past the last link goes on to the header's CTA,
+  // and the menu doesn't stay open behind it.
+  await menu.focus();
+  await page.keyboard.press("Enter");
+  await isOpen();
+  for (let i = 0; i < 5; i++) await page.keyboard.press("Tab");
+  await expect(panel.getByRole("link", { name: "FAQ" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.locator('header a[data-cta="nav"]')).toBeFocused();
+  await isClosed();
+
+  // The page moving under it closes it too.
+  await menu.click();
+  await isOpen();
+  await page.evaluate(() => window.scrollBy(0, 300));
+  await isClosed();
+});
+
+test.describe("without JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+  test("the phone menu still opens, on the screen", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/");
+    await page.locator("header summary").click();
+    const panel = page.locator("header details nav");
+    await expect(panel.getByRole("link", { name: "FAQ" })).toBeVisible();
+    const box = (await panel.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(375);
+  });
+});
