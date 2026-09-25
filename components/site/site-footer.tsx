@@ -22,6 +22,8 @@ export function SiteFooter() {
           <Link href="/vieve" className={link}>Vieve</Link>
           <Link href="/vieve#specs" className={link}>Vieve specifications</Link>
           <Link href="/#beta" className={link}>Applying for the beta</Link>
+          <Link href="/privacy" className={link}>Privacy</Link>
+          <Link href="/terms" className={link}>Terms</Link>
         </nav>
       </div>
       <div className="mx-auto max-w-7xl px-5 pb-10 text-xs text-muted-foreground sm:px-8">
