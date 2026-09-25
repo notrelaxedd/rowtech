@@ -96,8 +96,8 @@ export default function PrivacyPage() {
               </ul>
               <p>
                 If you aren&rsquo;t on a team yet, your first upload makes one, named &ldquo;My crew&rdquo;. Teams
-                made earlier were named after the part of the owner&rsquo;s email address before the @, and keep that
-                name. Everyone on a team can see everything uploaded to it.
+                made earlier were named after the part of the owner&rsquo;s email address before the @. Everyone on
+                a team can see everything uploaded to it.
               </p>
               <p>
                 The dashboard has a place for a GPS track of each outing, which will come from Vieve, the RowTech cox box.
