@@ -100,6 +100,10 @@ export default function PrivacyPage() {
                 a team can see everything uploaded to it.
               </p>
               <p>
+                The dashboard also keeps which account uploaded each session, and who is on each team and in what
+                role: owner, coach or member.
+              </p>
+              <p>
                 The dashboard has a place for a GPS track of each outing, which will come from Vieve, the RowTech cox box.
                 Vieve is in development, and nothing uploads a track today.
               </p>
