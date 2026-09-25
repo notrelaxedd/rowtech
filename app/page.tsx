@@ -34,7 +34,7 @@ const STEPS = [
   {
     art: "device",
     t: "Row",
-    d: "Each node finds every catch and release on its own and starts recording at the first stroke. The rower sees their own peak and curve.",
+    d: "Each node finds each catch and release on its own and starts recording at the first stroke. The rower sees their own peak and curve.",
   },
   {
     art: "files",
@@ -197,7 +197,7 @@ export default function Home() {
               <h2 className="type-h2">One stroke, taken apart.</h2>
               <p className="type-lead mt-5 text-muted-foreground">
                 How fast the blade loads, how high the peak is and where it lands, and where the work goes through the drive.
-                The node measures all of it on every stroke. Pick a measure to see where it lives on the curve.
+                The node measures all of it on each stroke. Pick a measure to see where it lives on the curve.
               </p>
             </div>
             <div className="mt-12">

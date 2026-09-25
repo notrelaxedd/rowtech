@@ -40,6 +40,19 @@ test("specifications live on the product pages, not the home page", async ({ pag
   await expect(page.locator("#specs")).toContainText("$499");
 });
 
+// Claims no stronger than what's built (LEG-010): the 3 ms is the interpolation's
+// resolution, not a tested accuracy, and Vieve's parts are planned.
+test("the specifications claim no more than what's built", async ({ page }) => {
+  await page.goto("/force");
+  const force = page.locator("#specs");
+  await expect(force).toContainText("resolution of about 3 ms");
+  await expect(force).not.toContainText("any phone");
+  await page.goto("/vieve");
+  for (const row of ["Screen", "GPS", "Battery"]) {
+    await expect(page.locator("#specs dt", { hasText: row }).locator("+ dd")).toContainText(/^Planned/);
+  }
+});
+
 // No node has been calibrated: the kilograms on the home page say they're an
 // example, next to where they're shown (BIZ-005).
 test("the home page's kilograms are labelled as example data, with where calibration stands", async ({ page }) => {
