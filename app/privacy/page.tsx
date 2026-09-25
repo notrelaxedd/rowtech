@@ -71,8 +71,7 @@ export default function PrivacyPage() {
 
             <LegalSection title="Signing in">
               <p>
-                The dashboard is for beta crews. Their accounts are made by hand when a crew joins; typing an email address
-                into the sign-in form never makes one.
+                The dashboard is for beta crews. Typing an email address into the sign-in form never makes an account.
               </p>
               <p>
                 An account holds its email address. Sign-in runs on Supabase Auth, which keeps the account and sends the
