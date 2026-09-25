@@ -412,6 +412,17 @@ test("no page can be framed, and responses carry the basic security headers", as
   }
 });
 
+// The icon and the share image are checked once a day, not on every page
+// view (PERF-008).
+test("the icon and the share image are cached for a day", async ({ request }) => {
+  for (const path of ["/icon.svg", "/og.png"]) {
+    const res = await request.get(path);
+    expect(res.status(), path).toBe(200);
+    expect(res.headers()["cache-control"], path).toBe("public, max-age=86400, stale-while-revalidate=604800");
+    expect(res.headers()["x-frame-options"], path).toBe("DENY");
+  }
+});
+
 // Archivo sets the headline and is preloaded; Chivo Mono is for device output
 // only and loads when a page uses it (PERF-006).
 test("only the headline font is preloaded", async ({ request }) => {
