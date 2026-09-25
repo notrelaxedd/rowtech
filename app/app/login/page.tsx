@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getViewer } from "@/lib/supabase/server";
 import { Logo } from "@/components/site/logo";
 import { SkipLink } from "@/components/site/skip-link";
+import { PolicyLinks } from "@/components/site/legal";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Sign in", robots: { index: false } };
@@ -34,6 +35,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <div className="mt-8">
             <LoginForm error={failed} />
           </div>
+          <p className="mt-8 text-sm text-muted-foreground">
+            <PolicyLinks />
+          </p>
         </div>
       </main>
     </>
