@@ -113,10 +113,10 @@ export default function PrivacyPage() {
             <LegalSection title="On every page">
               <p>Vercel hosts the site and the dashboard, so every visit to them goes through Vercel.</p>
               <p>
-                Every page, on the site and in the dashboard, also runs Vercel Web Analytics, which counts visits to each
-                page, and Vercel Speed Insights, which measures how quickly pages load. Both send what they measure to
-                Vercel.
+                Every page, on the site and in the dashboard, also runs Vercel Web Analytics and Vercel Speed Insights,
+                which send information about each page visit, including which page it was, to Vercel.
               </p>
+              <p>[OWNER: confirm what Vercel Web Analytics and Speed Insights collect]</p>
               <p>For the beta form, the site keeps two small notes in your browser:</p>
               <ul>
                 <li>
@@ -124,11 +124,15 @@ export default function PrivacyPage() {
                   the website that sent you, if one did. It goes when the tab is closed.
                 </li>
                 <li>
-                  in local storage (rt_cta): which beta link you just clicked. The apply page reads it, if it&rsquo;s less
-                  than five minutes old, and removes it.
+                  in local storage (rt_cta): which of this site&rsquo;s beta links you last used. The apply page reads it
+                  and removes it when it opens, unless the link to it had a from tag of its own, and uses it only if
+                  it&rsquo;s less than five minutes old. Until then it stays in your browser.
                 </li>
               </ul>
-              <p>Neither leaves your browser unless you send the beta form.</p>
+              <p>
+                Neither note leaves your browser unless you send the beta form. The utm tags are also part of the address
+                of the page you came in on, which goes through Vercel like any other visit.
+              </p>
             </LegalSection>
 
             <LegalSection title="Who handles it">
