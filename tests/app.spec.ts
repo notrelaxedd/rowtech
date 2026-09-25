@@ -562,6 +562,12 @@ test.describe("signed in", () => {
     await expect(picked).toHaveAccessibleDescription(/^8 files, 16 KB/);
     await expect(listed).toHaveCount(6);
     await expect(page.getByText("and 2 more")).toBeVisible();
+
+    // A long name with no spaces or hyphens wraps instead of pushing the page sideways on a phone.
+    await page.setViewportSize({ width: 375, height: 900 });
+    await page.getByLabel("Files").setInputFiles(sized([["rowtech_session_export_20260924_bow_seat_three_final.zip", 5000]]));
+    await expect(listed).toHaveText(["rowtech_session_export_20260924_bow_seat_three_final.zip, 4.9 KB"]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 
   test("while an upload is sent, a bar and a line say it's under way", async ({ page, context, baseURL }) => {

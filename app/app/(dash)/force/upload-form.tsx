@@ -130,7 +130,7 @@ export function UploadForm() {
             />
           </label>
           {picked.length > 0 && (
-            <div id={pickedId} className="mt-1.5 text-xs text-muted-foreground">
+            <div id={pickedId} className="mt-1.5 text-xs text-muted-foreground wrap-anywhere">
               <p>
                 {picked.length} file{picked.length === 1 ? "" : "s"}, {fileSize(picked.reduce((sum, f) => sum + f.size, 0))}
               </p>
