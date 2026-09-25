@@ -47,14 +47,25 @@ function Err({ id, msg }: { id: string; msg?: string }) {
   );
 }
 
+/**
+ * "Thanks, Coach Jones.": the name as they wrote it, since a first word can
+ * be a title ("Coach", "Dr."), without doubling a full stop it ends with.
+ */
+function thanks(name = "") {
+  const n = name.trim().replace(/\.+$/, "");
+  return n ? `Thanks, ${n}.` : "Thanks.";
+}
+
 function Done({ name }: { name?: string }) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
   return (
     <div>
-      <p className="text-sm font-semibold text-muted-foreground">Application saved</p>
+      {/* Received, not saved: said for an address that has already applied
+          too, and for the bot trap, where nothing new is stored. */}
+      <p className="text-sm font-semibold text-muted-foreground">Application received</p>
       <h1 ref={heading} tabIndex={-1} className="type-h2 mt-4 outline-none">
-        {`${name ? `Thanks, ${name.split(" ")[0]}.` : "Thanks."} We have your application.`}
+        {`${thanks(name)} We have your application.`}
       </h1>
       <p className="type-lead mt-5 text-muted-foreground">Here&rsquo;s what happens next.</p>
       <ol className="mt-8 space-y-6 border-t border-line pt-8">

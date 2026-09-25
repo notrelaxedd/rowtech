@@ -20,8 +20,24 @@ test("the beta form submits and says what happens next", async ({ page }) => {
   await page.getByRole("button", { name: /apply for the beta/i }).click();
   expect((await sent).postData()).toMatch(/from"\s+hero\s/);
 
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Thanks, Sam Rower. We have your application.");
+  // Received, not saved: it's said for an address that already applied, too.
+  await expect(page.getByText("Application received", { exact: true })).toBeVisible();
   await expect(page.getByText("We read your application.")).toBeVisible();
+});
+
+test("the confirmation thanks people by the name they gave, titles and all", async ({ page }) => {
+  for (const [name, heading] of [
+    ["Coach Jones", "Thanks, Coach Jones."],
+    ["Dr. A. Smith Jr.", "Thanks, Dr. A. Smith Jr."],
+  ]) {
+    await page.goto("/beta");
+    await page.getByLabel("Name").fill(name);
+    await page.getByLabel("Email").fill("sam.rower@example.com");
+    await page.getByLabel("Club, school or program").fill("Riverside RC");
+    await page.getByRole("button", { name: /apply for the beta/i }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${heading} We have your application.`);
+  }
 });
 
 test("every beta link goes to the one /beta, and the form knows which was used", async ({ page, request }) => {
@@ -236,6 +252,7 @@ test("the bot trap is nothing a browser would fill in, and a bot that fills it i
   await trap.evaluate((el) => ((el as HTMLInputElement).value = "https://spam.example"));
   await page.getByRole("button", { name: /apply for the beta/i }).click();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
+  await expect(page.getByText("Application received", { exact: true })).toBeVisible();
 });
 
 test("while it sends, a screen reader hears so and focus stays on the button", async ({ page }) => {
