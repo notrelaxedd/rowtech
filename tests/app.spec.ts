@@ -529,8 +529,6 @@ test.describe("signed in", () => {
     });
   });
 
-  // React resets the form after every submit, error or not, which blanks the
-  // time; what's stored is what the field shows when the form is sent.
   test("while an upload is read, a screen reader hears so and focus stays put", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);
@@ -542,6 +540,8 @@ test.describe("signed in", () => {
     expect(sent.posts()).toBe(1);
   });
 
+  // React resets the form after every submit, error or not, which blanks the
+  // time; what's stored is what the field shows when the form is sent.
   test("after a refused upload, a blank time is now, not the time typed before", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);
