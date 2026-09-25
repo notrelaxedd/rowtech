@@ -30,6 +30,8 @@ test("the confirmation thanks people by the name they gave, titles and all", asy
   for (const [name, heading] of [
     ["Coach Jones", "Thanks, Coach Jones."],
     ["Dr. A. Smith Jr.", "Thanks, Dr. A. Smith Jr."],
+    ["Sam!", "Thanks, Sam."],
+    ["Coach Jones?", "Thanks, Coach Jones."],
   ]) {
     await page.goto("/beta");
     await page.getByLabel("Name").fill(name);

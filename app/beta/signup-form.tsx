@@ -49,10 +49,11 @@ function Err({ id, msg }: { id: string; msg?: string }) {
 
 /**
  * "Thanks, Coach Jones.": the name as they wrote it, since a first word can
- * be a title ("Coach", "Dr."), without doubling a full stop it ends with.
+ * be a title ("Coach", "Dr."), ending in one full stop even when the name
+ * ends in ".", "!" or "?".
  */
 function thanks(name = "") {
-  const n = name.trim().replace(/\.+$/, "");
+  const n = name.trim().replace(/[.!?]+$/, "");
   return n ? `Thanks, ${n}.` : "Thanks.";
 }
 
