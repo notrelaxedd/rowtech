@@ -80,9 +80,10 @@ What changed:
   marks the element.
 - **SVG weight.** Static curves go through Ramer–Douglas–Peucker
   simplification at a quarter-pixel tolerance before they are serialized.
-- **Offscreen work.** Sections below the hero use `content-visibility: auto`
-  with a remembered intrinsic size. The first layout covers only what is on
-  screen, and scrollbar and anchor jumps stay stable.
+- **Offscreen work.** Sections below the hero used `content-visibility: auto`
+  with a 900 px placeholder height. Since removed: until a section had been
+  drawn the browser scrolled by the placeholder heights, so links such as
+  `/#faq` landed hundreds of pixels away from their section (UX-001).
 - **Images.** AVIF, then WebP.
 
 ## Final (after every step of the revamp)

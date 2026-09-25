@@ -2,25 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { chip } from "@/components/dash/chip";
+import { paddedRange } from "@/lib/chart";
+import type { SessionStats } from "@/lib/supabase/types";
 
-export type HistoryPoint = {
-  session_id: string;
-  seat_number: number;
-  recorded_at: string;
-  avg_peak: number | null;
-  avg_rise_rate: number | null;
-  avg_peak_pos_pct: number | null;
-  avg_drive_ms: number | null;
-  avg_recovery_ms: number | null;
-  consistency_pct: number | null;
-  strokes: number;
-};
+/** A seat session's row of session_stats: one with a seat. */
+export type HistoryPoint = Pick<
+  SessionStats,
+  "session_id" | "recorded_at" | "avg_peak" | "avg_rise_rate" | "avg_peak_pos_pct" | "avg_drive_ms" | "avg_recovery_ms" | "consistency_pct" | "strokes"
+> & { seat_number: number };
 
 const SERIES = [
   { id: "avg_peak", label: "Peak", get: (p: HistoryPoint) => p.avg_peak },
   { id: "avg_rise_rate", label: "Rise rate", get: (p: HistoryPoint) => p.avg_rise_rate },
   { id: "avg_peak_pos_pct", label: "Peak position", get: (p: HistoryPoint) => p.avg_peak_pos_pct },
-  { id: "ratio", label: "Drive : recovery", get: (p: HistoryPoint) => (p.avg_drive_ms ? (p.avg_recovery_ms ?? 0) / p.avg_drive_ms : null) },
+  { id: "ratio", label: "Drive:recovery", get: (p: HistoryPoint) => (p.avg_drive_ms ? (p.avg_recovery_ms ?? 0) / p.avg_drive_ms : null) },
   { id: "consistency_pct", label: "Consistency", get: (p: HistoryPoint) => p.consistency_pct },
 ] as const;
 
@@ -57,9 +53,7 @@ export function HistoryPanel({ points }: { points: HistoryPoint[] }) {
       if (!values.length) return;
       const hi = Math.max(...values);
       const lo = Math.min(...values);
-      const padV = (hi - lo || hi || 1) * 0.2;
-      const top = hi + padV;
-      const bottom = Math.max(0, lo - padV);
+      const { bottom, top } = paddedRange(lo, hi, 0.2);
       const times = points.map((p) => new Date(p.recorded_at).getTime());
       const t0 = Math.min(...times);
       const t1 = Math.max(...times);
@@ -77,7 +71,7 @@ export function HistoryPanel({ points }: { points: HistoryPoint[] }) {
         c.moveTo(pad.l, y);
         c.lineTo(w - pad.r, y);
         c.stroke();
-        c.fillText(v.toFixed(v > 50 ? 0 : 1), pad.l - 8, y + 4);
+        c.fillText(v.toFixed(Math.abs(v) > 50 ? 0 : 1), pad.l - 8, y + 4);
       }
 
       seats.forEach((seat, i) => {
@@ -124,7 +118,7 @@ export function HistoryPanel({ points }: { points: HistoryPoint[] }) {
             aria-pressed={s.id === seriesId}
             onClick={() => setSeriesId(s.id)}
             className={cn(
-              "min-h-9 rounded-md border border-line px-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace",
+              chip,
               s.id === seriesId ? "border-trace/60 bg-trace/10 text-trace" : "text-muted-foreground hover:text-foreground"
             )}
           >

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { StrokeRow } from "@/lib/session/format";
 import { metric, type MetricId } from "@/lib/session/analyse";
+import { paddedRange } from "@/lib/chart";
 
 /**
  * Every stroke in the session, one bar each, scrubbable: drag it, click it, or
@@ -51,9 +52,7 @@ export function StrokeTimeline({
       const lo = Math.min(...values);
       // A tight baseline: over a piece these differ by a few percent, and a
       // zero baseline would flatten every one of them into the same bar.
-      const pad = (hi - lo || hi || 1) * 0.15;
-      const top = hi + pad;
-      const bottom = Math.max(0, lo - pad);
+      const { bottom, top } = paddedRange(lo, hi, 0.15);
       const span = top - bottom || 1;
       const barW = w / strokes.length;
 
@@ -163,33 +162,37 @@ export function StrokeList({
   const first = Math.max(0, Math.floor(scrollTop / ROW) - OVERSCAN);
   const last = Math.min(strokes.length, first + Math.ceil(height / ROW) + OVERSCAN * 2);
 
+  // A plain list of rows, each with its two buttons: the rows off screen
+  // aren't rendered, so each says where it sits in the whole.
   return (
     <div
       ref={scroller}
       onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
       style={{ height }}
       className="overflow-y-auto rounded-md border border-line bg-panel"
-      role="listbox"
-      aria-label="Strokes"
-      aria-activedescendant={`stroke-${selected}`}
-      tabIndex={-1}
     >
-      <div style={{ height: strokes.length * ROW }} className="relative">
+      {/* role="list": Safari drops the list role from a list with no markers. */}
+      <ul role="list" aria-label="Strokes" style={{ height: strokes.length * ROW }} className="relative">
         {strokes.slice(first, last).map((s, n) => {
           const i = first + n;
           const on = i === selected;
           return (
-            <div
+            <li
               key={s.rec}
-              id={`stroke-${i}`}
-              role="option"
-              aria-selected={on}
+              aria-setsize={strokes.length}
+              aria-posinset={i + 1}
               style={{ position: "absolute", top: i * ROW, height: ROW }}
               className={`flex w-full items-center gap-3 px-3 text-sm ${
                 on ? "bg-trace/10 text-foreground" : i === compare ? "bg-warn/10" : "text-muted-foreground"
               }`}
             >
-              <button type="button" onClick={() => onSelect(i)} className="readout w-10 shrink-0 text-left text-xs hover:text-trace">
+              <button
+                type="button"
+                aria-label={`Stroke ${i + 1}`}
+                aria-current={on ? "true" : undefined}
+                onClick={() => onSelect(i)}
+                className="readout w-10 shrink-0 text-left text-xs hover:text-trace"
+              >
                 {i + 1}
               </button>
               <span className="readout w-16 shrink-0 tabular-nums">{s.peak.toFixed(1)}</span>
@@ -204,10 +207,10 @@ export function StrokeList({
               >
                 {i === compare ? "comparing" : "compare"}
               </button>
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </div>
   );
 }

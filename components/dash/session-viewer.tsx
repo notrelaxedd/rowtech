@@ -8,19 +8,19 @@ import { METRICS, duration, fmt, rateAt, summarise, thirdsPct, toCsv, type Metri
 import { CurveCanvas, type CurveLayer } from "./curve-canvas";
 import { StrokeList, StrokeTimeline } from "./stroke-timeline";
 import { cn } from "@/lib/utils";
+import { picker } from "@/components/ui/field";
+import { chip } from "./chip";
 
 /** One node session: its strokes, and where to fetch its curves.bin. */
 export type SeatSource = {
   id: string;
-  seat: number;
+  /** null when the node's seat was never set. */
+  seat: number | null;
   label: string;
   units: string;
   strokes: StrokeRow[];
   curvesUrl: string | null;
 };
-
-const chip =
-  "min-h-9 rounded-md border border-line px-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace";
 
 export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: string }) {
   const [seatId, setSeatId] = useState(seats[0]?.id ?? "");
@@ -28,7 +28,9 @@ export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: s
   const [compare, setCompare] = useState<number | null>(null);
   const [overlaySeat, setOverlaySeat] = useState<string | null>(null);
   const [metricId, setMetricId] = useState<MetricId>("peak");
-  const [curves, setCurves] = useState<Record<string, Uint8Array | null>>({});
+  // A seat's curves.bin, or "failed" when the fetch didn't come back (a signed
+  // link past its hour, or the network): not the same as a seat with no file.
+  const [curves, setCurves] = useState<Record<string, Uint8Array | "failed">>({});
   const pending = useRef(new Set<string>());
 
   const seat = seats.find((s) => s.id === seatId) ?? seats[0];
@@ -42,9 +44,21 @@ export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: s
       fetch(s.curvesUrl)
         .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
         .then((b) => setCurves((c) => ({ ...c, [s.id]: new Uint8Array(b) })))
-        .catch(() => setCurves((c) => ({ ...c, [s.id]: null })));
+        .catch(() => {
+          pending.current.delete(s.id);
+          setCurves((c) => ({ ...c, [s.id]: "failed" }));
+        });
     }
   }, [seat, other, curves]);
+
+  // Picking a seat whose curves didn't load tries them again.
+  const retry = (id: string) =>
+    setCurves((c) => {
+      if (c[id] !== "failed") return c;
+      const rest = { ...c };
+      delete rest[id];
+      return rest;
+    });
 
   const strokes = useMemo(() => seat?.strokes ?? [], [seat]);
   const summary = useMemo(() => summarise(strokes), [strokes]);
@@ -54,7 +68,8 @@ export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: s
     return <p className="text-sm text-muted-foreground">This session has no strokes in it.</p>;
   }
 
-  const bytes = curves[seat.id] ?? null;
+  const loaded = curves[seat.id];
+  const bytes = loaded instanceof Uint8Array ? loaded : null;
   const layers: CurveLayer[] = [
     { curve: bytes ? curveAt(bytes, current.rec) : null, stroke: current, colour: "#22e3ef", label: `Stroke ${selected + 1}`, main: true },
   ];
@@ -67,7 +82,8 @@ export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: s
     });
   }
   if (other) {
-    const otherBytes = curves[other.id] ?? null;
+    const otherLoaded = curves[other.id];
+    const otherBytes = otherLoaded instanceof Uint8Array ? otherLoaded : null;
     const same = other.strokes[selected];
     if (same) {
       layers.push({
@@ -87,7 +103,7 @@ export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: s
     const blob = new Blob([toCsv(strokes)], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${title ? title.replace(/\W+/g, "-").toLowerCase() : "session"}-seat-${seat.seat}.csv`;
+    a.download = `${title ? title.replace(/\W+/g, "-").toLowerCase() : "session"}${seat.seat === null ? "" : `-seat-${seat.seat}`}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
   };
@@ -119,7 +135,10 @@ export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: s
               key={s.id}
               type="button"
               aria-pressed={s.id === seat.id}
-              onClick={() => setSeatId(s.id)}
+              onClick={() => {
+                setSeatId(s.id);
+                retry(s.id);
+              }}
               className={cn(chip, "readout", s.id === seat.id ? "border-trace/60 bg-trace/10 text-trace" : "text-muted-foreground hover:text-foreground")}
             >
               {s.label}
@@ -129,8 +148,11 @@ export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: s
             Overlay seat
             <select
               value={overlaySeat ?? ""}
-              onChange={(e) => setOverlaySeat(e.target.value || null)}
-              className="min-h-9 rounded-md border border-line bg-[#0b0e11] px-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace"
+              onChange={(e) => {
+                setOverlaySeat(e.target.value || null);
+                if (e.target.value) retry(e.target.value);
+              }}
+              className={picker}
             >
               <option value="">none</option>
               {seats.filter((s) => s.id !== seat.id).map((s) => (
@@ -158,7 +180,11 @@ export function SessionViewer({ seats, title }: { seats: SeatSource[]; title?: s
                 work {thirds.map((t) => Math.round(t)).join(" · ")} %
               </p>
             </div>
-            <CurveCanvas layers={layers} />
+            <CurveCanvas
+              layers={layers}
+              loadFailed={loaded === "failed"}
+              loading={!!seat.curvesUrl && loaded === undefined}
+            />
             {layers.length > 1 && (
               <ul className="flex flex-wrap gap-4 px-1 pt-2 text-xs text-muted-foreground">
                 {layers.map((l) => (

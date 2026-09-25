@@ -1,7 +1,7 @@
 "use server";
 
 import { supabaseAnon } from "@/lib/supabase/anon";
-import { BOATS, EMAIL, LIMITS, ROLES, type ApplyState, type Values } from "./fields";
+import { BOATS, cleanFrom, fixSummary, LIMITS, requiredError, ROLES, type ApplyState, type Values } from "./fields";
 
 type Application = {
   name: string;
@@ -27,6 +27,18 @@ function text(fd: FormData, key: string) {
 const clip = (v: string, n: number) => v.slice(0, n) || null;
 
 /**
+ * What's safe to log from a failure. A Postgres error's `details` can quote
+ * the failing row, which here is the applicant's name, email and message.
+ */
+function loggable(e: unknown) {
+  if (e && typeof e === "object") {
+    const { code, message } = e as { code?: unknown; message?: unknown };
+    return { code, message };
+  }
+  return { message: String(e) };
+}
+
+/**
  * Confirmation email to the applicant. No provider is set up yet, so this does
  * nothing; the on-page confirmation carries "what happens next" for now.
  */
@@ -36,13 +48,28 @@ async function sendConfirmation(application: Application): Promise<void> {
   void application;
 }
 
+/**
+ * Test runs (Playwright) exercise the whole path except the write. Never in
+ * production: a stray BETA_DRY_RUN there would drop every application while
+ * telling each applicant it was saved, so it is ignored, loudly.
+ */
+function dryRun() {
+  if (process.env.BETA_DRY_RUN !== "1") return false;
+  if (process.env.VERCEL_ENV === "production") {
+    console.error("BETA_DRY_RUN is set in production; ignoring it and saving the application");
+    return false;
+  }
+  return true;
+}
+
 /** The single submit path for beta applications. */
 export async function submitApplication(_prev: ApplyState, fd: FormData): Promise<ApplyState> {
   const boats = [...new Set(fd.getAll("boats").filter((b): b is string => typeof b === "string"))];
+  const [name, email, organization] = [text(fd, "name"), text(fd, "email"), text(fd, "organization")];
   const values: Values = {
-    name: text(fd, "name"),
-    email: text(fd, "email"),
-    organization: text(fd, "organization"),
+    name,
+    email,
+    organization,
     role: text(fd, "role"),
     location: text(fd, "location"),
     message: text(fd, "message"),
@@ -50,36 +77,36 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
   };
 
   // Honeypot: a field people never see. Bots that fill it get the success
-  // screen and nothing is stored.
-  if (text(fd, "website")) return { status: "ok", errors: {}, message: "", values };
+  // screen and nothing is stored. Logged, without anything they sent, so a
+  // run of these (or a real person caught by it) shows up.
+  if (text(fd, "leave_blank")) {
+    console.warn("beta application dropped: honeypot filled", { from: cleanFrom(text(fd, "from")) || null });
+    return { status: "ok", errors: {}, message: "", values };
+  }
 
   const errors: ApplyState["errors"] = {};
-  if (!values.name) errors.name = "Tell us your name.";
-  else if (values.name.length > LIMITS.name) errors.name = `Keep it under ${LIMITS.name} characters.`;
-  if (!values.email) errors.email = "We need an email address to reply to.";
-  else if (values.email.length > LIMITS.email || !EMAIL.test(values.email))
-    errors.email = "That doesn't look like an email address. Check for a typo.";
-  if (!values.organization) errors.organization = "Which club, school or program do you row with?";
-  else if (values.organization.length > LIMITS.organization)
-    errors.organization = `Keep it under ${LIMITS.organization} characters.`;
+  for (const f of ["name", "email", "organization"] as const) {
+    const msg = requiredError(f, values[f] ?? "");
+    if (msg) errors[f] = msg;
+  }
   if (values.role && !ROLES.some((r) => r.value === values.role)) errors.role = "Pick one of the options.";
   if (boats.some((b) => !(BOATS as readonly string[]).includes(b))) errors.boats = "Pick from the boats listed.";
   if (values.location && values.location.length > LIMITS.location) errors.location = `Keep it under ${LIMITS.location} characters.`;
   if (values.message && values.message.length > LIMITS.message) errors.message = `Keep it under ${LIMITS.message} characters.`;
 
   if (Object.keys(errors).length) {
-    return { status: "error", errors, message: "A couple of things need fixing before we can send this.", values };
+    return { status: "error", errors, message: fixSummary(Object.keys(errors).length), values };
   }
 
   const application: Application = {
-    name: values.name!,
-    email: values.email!,
-    organization: values.organization!,
+    name,
+    email,
+    organization,
     role: values.role || null,
     boat_types: boats.length ? boats : null,
     location: values.location || null,
     message: values.message || null,
-    from_cta: clip(text(fd, "from").replace(/[^a-z0-9_-]/gi, ""), LIMITS.from),
+    from_cta: cleanFrom(text(fd, "from")) || null,
     utm_source: clip(text(fd, "utm_source"), LIMITS.utm),
     utm_medium: clip(text(fd, "utm_medium"), LIMITS.utm),
     utm_campaign: clip(text(fd, "utm_campaign"), LIMITS.utm),
@@ -88,8 +115,7 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
     referrer: clip(text(fd, "referrer"), LIMITS.referrer),
   };
 
-  // Test runs (Playwright) exercise the whole path except the write.
-  if (process.env.BETA_DRY_RUN === "1") return { status: "ok", errors: {}, message: "", values };
+  if (dryRun()) return { status: "ok", errors: {}, message: "", values };
 
   try {
     const { error } = await supabaseAnon().from("beta_signups").insert(application);
@@ -100,15 +126,15 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
       try {
         await sendConfirmation(application);
       } catch (e) {
-        console.error("beta confirmation email failed", e);
+        console.error("beta confirmation email failed", loggable(e));
       }
     }
   } catch (e) {
-    console.error("beta application failed", e);
+    console.error("beta application failed", loggable(e));
     return {
       status: "error",
       errors: {},
-      message: "Something went wrong on our side and your application wasn't saved. Please try again in a minute.",
+      message: "Something went wrong on our side and your application wasn’t saved. Try again in a minute.",
       values,
     };
   }
