@@ -113,6 +113,42 @@ test("from the keyboard, the 3D model says it takes the arrow keys, and does", a
   expect(await page.evaluate(() => scrollY)).toBe(y);
 });
 
+// Reaching the button isn't pressing it: focus stays put, and nothing loads (A11Y-007).
+test("tabbing onto 'Show the 3D model' leaves focus there and loads nothing", async ({ page }) => {
+  const scripts: Array<Promise<string>> = [];
+  page.on("response", (r) => {
+    if (r.url().endsWith(".js")) scripts.push(r.text().catch(() => ""));
+  });
+  const three = async () => (await Promise.all(scripts)).some((t) => t.includes("WebGLRenderer"));
+
+  await page.goto("/force", { waitUntil: "networkidle" });
+  const show = page.locator("#parts").getByRole("button", { name: "Show the 3D model" });
+  await show.focus();
+  await page.waitForTimeout(2000);
+  await expect(show).toBeFocused();
+  await expect(page.locator("#parts canvas")).toHaveCount(0);
+  expect(await three()).toBe(false);
+});
+
+// Pressing it and then going elsewhere before the model is there: focus isn't
+// pulled back to the model when it arrives (A11Y-007).
+test("focus isn't pulled back to the 3D model once it has moved on", async ({ page }) => {
+  await page.goto("/vieve", { waitUntil: "networkidle" });
+  // Slow the model's code, so there is time to move on.
+  await page.route("**/_next/static/chunks/**", async (route) => {
+    await new Promise((r) => setTimeout(r, 1500));
+    await route.continue();
+  });
+  const show = page.locator("#parts").getByRole("button", { name: "Show the 3D model" });
+  await show.focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("heading", { level: 1 }).click();
+  const model = page.getByRole("application", { name: "3D model: Parts of Vieve" });
+  await expect(model.locator("canvas")).toBeVisible({ timeout: 15000 });
+  await page.waitForTimeout(250);
+  await expect(model).not.toBeFocused();
+});
+
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
   test("the product pages show the device drawings, and nothing to drag", async ({ page }) => {

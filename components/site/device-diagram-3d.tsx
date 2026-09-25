@@ -8,7 +8,7 @@ import type { Kind } from "@/components/device3d/scene";
 
 // three.js and the models are their own chunk, about 250 kB gzipped, so it is
 // fetched only when someone reaches for the model: points at it or its notes,
-// tabs into it, taps it, or presses "Show the 3D model". Until the model has
+// tabs to a note, taps it, or presses "Show the 3D model". Until the model has
 // drawn its first frame (and for good without JavaScript or WebGL) the
 // drawing of the device stands in, and the notes are readable on their own.
 const DeviceScene = dynamic(() => import("@/components/device3d/scene"), { ssr: false });
@@ -68,12 +68,16 @@ export function DeviceDiagram3D({
   const lines = useRef<Array<SVGLineElement | null>>([]);
   const dots = useRef<Array<HTMLButtonElement | null>>([]);
   const firstFrame = useRef(false);
-  // Whether "Show the 3D model" has focus, so the model can take it over.
+  // "Show the 3D model": whether it was pressed, and whether it still had
+  // focus when it went, so that focus can be handed on.
+  const btn = useRef<HTMLButtonElement>(null);
+  const pressed = useRef(false);
   const focusModel = useRef(false);
   const load = () => setLive(true);
 
-  // The button goes once the model is there. If focus went with it, it moves
-  // on to the model rather than back to the top of the page.
+  // The button goes once the model is there. If it was pressed and focus
+  // went with it, focus moves on to the model rather than back to the top of
+  // the page.
   useEffect(() => {
     const lost = !document.activeElement || document.activeElement === document.body;
     if (shown && focusModel.current && lost) stage.current?.focus();
@@ -92,6 +96,7 @@ export function DeviceDiagram3D({
   const onFrame = useCallback((pts: Array<[number, number]>) => {
     if (!firstFrame.current) {
       firstFrame.current = true;
+      focusModel.current = pressed.current && document.activeElement === btn.current;
       setShown(true);
     }
     const w = wrap.current, s = stage.current;
@@ -174,7 +179,8 @@ export function DeviceDiagram3D({
       <div
         ref={wrap}
         onPointerEnter={(e) => e.pointerType !== "touch" && load()}
-        onFocusCapture={load}
+        // Focus on a note is intent enough; focus on the button isn't, until it's pressed.
+        onFocusCapture={(e) => (e.target as Element) !== btn.current && load()}
         onClick={load}
         className="relative grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.1fr)_minmax(0,1fr)] lg:gap-6">
         {/* leader lines, wide screens only */}
@@ -267,9 +273,11 @@ export function DeviceDiagram3D({
                 !failed && (
                   <button
                     type="button"
-                    onClick={load}
-                    onFocus={() => (focusModel.current = true)}
-                    onBlur={(e) => e.relatedTarget && (focusModel.current = false)}
+                    ref={btn}
+                    onClick={() => {
+                      pressed.current = true;
+                      load();
+                    }}
                     className="underline underline-offset-4 hover:text-foreground"
                   >
                     {live ? "Loading the 3D model…" : "Show the 3D model"}
