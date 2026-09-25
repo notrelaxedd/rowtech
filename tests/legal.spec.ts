@@ -64,11 +64,13 @@ test.describe("signed in, but not on the beta list", () => {
 });
 
 // Owner placeholders are for people reading the page, never for crawlers or
-// share previews.
+// share previews. Built in two parts so this file isn't itself a hit when the
+// owners search the code for placeholders still to fill in.
+const PLACEHOLDER = "[" + "OWNER:";
 test("no page's head, structured data or labels carry an owner placeholder", async ({ page, request }) => {
   for (const path of ["/", "/force", "/vieve", "/beta", "/privacy", "/terms", "/app/login", "/no-such-page"]) {
     const html = await (await request.get(path)).text();
-    expect(html.slice(0, html.indexOf("</head>")), path).not.toContain("[OWNER:");
+    expect(html.slice(0, html.indexOf("</head>")), path).not.toContain(PLACEHOLDER);
     await page.goto(path);
     const read = await page.evaluate(() => [
       document.head.innerHTML,
@@ -77,6 +79,6 @@ test("no page's head, structured data or labels carry an owner placeholder", asy
         ["aria-label", "alt", "title"].map((a) => el.getAttribute(a) ?? ""),
       ),
     ]);
-    for (const text of read) expect(text, path).not.toContain("[OWNER:");
+    for (const text of read) expect(text, path).not.toContain(PLACEHOLDER);
   }
 });

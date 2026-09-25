@@ -7,7 +7,7 @@ import { pageMetadata } from "@/lib/site";
 
 // What the code collects, and where it sends it. Anything only the owners can
 // say (who is responsible, retention, legal basis, rights, transfers, age) is
-// an [OWNER: ...] placeholder in the page body, never in the metadata.
+// an OWNER placeholder in the page body, never in the metadata.
 export const metadata: Metadata = pageMetadata({
   title: "Privacy",
   description: "What the RowTech site, beta form and dashboard collect, where it is stored, and which services handle it.",

@@ -1,5 +1,5 @@
 // What only RowTech's owners can say: who runs it, legally, and where to write.
-// Until they fill these in, each is a visible [OWNER: ...] placeholder; pages
+// Until they fill these in, each is a visible OWNER placeholder; pages
 // import them, so each is filled in here, once. Never use these in metadata,
 // titles, structured data or alt text: crawlers and share previews read those.
 

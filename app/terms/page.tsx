@@ -5,7 +5,7 @@ import { ContactEmail, inlineLink, LegalSection } from "@/components/site/legal"
 import { legalCountry, legalEntity } from "@/lib/owner";
 import { pageMetadata } from "@/lib/site";
 
-// The terms themselves are the owners' to write: each is an [OWNER: ...]
+// The terms themselves are the owners' to write: each is an OWNER
 // placeholder in the page body, never in the metadata.
 export const metadata: Metadata = pageMetadata({
   title: "Terms",
