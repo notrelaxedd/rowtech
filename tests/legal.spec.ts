@@ -25,18 +25,19 @@ for (const { path, title, h1 } of LEGAL) {
 
 test("the privacy and terms pages link to each other", async ({ page }) => {
   await page.goto("/privacy");
-  await expect(page.getByRole("main").getByRole("link", { name: "Terms", exact: true })).toHaveAttribute("href", "/terms");
+  await expect(page.getByRole("main").getByRole("link", { name: "Terms", exact: true }).first()).toHaveAttribute("href", "/terms");
   await page.goto("/terms");
   await expect(page.getByRole("main").getByRole("link", { name: "Privacy", exact: true })).toHaveAttribute("href", "/privacy");
 });
 
-// Nothing specific is promised to beta crews until the owners say what is
-// (LEG-009), and the beta's terms are a link away.
-test("the home page's beta section links to the terms and promises no discount", async ({ page }) => {
+// The beta promises only what the owners confirmed (LEG-009): no discount on
+// everything, just one for units sent back. The beta's terms are a link away.
+test("the home page's beta section links to the terms and promises only the confirmed discount", async ({ page }) => {
   await page.goto("/");
   const beta = page.locator("#beta");
   await expect(beta.getByRole("link", { name: "Terms", exact: true })).toHaveAttribute("href", "/terms");
-  await expect(page.locator("main")).not.toContainText(/discount/i);
+  await expect(page.locator("main")).not.toContainText("Discounted prices on all RowTech products");
+  await expect(beta).toContainText("send them back for a discount on the finished product");
 });
 
 async function expectPolicyLinks(scope: ReturnType<Page["locator"]>) {
