@@ -224,7 +224,7 @@ export default function Home() {
                   <h3 className="type-h3 mt-2">{p.name}</h3>
                   <p className="type-body mt-2 max-w-[48ch] text-muted-foreground">{p.line}</p>
                   <p className="mt-5">
-                    <Link href={p.href} className="font-semibold text-trace underline-offset-4 hover:underline">
+                    <Link href={p.href} className="hit-area relative font-semibold text-trace underline-offset-4 hover:underline">
                       {p.cta}
                     </Link>
                   </p>

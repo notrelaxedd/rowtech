@@ -229,6 +229,18 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* A touch target at least 44px square, centred on the element, that changes
+   nothing on screen: an invisible box around it that takes the taps. The
+   element must be positioned (relative or absolute). */
+@utility hit-area {
+  &::before {
+    content: "";
+    position: absolute;
+    /* Grown to 44px on each axis the element is short of it, and no further. */
+    inset: min(0px, calc(50% - 1.375rem));
+  }
+}
+
 /* The sweep graph's quarter gridlines. */
 @utility scope-grid {
   background-image: linear-gradient(to bottom, var(--line) 1px, transparent 1px);

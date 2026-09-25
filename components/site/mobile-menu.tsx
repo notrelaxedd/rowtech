@@ -62,7 +62,7 @@ export function MobileMenu({ links }: { links: ReadonlyArray<{ href: string; lab
         ref={trigger}
         aria-expanded={js ? open : undefined}
         aria-controls={js ? navId : undefined}
-        className="flex h-10 cursor-pointer list-none items-center rounded-md px-2.5 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden"
+        className="flex h-11 cursor-pointer list-none items-center rounded-md px-2.5 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden"
       >
         Menu
       </summary>

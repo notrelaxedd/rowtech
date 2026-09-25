@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Locator } from "@playwright/test";
 import { expectSkipLink } from "./support/skip-link";
 
 test("the marketing page renders, with the beta offered in four places", async ({ page }) => {
@@ -383,4 +383,71 @@ test.describe("without JavaScript", () => {
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(375);
   });
+});
+
+// On a phone, the small links and buttons take taps over at least 44x44 CSS
+// px, however small they're drawn (A11Y-005): every point of the target's
+// middle 42px square lands on it.
+async function tapArea(target: Locator) {
+  return target.evaluate((el) => {
+    el.scrollIntoView({ block: "center", behavior: "instant" });
+    const r = el.getBoundingClientRect();
+    const before = getComputedStyle(el, "::before");
+    const size = (px: string, own: number) => Math.max(own, parseFloat(px) || 0);
+    const [cx, cy] = [r.left + r.width / 2, r.top + r.height / 2];
+    const misses: string[] = [];
+    for (const dx of [-21, 0, 21])
+      for (const dy of [-21, 0, 21]) {
+        const hit = document.elementFromPoint(cx + dx, cy + dy);
+        if (!hit || !el.contains(hit)) misses.push(`${dx},${dy}: ${hit?.tagName}${hit?.getAttribute("aria-label") ? ` ${hit.getAttribute("aria-label")}` : ""}`);
+      }
+    return { width: size(before.width, r.width), height: size(before.height, r.height), misses };
+  });
+}
+
+test("on a phone, small links and buttons take taps over 44x44 px", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/");
+  const header = page.locator("header");
+  const targets: Array<[string, Locator]> = [
+    ["logo", header.getByRole("link", { name: "RowTech home" })],
+    ["Menu", header.locator("summary")],
+    ["header CTA", header.getByRole("link", { name: "Apply for the beta" })],
+    ["See Force", page.locator("figcaption").getByRole("link", { name: "See Force" })],
+    ["Force card", page.getByRole("link", { name: "See Force and its specifications" })],
+    ["Vieve card", page.getByRole("link", { name: "See Vieve and its specifications" })],
+  ];
+  for (const link of await page.getByRole("navigation", { name: "Footer" }).getByRole("link").all())
+    targets.push([`footer ${await link.textContent()}`, link]);
+  for (const [name, target] of targets) {
+    const a = await tapArea(target);
+    expect(a.width, name).toBeGreaterThanOrEqual(44);
+    expect(a.height, name).toBeGreaterThanOrEqual(44);
+    expect(a.misses, name).toEqual([]);
+  }
+
+  // The stroke chart's numbered markers. Where two sit closer than 44px, the
+  // later one takes the taps they share; none are lost to the chart under them.
+  const chart = page.locator("#stroke");
+  await chart.scrollIntoViewIfNeeded();
+  // The server's copy is static; wait for the live one to swap in.
+  const rhythm = chart.getByRole("button", { name: /^Rhythm:/ });
+  await expect(async () => {
+    await rhythm.click();
+    await expect(rhythm).toHaveAttribute("aria-pressed", "true", { timeout: 500 });
+  }).toPass({ timeout: 10000 });
+  const markers = chart.locator("[aria-pressed][aria-label]");
+  await expect(markers).toHaveCount(7);
+  for (const marker of await markers.all()) {
+    const name = (await marker.getAttribute("aria-label"))!;
+    const a = await tapArea(marker);
+    expect(a.width, name).toBeGreaterThanOrEqual(44);
+    expect(a.height, name).toBeGreaterThanOrEqual(44);
+    expect(a.misses.filter((m) => !m.includes("BUTTON ")), name).toEqual([]);
+  }
+
+  await page.goto("/app/login");
+  const logo = await tapArea(page.getByRole("link", { name: "RowTech home" }));
+  expect(Math.min(logo.width, logo.height)).toBeGreaterThanOrEqual(44);
+  expect(logo.misses).toEqual([]);
 });

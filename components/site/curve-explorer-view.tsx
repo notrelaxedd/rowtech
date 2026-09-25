@@ -94,7 +94,7 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
                     onClick={setActive && (() => setActive(p.id))}
                     className={cn(
                       "absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-md border text-left transition-colors duration-200",
-                      "flex size-7 items-center justify-center text-xs font-bold tabular-nums sm:block sm:size-auto sm:px-2.5 sm:py-1.5 sm:font-normal",
+                      "flex size-7 items-center justify-center text-xs font-bold tabular-nums max-sm:hit-area sm:block sm:size-auto sm:px-2.5 sm:py-1.5 sm:font-normal",
                       lit_ ? "border-trace bg-[#0b3a44] text-foreground" : "border-line bg-panel/95 text-muted-foreground hover:border-trace/60 hover:text-foreground"
                     )}
                     style={{ left: `${(p.chip[0] / W) * 100}%`, top: `${(p.chip[1] / H) * 100}%` }}
