@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowRight, LoaderCircle } from "lucide-react";
-import { readAttribution, readCta, UTM } from "@/components/site/attribution";
+import { readAttribution, takeCta, UTM } from "@/components/site/attribution";
 import { ctaPrimary, ctaSecondary } from "@/components/site/cta";
 import { formField } from "@/components/ui/field";
 import { track } from "@/lib/analytics";
@@ -27,12 +27,13 @@ const NEXT_STEPS = [
 
 /**
  * Which link brought them here: the beta link they used on the site (its
- * data-cta, remembered for the tab), or an older /beta?from= link's tag.
+ * data-cta, handed over by AttributionCapture), or an older /beta?from=
+ * link's tag.
  * Read in the browser, so /beta itself can be one static page. The server's
  * render, and a form sent without JavaScript, say "direct".
  */
 function readFrom() {
-  return cleanFrom(new URLSearchParams(location.search).get("from") ?? "") || cleanFrom(readCta()) || "direct";
+  return cleanFrom(new URLSearchParams(location.search).get("from") ?? "") || cleanFrom(takeCta()) || "direct";
 }
 const noSubscribe = () => () => {};
 

@@ -48,6 +48,29 @@ test("every beta link goes to the one /beta, and the form knows which was used",
   await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
 });
 
+test("a beta link opened in a new tab says which it was, and only for that visit", async ({ page, context }) => {
+  await page.goto("/");
+  for (const button of ["left", "middle"] as const) {
+    const opened = context.waitForEvent("page");
+    await page.locator("a[data-cta=hero]").click({ button, modifiers: button === "left" ? ["ControlOrMeta"] : [] });
+    const tab = await opened;
+    await expect(tab).toHaveURL(/\/beta$/);
+    await expect(tab.locator('input[name="from"]')).toHaveValue("hero");
+    await tab.close();
+  }
+
+  // Used once, the tag is gone: a later visit without a beta link is direct.
+  await page.locator("a[data-cta=hero]").click();
+  await expect(page.locator('input[name="from"]')).toHaveValue("hero");
+  await page.goto("/beta");
+  await expect(page.locator('input[name="from"]')).toHaveValue("direct");
+
+  // And one that's never opened doesn't linger to claim a visit much later.
+  await page.evaluate(() => localStorage.setItem("rt_cta", JSON.stringify({ cta: "hero", at: Date.now() - 60 * 60_000 })));
+  await page.reload();
+  await expect(page.locator('input[name="from"]')).toHaveValue("direct");
+});
+
 test("straight to /beta, the form says it came direct", async ({ page }) => {
   await page.goto("/beta");
   await expect(page.locator('input[name="from"]')).toHaveValue("direct");
