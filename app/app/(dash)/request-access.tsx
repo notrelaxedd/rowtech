@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/site/logo";
 import { ctaPrimary, ctaSecondary } from "@/components/site/cta";
-import { inlineLink } from "@/components/site/legal";
+import { PolicyLinks } from "@/components/site/legal";
 import { cn } from "@/lib/utils";
 
 /** Signed in, but not on the beta list. */
@@ -31,15 +31,7 @@ export function RequestAccess({ email, signOut }: { email: string; signOut: () =
           Already applied, or already rowing with us? Reply to our email and we&rsquo;ll sort it out.
         </p>
         <p className="mt-3 text-sm text-muted-foreground">
-          To have this account deleted instead, see{" "}
-          <Link href="/privacy" className={inlineLink}>
-            Privacy
-          </Link>
-          . The dashboard&rsquo;s terms are under{" "}
-          <Link href="/terms" className={inlineLink}>
-            Terms
-          </Link>
-          .
+          <PolicyLinks />
         </p>
       </div>
     </main>

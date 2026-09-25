@@ -31,7 +31,7 @@ export default function PrivacyPage() {
                 RowTech is run by {legalEntity}, {legalCountry}.
               </p>
               <p>
-                For anything on this page, including the requests below, write to <ContactEmail />.
+                For anything on this page, write to <ContactEmail />.
               </p>
             </LegalSection>
 
@@ -156,12 +156,12 @@ export default function PrivacyPage() {
             </LegalSection>
 
             <LegalSection title="Your requests">
-              <p>
-                To see, correct, export or delete what we hold about you, to withdraw a beta application, or to close a
-                dashboard account, write to <ContactEmail />.
-              </p>
               <p>A team&rsquo;s owners and coaches can delete a session themselves, from the session&rsquo;s page in the dashboard.</p>
-              <p>[OWNER: which rights people have over their information, how to use them, and how quickly requests are answered]</p>
+              <p>
+                [OWNER: which requests people can make about their information (for example to see, correct, export or
+                delete it, to withdraw a beta application, or to close a dashboard account), how to make them, and how
+                quickly they are answered]
+              </p>
             </LegalSection>
 
             <LegalSection title="Children">

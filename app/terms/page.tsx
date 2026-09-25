@@ -54,7 +54,7 @@ export default function TermsPage() {
 
             <LegalSection title="Your data">
               <p>
-                What&rsquo;s collected, where it&rsquo;s kept and how to have it deleted is on the{" "}
+                What&rsquo;s collected and where it&rsquo;s kept is on the{" "}
                 <Link href="/privacy" className={inlineLink}>
                   Privacy
                 </Link>{" "}
