@@ -26,6 +26,8 @@ for (const { path, title } of PAGES) {
     await expect(meta(page, "og:title")).toHaveAttribute("content", title);
     await expect(meta(page, "twitter:title")).toHaveAttribute("content", title);
     if (path !== "/") {
+      // Short enough that a search result shows it whole (~160 characters).
+      expect(description!.length).toBeLessThanOrEqual(160);
       await expect(meta(page, "og:description")).toHaveAttribute("content", description!);
       await expect(meta(page, "twitter:description")).toHaveAttribute("content", description!);
     }

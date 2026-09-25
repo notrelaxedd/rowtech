@@ -11,7 +11,7 @@ import { pageMetadata } from "@/lib/site";
 export const metadata: Metadata = pageMetadata({
   title: "Force, the seat node",
   description:
-    "Seat-by-seat rowing force measurement: the Force node sits on each seat's rigger backstay, records the force curve of every stroke and shows it to the rower live. Specifications and parts.",
+    "Seat-by-seat rowing force measurement: a Force node on each seat's rigger backstay records the force curve of every stroke and shows it to the rower live.",
   path: "/force",
 });
 
