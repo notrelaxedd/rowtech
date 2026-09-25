@@ -6,14 +6,14 @@ import { FORCE_DEFAULT_VIEW, FORCE_NOTES } from "@/components/site/device-notes"
 import { ForceDevice } from "@/components/device/force-device";
 import { SpecTable } from "@/components/site/spec-table";
 import { FORCE_SPECS } from "@/lib/specs";
-import { siteUrl } from "@/lib/site";
+import { pageMetadata, siteUrl } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Force, the seat node",
   description:
     "The Force node sits on each seat's rigger backstay, records the force curve of every stroke and shows it to the rower live. Specifications and parts.",
-  alternates: { canonical: "/force" },
-};
+  path: "/force",
+});
 
 const BOATHOUSE = [
   {

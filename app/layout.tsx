@@ -5,7 +5,7 @@ import { AttributionCapture } from "@/components/site/attribution";
 import { Analytics as ProductAnalytics } from "@/components/site/analytics";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { siteUrl } from "@/lib/site";
+import { openGraphBase, siteTitle, siteUrl, titleTemplate, twitterBase } from "@/lib/site";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -20,32 +20,20 @@ const chivoMono = Chivo_Mono({
 });
 
 
+// Pages set their own canonical URL and share title, description and url
+// (pageMetadata in lib/site.ts); nothing here names one page, so nothing
+// inherits the home page's.
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "RowTech: the force curve from every seat in the boat",
-    template: "%s | RowTech",
+    default: siteTitle,
+    template: titleTemplate,
   },
   description:
     "A Force node on each seat's rigger backstay records the force curve of every stroke and shows it to the rower live. Vieve, the RowTech cox box, is in development. Coaches: apply for the beta.",
   applicationName: "RowTech",
-  alternates: { canonical: "/" },
-  openGraph: {
-    title: "RowTech: the force curve from every seat in the boat",
-    description:
-      "Seat-by-seat force measurement for rowing. Coaches: apply for the beta.",
-    url: "/",
-    siteName: "RowTech",
-    locale: "en_US",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "RowTech: the force curve from every seat in the boat" }],
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "RowTech: the force curve from every seat in the boat",
-    description: "Seat-by-seat force measurement for rowing. Coaches: apply for the beta.",
-    images: ["/og.png"],
-  },
+  openGraph: openGraphBase,
+  twitter: twitterBase,
 };
 
 export default function RootLayout({

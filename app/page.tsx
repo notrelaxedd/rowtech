@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { wrap } from "@/components/site/site-page";
@@ -12,8 +13,16 @@ import { DevicePlaceholder } from "@/components/device/device-placeholder";
 import { CurveExplorerView } from "@/components/site/curve-explorer-view";
 import { SessionFiles } from "@/components/site/session-files";
 import { ForceMount } from "@/components/device/force-mount";
-import { siteUrl } from "@/lib/site";
+import { openGraphBase, siteTitle, siteUrl, twitterBase } from "@/lib/site";
 import { cn } from "@/lib/utils";
+
+// The title and description are the root layout's defaults.
+const shareDescription = "Seat-by-seat force measurement for rowing. Coaches: apply for the beta.";
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { ...openGraphBase, title: siteTitle, description: shareDescription, url: "/" },
+  twitter: { ...twitterBase, title: siteTitle, description: shareDescription },
+};
 
 const STEPS = [
   {

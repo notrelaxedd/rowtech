@@ -8,13 +8,14 @@ import { CoxBoxView } from "@/components/site/cox-box-view";
 import { Status } from "@/components/site/status";
 import { SpecTable } from "@/components/site/spec-table";
 import { VIEVE_SPECS } from "@/lib/specs";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Vieve, the RowTech cox box",
   description:
     "Vieve, the RowTech cox box, is in development: the cox's voice to the boat's speakers, and the hub every seat node reports to. Specifications and parts.",
-  alternates: { canonical: "/vieve" },
-};
+  path: "/vieve",
+});
 
 export default function VievePage() {
   return (

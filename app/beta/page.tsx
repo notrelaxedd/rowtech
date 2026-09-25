@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SignupForm } from "./signup-form";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Apply for the beta",
-  description:
-    "Apply to be a RowTech beta crew: seat-by-seat force measurement for rowing coaches and programs.",
-};
+  description: "Apply to be a RowTech beta crew: seat-by-seat force measurement for rowing coaches and programs.",
+  path: "/beta",
+});
 
 // Static: which link someone came in on is read in the browser (SignupForm).
 export default function BetaPage() {
