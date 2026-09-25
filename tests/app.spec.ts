@@ -7,6 +7,7 @@ import { parseStrokes } from "../lib/session/parse";
 import { duration, fmt, summarise, type SessionSummary } from "../lib/session/analyse";
 import { expectSkipLink } from "./support/skip-link";
 import { sendWhileHeld } from "./support/pending";
+import { googleSignIn } from "../lib/owner";
 
 test("the dashboard is closed to people who aren't signed in", async ({ page }) => {
   await page.goto("/app/force");
@@ -30,11 +31,23 @@ test("a stale magic link says so instead of failing quietly", async ({ page }) =
   await expect(page.getByRole("alert").first()).toContainText("Enter your email for a new one.");
 });
 
+// Until the Google provider is enabled, the sign-in page doesn't offer a
+// button that would fail for everyone (LEG-003): lib/owner.ts turns it on.
+test("while Google sign-in is off, the sign-in page offers only the emailed link", async ({ page }) => {
+  test.skip(googleSignIn, "Google sign-in is on (lib/owner.ts)");
+  await page.goto("/app/login");
+  await expect(page.getByRole("button", { name: "Continue with Google" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Email me a link" })).toBeVisible();
+  await page.goto("/privacy");
+  await expect(page.getByRole("main")).not.toContainText("Continue with Google");
+});
+
 // Google's own button, built to its guidelines (LEG-003), still starts the same
 // sign-in: the server action sends the browser to Supabase's Google authorize
 // URL, which comes back to /auth/callback. The request is stopped there: the
 // local stack has no Google provider.
 test("Continue with Google still sends the browser to Google sign-in", async ({ page, baseURL }) => {
+  test.skip(!googleSignIn, "Google sign-in is off until the provider is enabled (lib/owner.ts)");
   test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
   await page.route("**/auth/v1/authorize?**", (route) => route.fulfill({ status: 200, contentType: "text/plain", body: "stopped" }));
   await page.goto("/app/login");
@@ -153,6 +166,35 @@ test.describe("signed in", () => {
     await expect(empty).toContainText("microSD card");
     for (const f of ["meta.json", "strokes.csv", "curves.bin", "events.csv"]) await expect(empty).toContainText(f);
     await expect(empty).toContainText("Wi-Fi");
+  });
+
+  // A team keeps at most 200 MB in Storage (SEC-008): an upload that would take
+  // it past that is refused before anything is stored.
+  test("an upload that would take the team past 200 MB of storage is refused", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const { data: team, error } = await user.db.rpc("ensure_own_team", { p_name: "My crew" });
+    if (error) throw error;
+    // A session whose file rows already fill the team's 200 MB.
+    const full = randomUUID();
+    const { error: sessionError } = await user.db
+      .from("sessions")
+      .insert({ id: full, team_id: team, kind: "node", device_id: "node-9", session_uuid: randomUUID(), created_by: user.id });
+    if (sessionError) throw sessionError;
+    const { error: fileError } = await user.db
+      .from("session_files")
+      .insert({ session_id: full, kind: "meta", path: `${team}/${full}/meta.json`, bytes: 200 * 1024 * 1024 });
+    if (fileError) throw fileError;
+
+    await page.goto("/app/force");
+    await page.getByLabel("Files").setInputFiles(seatFiles(2));
+    await page.getByRole("button", { name: "Upload" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "200 MB" })).toHaveText(
+      "Your team has used its 200 MB of storage. Delete sessions you no longer need to make room.",
+      { timeout: 30_000 }
+    );
+    const { data: sessions } = await user.db.from("sessions").select("id");
+    expect(sessions).toEqual([{ id: full }]);
   });
 
   test("the dashboard's first Tab is a link past its header to the content", async ({ page, context, baseURL }) => {

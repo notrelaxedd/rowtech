@@ -1,6 +1,6 @@
 import { test, expect, type Locator } from "@playwright/test";
 import { expectSkipLink } from "./support/skip-link";
-import { contactEmail } from "../lib/owner";
+import { contactEmail, googleSignIn } from "../lib/owner";
 
 test("the marketing page renders, with the beta offered in four places", async ({ page }) => {
   await page.goto("/");
@@ -130,6 +130,14 @@ test("the home page has a line for the build status, how the beta works, and fai
   const get = page.locator("#beta h3", { hasText: "What beta crews get" }).locator("+ ul > li");
   await expect(get).toHaveCount(4);
   await expect(get.last()).toContainText(`Write to ${contactEmail}.`);
+});
+
+// Another company sells rowing sensors as RowTech Solutions; the FAQ says this
+// RowTech isn't it (BIZ-023: the name stays).
+test("the FAQ says RowTech isn't RowTech Solutions", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#faq summary", { hasText: "Are you RowTech Solutions?" })).toHaveCount(1);
+  await expect(page.locator("#faq")).toContainText("isn’t connected to RowTech Solutions");
 });
 
 // "Wi-Fi", the standard spelling, wherever a page says it (LEG-016, CNT-008).
@@ -898,11 +906,14 @@ test("on a phone, small links and buttons take taps over 44x44 px", async ({ pag
   const logo = await tapArea(page.getByRole("link", { name: "RowTech home" }));
   expect(Math.min(logo.width, logo.height)).toBeGreaterThanOrEqual(44);
   expect(logo.misses).toEqual([]);
-  // Google's button is drawn 40px high, to its guidelines, but takes taps over 44px.
-  const google = await tapArea(page.getByRole("button", { name: "Continue with Google" }));
-  expect(Math.min(google.width, google.height)).toBeGreaterThanOrEqual(44);
-  expect(google.misses).toEqual([]);
-  expect((await page.getByRole("button", { name: "Continue with Google" }).boundingBox())!.height).toBeCloseTo(40, 0);
+  // Google's button, when it's on, is drawn 40px high, to its guidelines, but
+  // takes taps over 44px.
+  if (googleSignIn) {
+    const google = await tapArea(page.getByRole("button", { name: "Continue with Google" }));
+    expect(Math.min(google.width, google.height)).toBeGreaterThanOrEqual(44);
+    expect(google.misses).toEqual([]);
+    expect((await page.getByRole("button", { name: "Continue with Google" }).boundingBox())!.height).toBeCloseTo(40, 0);
+  }
   // The product pages' "Show the 3D model", a line of small text under the drawing.
   for (const path of ["/force", "/vieve"]) {
     await page.goto(path);
