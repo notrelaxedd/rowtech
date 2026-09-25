@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { readFailed, supabaseServer } from "@/lib/supabase/server";
 import { duration, fmt } from "@/lib/session/analyse";
 import { LocalTime } from "@/components/dash/local-time";
@@ -129,13 +130,15 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
           {(older || before) && (
             <p className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
               {before && (
-                <Link href="/app/force" className="text-trace underline-offset-4 hover:underline">
-                  ← Newest sessions
+                <Link href="/app/force" className="inline-flex items-center gap-1.5 text-trace underline-offset-4 hover:underline">
+                  <ArrowLeft aria-hidden className="size-3.5" />
+                  Newest sessions
                 </Link>
               )}
               {older && (
-                <Link href={`/app/force?before=${encodeURIComponent(older)}`} className="text-trace underline-offset-4 hover:underline">
-                  Older sessions →
+                <Link href={`/app/force?before=${encodeURIComponent(older)}`} className="inline-flex items-center gap-1.5 text-trace underline-offset-4 hover:underline">
+                  Older sessions
+                  <ArrowRight aria-hidden className="size-3.5" />
                 </Link>
               )}
             </p>

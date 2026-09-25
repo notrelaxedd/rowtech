@@ -440,24 +440,24 @@ test.describe("signed in", () => {
     const html = await (await page.request.get("/app/force")).text();
     expect(html).toContain(seats[500].id);
     expect(html).not.toContain(seats[0].id);
-    await expect(page.getByRole("link", { name: "← Newest sessions" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Newest sessions" })).toHaveCount(0);
     // Older pages reach it, and the oldest crew outing past it.
-    await page.getByRole("link", { name: "Older sessions →" }).click();
+    await page.getByRole("link", { name: "Older sessions" }).click();
     await expect(page.locator(`a[href="/app/force/${seats[300].id}"]`)).toBeVisible();
-    await page.getByRole("link", { name: "Older sessions →" }).click();
+    await page.getByRole("link", { name: "Older sessions" }).click();
     await expect(page.locator(`a[href="/app/force/${seats[0].id}"]`)).toBeVisible();
-    await page.getByRole("link", { name: "Older sessions →" }).click();
+    await page.getByRole("link", { name: "Older sessions" }).click();
     await expect(page.locator(`a[href="/app/force/${crews[0].id}"]`)).toBeVisible();
-    await expect(page.getByRole("link", { name: "Older sessions →" })).toHaveCount(0);
-    await page.getByRole("link", { name: "← Newest sessions" }).click();
+    await expect(page.getByRole("link", { name: "Older sessions" })).toHaveCount(0);
+    await page.getByRole("link", { name: "Newest sessions", exact: true }).click();
     await expect(page.locator(`a[href="/app/force/${seats[500].id}"]`)).toBeVisible();
 
     await page.goto("/app/cox");
     await expect(page.locator(`a[href="/app/cox/${crews[0].id}"]`)).toHaveCount(0);
-    await page.getByRole("link", { name: "Older outings →" }).click();
+    await page.getByRole("link", { name: "Older outings" }).click();
     await expect(page.locator(`a[href="/app/cox/${crews[0].id}"]`)).toBeVisible();
-    await expect(page.getByRole("link", { name: "Older outings →" })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "← Newest outings" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Older outings" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Newest outings", exact: true })).toBeVisible();
     await page.goto("/app/cox/compare");
     await expect(page.getByText("The lists hold the 100 most recent outings; older ones aren’t in them.")).toBeVisible();
   });
@@ -515,9 +515,9 @@ test.describe("signed in", () => {
     await page.goto("/app/force");
     await expect(page.locator(`a[href="/app/force/${rows[2].id}"]`)).toBeVisible();
     await expect(page.locator(`a[href="/app/force/${crew.id}"]`)).toHaveCount(0);
-    await page.getByRole("link", { name: "Older sessions →" }).click();
+    await page.getByRole("link", { name: "Older sessions" }).click();
     await expect(page.locator(`a[href="/app/force/${crew.id}"]`)).toContainText("2 seats");
-    await expect(page.getByRole("link", { name: "Older sessions →" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Older sessions" })).toHaveCount(0);
   });
 
   // A seat uploaded again on its own stays in its crew but takes the new time,
@@ -543,7 +543,7 @@ test.describe("signed in", () => {
 
     await page.goto("/app/force");
     await expect(page.locator(`a[href="/app/force/${crew}"]`)).toHaveCount(0);
-    await page.getByRole("link", { name: "Older sessions →" }).click();
+    await page.getByRole("link", { name: "Older sessions" }).click();
     const row = page.locator(`a[href="/app/force/${crew}"]`);
     await expect(row).toContainText("· 2 seats");
     await expect(row).toContainText(`${strokes} strokes`);
@@ -1073,7 +1073,7 @@ test.describe("signed in", () => {
     await expect(tabs.filter({ hasText: "Crew" })).toHaveAttribute("aria-current", "page");
     await expect(page.locator(`a[href="/app/cox/${single}"]`)).toHaveCount(0);
     // One outing: nothing to compare it with yet.
-    await expect(page.getByRole("link", { name: "Compare two outings →" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Compare two outings" })).toHaveCount(0);
     const link = page.locator(`a[href="/app/cox/${crew}"]`);
     await expect(link).toContainText("2 seats");
     await expect(link).toContainText("seat clocks");
@@ -1120,7 +1120,10 @@ test.describe("signed in", () => {
     expect((await user.db.from("gps_points").insert(fixes)).error).toBeNull();
 
     await page.goto("/app/cox");
-    await page.getByRole("link", { name: "Compare two outings →" }).click();
+    // An icon draws the arrow; the link's name is its words alone (CNT-012).
+    const compare = page.getByRole("link", { name: "Compare two outings", exact: true });
+    await expect(compare.locator("svg[aria-hidden]")).toHaveCount(1);
+    await compare.click();
     await expect(page).toHaveURL(/\/app\/cox\/compare$/);
     // Nothing picked yet: the two newest.
     await expect(page.getByLabel("First")).toHaveValue(newer);

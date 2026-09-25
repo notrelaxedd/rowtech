@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { readFailed, supabaseServer } from "@/lib/supabase/server";
 import { duration } from "@/lib/session/analyse";
 import { LocalTime } from "@/components/dash/local-time";
@@ -61,20 +62,23 @@ export default async function CoxPage({ searchParams }: { searchParams: Promise<
           {(older || before) && (
             <p className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
               {before && (
-                <Link href="/app/cox" className="text-trace underline-offset-4 hover:underline">
-                  ← Newest outings
+                <Link href="/app/cox" className="inline-flex items-center gap-1.5 text-trace underline-offset-4 hover:underline">
+                  <ArrowLeft aria-hidden className="size-3.5" />
+                  Newest outings
                 </Link>
               )}
               {older && (
-                <Link href={`/app/cox?before=${encodeURIComponent(older)}`} className="text-trace underline-offset-4 hover:underline">
-                  Older outings →
+                <Link href={`/app/cox?before=${encodeURIComponent(older)}`} className="inline-flex items-center gap-1.5 text-trace underline-offset-4 hover:underline">
+                  Older outings
+                  <ArrowRight aria-hidden className="size-3.5" />
                 </Link>
               )}
             </p>
           )}
           {crews.length > 1 && (
-            <Link href="/app/cox/compare" className="inline-block text-sm text-trace underline-offset-4 hover:underline">
-              Compare two outings →
+            <Link href="/app/cox/compare" className="inline-flex items-center gap-1.5 text-sm text-trace underline-offset-4 hover:underline">
+              Compare two outings
+              <ArrowRight aria-hidden className="size-3.5" />
             </Link>
           )}
         </>
