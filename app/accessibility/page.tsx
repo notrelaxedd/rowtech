@@ -3,9 +3,8 @@ import { SitePage, wrap } from "@/components/site/site-page";
 import { ContactEmail, LegalSection } from "@/components/site/legal";
 import { pageMetadata } from "@/lib/site";
 
-// What the code does for accessibility, and where to write. The standard
-// RowTech aims for is the owners' to state: an OWNER placeholder in the page
-// body, never in the metadata.
+// What the code does for accessibility, the standard RowTech aims for, and
+// where to write. Keep "What the site does" true to the code.
 export const metadata: Metadata = pageMetadata({
   title: "Accessibility",
   description: "What the RowTech site and dashboard do for accessibility, and where to report a problem.",
@@ -22,13 +21,14 @@ export default function AccessibilityPage() {
             What this site and the RowTech dashboard do for accessibility, and where to write when something
             doesn’t work for you.
           </p>
-          <p className="mt-4 text-sm text-muted-foreground">Last updated: [OWNER: the date this statement was written]</p>
+          <p className="mt-4 text-sm text-muted-foreground">Last updated: September 24, 2026</p>
 
           <div className="mt-14 space-y-12">
             <LegalSection title="What we aim for">
               <p>
-                [OWNER: the accessibility standard RowTech aims to meet (for example WCAG 2.1 AA), and how far the site
-                and dashboard meet it today]
+                We aim to meet the Web Content Accessibility Guidelines (WCAG) 2.1 at level AA, on the site and in the
+                dashboard. We haven’t had a formal audit against them yet, so some parts may still fall short, such as
+                the smallest labels in the drawings.
               </p>
             </LegalSection>
 
@@ -58,7 +58,7 @@ export default function AccessibilityPage() {
               <p>
                 If something on the site or in the dashboard doesn’t work for you, write to <ContactEmail />.
               </p>
-              <p>[OWNER: what happens after someone reports a problem, and how soon they hear back]</p>
+              <p>We’ll reply within 3 to 5 business days and tell you what we’ll do about it.</p>
             </LegalSection>
           </div>
         </div>

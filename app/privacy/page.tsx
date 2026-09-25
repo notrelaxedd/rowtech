@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SitePage, wrap } from "@/components/site/site-page";
 import { ContactEmail, inlineLink, LegalSection } from "@/components/site/legal";
-import { legalCountry, legalEntity } from "@/lib/owner";
+import { legalCountry, legalEntity, policiesUpdated } from "@/lib/owner";
 import { pageMetadata } from "@/lib/site";
 
-// What the code collects, and where it sends it. Anything only the owners can
-// say (who is responsible, retention, legal basis, rights, transfers, age) is
-// an OWNER placeholder in the page body, never in the metadata.
+// What the code collects, and where it sends it. The owner's answers (who runs
+// RowTech, retention, requests, age) and what Vercel and Supabase publish about
+// their own services fill the rest. Keep it true to the code: when the code
+// starts collecting something new or sending it somewhere new, say so here.
 export const metadata: Metadata = pageMetadata({
   title: "Privacy",
   description: "What the RowTech site, beta form and dashboard collect, where it is stored, and which services handle it.",
@@ -23,12 +24,12 @@ export default function PrivacyPage() {
           <p className="type-lead mt-6 text-muted-foreground">
             What this site and the RowTech dashboard collect, where it’s kept, and which services handle it.
           </p>
-          <p className="mt-4 text-sm text-muted-foreground">Last updated: [OWNER: the date this privacy policy takes effect]</p>
+          <p className="mt-4 text-sm text-muted-foreground">Last updated: {policiesUpdated}</p>
 
           <div className="mt-14 space-y-12">
             <LegalSection title="Who runs RowTech">
               <p>
-                RowTech is run by {legalEntity}, {legalCountry}.
+                RowTech is run by {legalEntity}, based in {legalCountry}.
               </p>
               <p>
                 For anything on this page, write to <ContactEmail />.
@@ -108,9 +109,18 @@ export default function PrivacyPage() {
                 Vieve is in development, and nothing uploads a track today.
               </p>
               <p>
-                Session data describes the rowers in each seat, who may never use the dashboard themselves. [OWNER: what
-                coaches must tell their rowers (or the rowers’ parents) before uploading data about them, and how a
-                rower can ask for that data to be removed]
+                Session data describes the rowers in each seat, who may never use the dashboard themselves. So upload
+                only the node’s session files, and don’t put rowers’ names or other personal details in session or
+                boat names (see the{" "}
+                <Link href="/terms" className={inlineLink}>
+                  Terms
+                </Link>
+                ). Before you upload a crew’s sessions, let the rowers know, and for rowers under 18, their parents or
+                guardians too.
+              </p>
+              <p>
+                A rower, or a rower’s parent or guardian, can ask their coach to delete a session from the dashboard,
+                or write to us and we’ll delete it.
               </p>
             </LegalSection>
 
@@ -120,7 +130,21 @@ export default function PrivacyPage() {
                 Every page, on the site and in the dashboard, also runs Vercel Web Analytics and Vercel Speed Insights,
                 which send information about each page visit, including which page it was, to Vercel.
               </p>
-              <p>[OWNER: confirm what Vercel Web Analytics and Speed Insights collect]</p>
+              <p>
+                Vercel says neither uses cookies or identifies you. Web Analytics records the page’s address, the
+                site that linked you there, your approximate location (country, region and city), and your browser,
+                operating system and type of device. It tells visits apart with a code made from each request, and
+                discards that after 24 hours. Speed Insights records the page, how fast it loaded, your network speed,
+                browser, operating system, type of device and country. Vercel’s own pages on{" "}
+                <a href="https://vercel.com/docs/analytics/privacy-policy" className={inlineLink}>
+                  Web Analytics
+                </a>{" "}
+                and{" "}
+                <a href="https://vercel.com/docs/speed-insights/privacy-policy" className={inlineLink}>
+                  Speed Insights
+                </a>{" "}
+                have the details.
+              </p>
               <p>For the beta form, the site keeps two small notes in your browser:</p>
               <ul>
                 <li>
@@ -145,37 +169,58 @@ export default function PrivacyPage() {
                 <li>Vercel: hosting, Web Analytics and Speed Insights.</li>
                 <li>Google: sign-in, only for people who choose Continue with Google.</li>
               </ul>
-              <p>[OWNER: confirm this list is complete, and name any other service that receives this information]</p>
               <p>
-                [OWNER: where Supabase and Vercel store and process this information (country or region), and what
-                protects it when it moves between countries]
+                That’s the whole list. The site’s fonts come from this site, and the dashboard’s map draws only your
+                outing’s track, with no map tiles from anyone else.
+              </p>
+              <p>
+                It’s all stored and processed in the United States: Supabase keeps it in its us-east-1 region
+                (Northern Virginia), and Vercel runs the site in its Washington, D.C. region. If you’re outside the
+                United States, your information goes there. Everything between your browser, Vercel and Supabase
+                travels encrypted over HTTPS, and Supabase encrypts what it stores.
               </p>
             </LegalSection>
 
             <LegalSection title="How long it’s kept">
               <p>
-                [OWNER: how long beta applications, dashboard accounts, uploaded sessions, and Vercel’s analytics and
-                logs are kept]
+                Nothing is deleted automatically. Beta applications, dashboard accounts and uploaded sessions are
+                kept until they’re deleted: a team’s owners and coaches can delete sessions themselves, and we delete
+                anything you ask us to (see Your requests). Vercel keeps its analytics under its own rules.
               </p>
             </LegalSection>
 
             <LegalSection title="Why we use it">
-              <p>[OWNER: the legal basis for each use of information above, for people in the UK and the EU]</p>
+              <p>For people in the UK and the EU, the legal basis for each use is:</p>
+              <ul>
+                <li>
+                  your beta application: our legitimate interest, and yours, in replying to you and running the beta
+                  you asked to join;
+                </li>
+                <li>your dashboard account and what you upload: providing the dashboard you signed up to use;</li>
+                <li>
+                  which link brought you here, and Vercel’s analytics: our legitimate interest in knowing how people
+                  find the site and how well it works, using information that doesn’t identify you;
+                </li>
+                <li>the sign-in cookies: they’re needed to keep you signed in.</li>
+              </ul>
             </LegalSection>
 
             <LegalSection title="Your requests">
               <p>A team’s owners and coaches can delete a session themselves, from the session’s page in the dashboard.</p>
               <p>
-                [OWNER: which requests people can make about their information (for example to see, correct, export or
-                delete it, to withdraw a beta application, or to close a dashboard account), how to make them, and how
-                quickly they are answered]
+                You can ask us to show you, correct, export or delete the information we hold about you, to withdraw
+                your beta application, or to close your dashboard account. Write to <ContactEmail /> from the email
+                address you used with us, so we know the request is yours. We’ll reply within 30 days.
               </p>
+              <p>If you’re in the UK or the EU, you can also complain to your data protection authority.</p>
             </LegalSection>
 
             <LegalSection title="Children">
               <p>
-                [OWNER: the minimum age to apply for the beta or to use the dashboard, and how information about rowers under
-                18 is handled]
+                Rowers under 18 can apply for the beta. The site and the dashboard aren’t meant for children under
+                13, and we don’t knowingly collect personal information from them: a rower under 13 should ask their
+                coach to apply instead. If you think we have information from a child under 13, write to us and we’ll
+                delete it.
               </p>
             </LegalSection>
 
