@@ -70,12 +70,12 @@ test("specifications live on the product pages, not the home page", async ({ pag
   await expect(page.locator("main section").first()).not.toContainText("$499");
 });
 
-// Claims no stronger than what's built (LEG-010): the 3 ms is the interpolation's
-// resolution, not a tested accuracy, and Vieve's parts are planned.
+// Claims no stronger than what's built (LEG-010): no "any phone", and Vieve's
+// parts are planned. The 3 ms line keeps the site's own wording until the
+// owner says what it measures.
 test("the specifications claim no more than what's built", async ({ page }) => {
   await page.goto("/force");
   const force = page.locator("#specs");
-  await expect(force).toContainText("resolution of about 3 ms");
   await expect(force).not.toContainText("any phone");
   await page.goto("/vieve");
   for (const row of ["Screen", "GPS", "Battery"]) {
@@ -297,9 +297,9 @@ test("the Force page shows the node as a 3D model with its notes around it", asy
   await expect(figure).toContainText("Drag the model, or use the arrow keys, to turn it.");
   await expect(figure.getByRole("img", { name: /Force seat node/ })).toHaveCount(0);
   await expect(page.locator("#parts")).toContainText("Steps through the rower’s screens");
-  // All three keys the page mentions have a note (CNT-003).
+  // VIEW and TARE have notes. POWER has none until what it does is confirmed (CNT-003).
   const notes = page.getByRole("list", { name: "Parts of the Force node" });
-  for (const key of ["VIEW", "TARE", "POWER"]) await expect(notes.getByRole("button", { name: new RegExp(key) })).toHaveCount(1);
+  for (const key of ["VIEW", "TARE"]) await expect(notes.getByRole("button", { name: new RegExp(key) })).toHaveCount(1);
 });
 
 // three.js is a quarter of a megabyte gzipped: only fetched when someone
