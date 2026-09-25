@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import coxInTheBoat from "@/assets/photos/cox-in-the-boat.jpg";
 import boardTop from "@/assets/photos/pcb-top.png";
 import boardBottom from "@/assets/photos/pcb-bottom.png";
 import { SitePage } from "@/components/site/site-page";
@@ -11,6 +12,7 @@ import { CoxBoxView } from "@/components/site/cox-box-view";
 import { Status } from "@/components/site/status";
 import { SpecTable } from "@/components/site/spec-table";
 import { VIEVE_SPECS } from "@/lib/specs";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Vieve, the RowTech cox box",
@@ -30,13 +32,23 @@ export default function VievePage() {
   return (
     <SitePage>
       <section className="py-20 sm:py-28">
-        <div className={wrap}>
-          <Status>In development</Status>
-          <h1 className="type-h1 mt-5 max-w-[16ch]">Vieve, the RowTech cox box.</h1>
-          <p className="type-lead mt-6 max-w-[40rem] text-muted-foreground">
-            Vieve will carry the cox&rsquo;s voice to the boat&rsquo;s speakers and be the hub every seat node reports to.
-            The target price is $499.
-          </p>
+        <div className={cn(wrap, "grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16")}>
+          <div>
+            <Status>In development</Status>
+            <h1 className="type-h1 mt-5 max-w-[16ch]">Vieve, the RowTech cox box.</h1>
+            <p className="type-lead mt-6 max-w-[40rem] text-muted-foreground">
+              Vieve will carry the cox&rsquo;s voice to the boat&rsquo;s speakers and be the hub every seat node reports to.
+              The target price is $499.
+            </p>
+          </div>
+          <Image
+            src={coxInTheBoat}
+            alt="A cox in a visor and headset, seated in a white boat on the water."
+            placeholder="blur"
+            loading="eager"
+            sizes="(min-width: 1024px) 40vw, (min-width: 448px) 448px, 100vw"
+            className="aspect-[4/5] w-full rounded-lg object-cover object-[55%_50%] max-lg:max-w-md"
+          />
         </div>
       </section>
 

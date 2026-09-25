@@ -8,7 +8,7 @@ test("the marketing page renders, with the beta offered in four places", async (
   await expect(page.getByRole("img", { name: /Force seat node/i }).first()).toBeVisible();
   await expect(page.locator("#hero-peak")).toHaveCount(1);
 
-  for (const id of ["crew", "how", "stroke", "products", "beta-scope", "faq", "beta"]) {
+  for (const id of ["crew", "how", "stroke", "products", "faq", "beta"]) {
     await expect(page.locator(`#${id}`)).toHaveCount(1);
   }
 
@@ -21,9 +21,14 @@ test("the marketing page renders, with the beta offered in four places", async (
     .getByRole("link", { name: /apply for the beta/i })
     .evaluateAll((els) => els.map((e) => e.getAttribute("data-cta")));
   expect(froms.sort()).toEqual(["closing", "hero", "nav", "stroke"]);
+});
 
-  // Built and planned are kept apart.
-  await expect(page.locator("#beta-scope")).toContainText("In the node’s firmware now");
+test("the header links to the product pages only, not to sections of the home page", async ({ page }) => {
+  await page.goto("/");
+  // A CSS locator, so the links behind the phone menu's closed disclosure are counted too.
+  const hrefs = await page.locator("header a[href]").evaluateAll((els) => els.map((e) => e.getAttribute("href")));
+  expect(hrefs.filter((h) => h?.startsWith("/#"))).toEqual([]);
+  expect(hrefs).toEqual(expect.arrayContaining(["/force", "/vieve"]));
 });
 
 test("specifications live on the product pages, not the home page", async ({ page }) => {

@@ -4,11 +4,8 @@ import { BetaLink } from "./cta";
 import { MobileMenu } from "./mobile-menu";
 
 const links = [
-  { href: "/#how", label: "How it works" },
-  { href: "/#stroke", label: "One stroke" },
   { href: "/force", label: "Force" },
   { href: "/vieve", label: "Vieve" },
-  { href: "/#faq", label: "FAQ" },
 ];
 
 /** `cta={false}` on pages that are already the destination (/beta). */

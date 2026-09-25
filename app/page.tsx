@@ -67,22 +67,6 @@ const PRODUCTS = [
   },
 ] as const;
 
-const BUILT = [
-  "A force curve for every stroke",
-  "Rate, drive and recovery times, and rhythm",
-  "Peak force and where it lands, rise rate, work by thirds",
-  "Stroke-to-stroke consistency",
-  "Sessions saved to microSD on their own, downloadable as files",
-];
-const NEXT = [
-  "Calibration, so every node reads in kilograms",
-  "Vieve: the cox’s voice, GPS time, and the hub every seat reports to",
-  "One clock across the boat, so seats can be compared",
-  "Catch spread and sequencing, seat by seat",
-  "Port and starboard balance",
-  "Sessions uploaded from the boat to the team dashboard",
-];
-
 const FAQ = [
   {
     q: "Do we need WiFi at the boathouse?",
@@ -138,11 +122,8 @@ export default function Home() {
               <p className="type-body mt-6 max-w-[58ch] text-muted-foreground">
                 A rate meter tells you about the boat. The crew view will show you every seat in it: whose catch lands
                 late, who does the work through the middle of the drive, and whether bow side and stroke side pull evenly.
-              </p>
-              <p className="type-body mt-4 max-w-[58ch] text-muted-foreground">
-                Each node records its own seat today. Comparing seats needs two things we&rsquo;re still building:
-                calibration, so every node reads in kilograms, and Vieve, the RowTech cox box, which puts every seat on
-                one clock.
+                It needs two things we&rsquo;re still building: calibration, so every node reads in kilograms, and Vieve,
+                the RowTech cox box, which puts every seat on one clock.
               </p>
             </div>
             <CrewLanes />
@@ -152,12 +133,7 @@ export default function Home() {
         {/* ---------------------------------------------------- how it works */}
         <section id="how" data-section="how" className="below-fold border-t border-line py-24 sm:py-28">
           <div className={wrap}>
-            <div className="max-w-2xl">
-              <h2 className="type-h2">How an outing gets from the rigger to your phone.</h2>
-              <p className="type-lead mt-5 text-muted-foreground">
-                The node records by itself, and you collect the files over its WiFi.
-              </p>
-            </div>
+            <h2 className="type-h2 max-w-2xl">How an outing gets from the rigger to your phone.</h2>
             <ol className="mt-14 grid grid-cols-1 gap-14 md:grid-cols-3 md:gap-8 lg:gap-12">
               {STEPS.map((s, i) => (
                 <li key={s.t}>
@@ -190,7 +166,7 @@ export default function Home() {
               <h2 className="type-h2">One stroke, taken apart.</h2>
               <p className="type-lead mt-5 text-muted-foreground">
                 How fast the blade loads, how high the peak is and where it lands, and where the work goes through the drive.
-                The node measures all of it on every stroke. Pick a measure to see where it lives on the curve.
+                Pick a measure to see where it lives on the curve.
               </p>
             </div>
             <div className="mt-12">
@@ -228,46 +204,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ----------------------------------------------- what's in the beta */}
-        <section id="beta-scope" data-section="beta-scope" className="below-fold border-t border-line py-24 sm:py-28">
-          <div className={wrap}>
-            <h2 className="type-h2 max-w-3xl">Where the build stands.</h2>
-            <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-line">
-              <div className="lg:pr-12">
-                <h3 className="type-h3">In the node&rsquo;s firmware now</h3>
-                <ul className="mt-6 space-y-3">
-                  {BUILT.map((t) => (
-                    <li key={t} className="type-body flex gap-3">
-                      <span aria-hidden className="mt-[0.72em] h-0.5 w-3 shrink-0 bg-foreground" />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-6 max-w-[52ch] text-sm text-muted-foreground">
-                  Until a node is calibrated, force reads in raw sensor units. Timing, rate and rhythm don&rsquo;t need
-                  calibration.
-                </p>
-                <h3 className="type-h3 mt-10">The team dashboard</h3>
-                <p className="type-body mt-3 max-w-[52ch]">
-                  Upload a node&rsquo;s four session files, or several seats at once as one outing, and go through it
-                  stroke by stroke. So far it has only run on a made-up sample session.
-                </p>
-              </div>
-              <div className="lg:pl-12">
-                <h3 className="type-h3">Coming next</h3>
-                <ul className="mt-6 space-y-3">
-                  {NEXT.map((t) => (
-                    <li key={t} className="type-body flex gap-3 text-muted-foreground">
-                      <span aria-hidden className="mt-[0.72em] h-0.5 w-3 shrink-0 border-t-2 border-dotted border-muted-foreground" />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* ------------------------------------------------------------- FAQ */}
         <section id="faq" data-section="faq" className="below-fold border-t border-line py-24 sm:py-28">
           <div className={wrap}>
@@ -291,40 +227,14 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ------------------------------------------------ the beta, plainly */}
-        <section id="beta" data-section="beta" className="below-fold border-t border-line py-24 sm:py-28">
-          <div className={wrap}>
-            <h2 className="type-h2 max-w-3xl">Applying for the beta.</h2>
-            <div className="mt-12 grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-10">
-              <div className="border-t border-line pt-6">
-                <h3 className="type-h3">Who it&rsquo;s for</h3>
-                <p className="type-body mt-4 max-w-[48ch] text-muted-foreground">High school, college and club coaches, and their crews.</p>
-              </div>
-              <div className="border-t border-line pt-6">
-                <h3 className="type-h3">Applying</h3>
-                <p className="type-body mt-4 max-w-[48ch] text-muted-foreground">
-                  The form asks for your name, email and program. Which boats you row, where you are and a note are optional.
-                </p>
-              </div>
-              <div className="border-t border-line pt-6">
-                <h3 className="type-h3">What beta crews get</h3>
-                <ul className="type-body mt-4 space-y-2 text-muted-foreground">
-                  <li>Testing units, for now</li>
-                  <li>A direct line to the people building it</li>
-                  <li>Discounted prices on all RowTech products</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* ------------------------------------------------------- closing */}
-        <section data-section="closing" className="below-fold border-t border-line">
+        <section id="beta" data-section="closing" className="below-fold border-t border-line">
           <div className={cn(wrap, "grid grid-cols-1 items-center gap-12 py-24 sm:py-32 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)] lg:gap-16")}>
             <div>
               <h2 className="type-h2 max-w-[16ch]">Tell us about your crew.</h2>
               <p className="type-lead mt-6 max-w-[44ch] text-muted-foreground">
-                We&rsquo;re choosing beta crews now.
+                We&rsquo;re choosing beta crews now. Beta crews get testing units for now, a direct line to the people
+                building it, and discounted prices on all RowTech products.
               </p>
               <div className="mt-10">
                 <BetaLink from="closing" className="h-14 px-7 text-base max-sm:w-full" />
