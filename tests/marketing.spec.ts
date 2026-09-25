@@ -111,10 +111,10 @@ test("Force's specifications say what it fits, what it doesn't measure and its t
     await expect(page.locator("#specs dt", { hasText: label }).locator("+ dd")).not.toBeEmpty();
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.goto("/vieve");
-  await expect(page.locator("#specs dt", { hasText: "Target price" })).toHaveCount(1);
   // The Fits row and the home page's fit question give the same answer.
   await expect(page.locator("#specs dt", { hasText: "Fits" }).locator("+ dd")).toContainText("Vespoli riggers");
+  await page.goto("/vieve");
+  await expect(page.locator("#specs dt", { hasText: "Target price" })).toHaveCount(1);
   await page.goto("/");
   await expect(page.locator("#faq")).toContainText("For now it fits Vespoli riggers");
 });
