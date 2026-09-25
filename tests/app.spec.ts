@@ -7,6 +7,27 @@ test("the dashboard is closed to people who aren't signed in", async ({ page }) 
   await expect(page.getByRole("link", { name: /apply for the beta/i })).toBeVisible();
 });
 
+test("sign in is an email and a password", async ({ page }) => {
+  await page.goto("/app/login");
+  await expect(page.getByLabel("Email")).toBeVisible();
+  await expect(page.getByLabel("Password")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /email me a link/i })).toHaveCount(0);
+});
+
+test("sign in checks the form before asking Supabase", async ({ page }) => {
+  await page.goto("/app/login");
+  await page.getByLabel("Email").fill("not-an-email");
+  await page.getByLabel("Password").fill("x");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: /email address/i })).toBeVisible();
+
+  await page.getByLabel("Email").fill("crew@example.com");
+  await page.getByLabel("Password").fill("");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: /enter your password/i })).toBeVisible();
+});
+
 test("a stale magic link says so instead of failing quietly", async ({ page }) => {
   await page.goto("/auth/callback");
   await expect(page).toHaveURL(/\/app\/login\?error=link/);

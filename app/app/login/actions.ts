@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { EMAIL } from "@/app/beta/fields";
 
-export type LoginState = { status: "idle" | "error" | "sent"; message: string; email: string };
+export type LoginState = { status: "idle" | "error"; message: string; email: string };
 
 async function callbackUrl(next: string) {
   const h = await headers();
@@ -15,21 +15,25 @@ async function callbackUrl(next: string) {
   return `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
 }
 
-/** Magic link. The reply is the same whether or not the address is known. */
-export async function sendMagicLink(_prev: LoginState, fd: FormData): Promise<LoginState> {
+/**
+ * Email and password. A wrong email and a wrong password get the same reply, so
+ * the form can't be used to find out who has an account. Getting in here only
+ * makes a session; /app still checks allowed_users.
+ */
+export async function signInWithPassword(_prev: LoginState, fd: FormData): Promise<LoginState> {
   const email = (fd.get("email") as string | null)?.trim().toLowerCase() ?? "";
+  const password = (fd.get("password") as string | null) ?? "";
   if (!email || !EMAIL.test(email)) return { status: "error", message: "That doesn't look like an email address.", email };
+  if (!password) return { status: "error", message: "Enter your password.", email };
 
   const sb = await supabaseServer();
-  const { error } = await sb.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: await callbackUrl("/app"), shouldCreateUser: true },
-  });
+  const { error } = await sb.auth.signInWithPassword({ email, password });
   if (error) {
-    console.error("magic link failed", error);
-    return { status: "error", message: "We couldn't send that link. Try again in a minute.", email };
+    if (error.code === "invalid_credentials") return { status: "error", message: "That email and password don't match.", email };
+    console.error("password sign-in failed", error);
+    return { status: "error", message: "We couldn't sign you in. Try again in a minute.", email };
   }
-  return { status: "sent", message: "", email };
+  redirect("/app");
 }
 
 export async function signInWithGoogle() {

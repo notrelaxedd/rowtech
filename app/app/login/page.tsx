@@ -12,7 +12,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (viewer.state === "allowed") redirect("/app");
 
   const q = await searchParams;
-  const failed = q.error === "link" ? "That link has expired or was already used. Here's a fresh one." : q.error === "google" ? "Google sign-in didn't come back. Try again, or use a link instead." : "";
+  const failed = q.error === "link" ? "That link has expired or was already used. Sign in with your password instead." : q.error === "google" ? "Google sign-in didn't come back. Try again, or use your password." : "";
 
   return (
     <main id="main" className="flex min-h-dvh flex-col items-center justify-center px-5 py-16">

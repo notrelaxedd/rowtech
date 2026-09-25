@@ -1,31 +1,19 @@
 "use client";
 
 import { useActionState } from "react";
-import { ArrowRight, LoaderCircle, Mail } from "lucide-react";
+import { ArrowRight, LoaderCircle } from "lucide-react";
 import { ctaPrimary, ctaSecondary } from "@/components/site/cta";
 import { cn } from "@/lib/utils";
-import { sendMagicLink, signInWithGoogle, type LoginState } from "./actions";
+import { signInWithGoogle, signInWithPassword, type LoginState } from "./actions";
 
 const EMPTY: LoginState = { status: "idle", message: "", email: "" };
 
-export function LoginForm({ error }: { error?: string }) {
-  const [state, action, pending] = useActionState(sendMagicLink, EMPTY);
+const FIELD =
+  "block h-12 w-full rounded-md border border-input bg-[#0b0e11] px-3.5 text-base text-foreground transition-[border-color,box-shadow] duration-150 focus:border-trace focus:outline-none focus:ring-3 focus:ring-trace/25 aria-[invalid=true]:border-destructive";
 
-  if (state.status === "sent") {
-    return (
-      <div className="rounded-lg border border-line bg-panel p-6">
-        <p className="readout inline-flex items-center gap-2.5 text-sm">
-          <span aria-hidden className="size-2 rounded-full bg-ok shadow-[0_0_10px_rgb(61_220_110/0.7)]" />
-          <span className="text-ok">SENT</span>
-        </p>
-        <h2 className="type-h3 mt-4">Check your email.</h2>
-        <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
-          We sent a sign-in link to <span className="text-foreground">{state.email}</span>. It works once, and only for a
-          short while.
-        </p>
-      </div>
-    );
-  }
+export function LoginForm({ error }: { error?: string }) {
+  const [state, action, pending] = useActionState(signInWithPassword, EMPTY);
+  const invalid = state.status === "error" || undefined;
 
   return (
     <div className="space-y-5">
@@ -56,23 +44,34 @@ export function LoginForm({ error }: { error?: string }) {
           id="email"
           name="email"
           type="email"
-          autoComplete="email"
+          autoComplete="username"
           inputMode="email"
           required
           defaultValue={state.email}
-          aria-invalid={state.status === "error" || undefined}
-          className="block h-12 w-full rounded-md border border-input bg-[#0b0e11] px-3.5 text-base text-foreground transition-[border-color,box-shadow] duration-150 focus:border-trace focus:outline-none focus:ring-3 focus:ring-trace/25 aria-[invalid=true]:border-destructive"
+          aria-invalid={invalid}
+          className={FIELD}
         />
-        <button type="submit" disabled={pending} className={cn(ctaPrimary, "w-full disabled:cursor-wait disabled:opacity-70")}>
+        <label htmlFor="password" className="block pt-2 text-[0.9375rem] font-semibold">
+          Password
+        </label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+          aria-invalid={invalid}
+          className={FIELD}
+        />
+        <button type="submit" disabled={pending} className={cn(ctaPrimary, "mt-2 w-full disabled:cursor-wait disabled:opacity-70")}>
           {pending ? (
             <>
               <LoaderCircle aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />
-              Sending&hellip;
+              Signing in&hellip;
             </>
           ) : (
             <>
-              <Mail aria-hidden className="size-4" />
-              Email me a link
+              Sign in
               <ArrowRight aria-hidden className="size-4" />
             </>
           )}
