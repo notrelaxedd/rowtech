@@ -55,5 +55,14 @@ export function requiredError(f: "name" | "email" | "organization", value: strin
   return undefined;
 }
 
+/**
+ * The line over the form when fields need fixing, counted. The action sends
+ * it, and the form recounts as fields are fixed, so it stays true.
+ */
+export function fixSummary(n: number): string {
+  const things = n === 1 ? "One thing needs" : n === 2 ? "A couple of things need" : "A few things need";
+  return `${things} fixing before we can send this.`;
+}
+
 /** Which link someone came in on (`from_cta`): a short tag, letters, digits, - and _. */
 export const cleanFrom = (v: string) => v.replace(/[^a-z0-9_-]/gi, "").slice(0, LIMITS.from);

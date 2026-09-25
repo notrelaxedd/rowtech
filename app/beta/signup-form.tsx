@@ -10,7 +10,7 @@ import { formField } from "@/components/ui/field";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { submitApplication } from "./actions";
-import { BOATS, cleanFrom, EMAIL, EMPTY_STATE, LIMITS, REQUIRED, requiredError, ROLES, type ApplyState, type Field } from "./fields";
+import { BOATS, cleanFrom, EMAIL, EMPTY_STATE, fixSummary, LIMITS, REQUIRED, requiredError, ROLES, type ApplyState, type Field } from "./fields";
 
 const input = cn(formField, "placeholder:text-muted-foreground");
 const chip =
@@ -162,6 +162,10 @@ export function SignupForm() {
   const e: ApplyState["errors"] = { ...state.errors };
   for (const f of REQUIRED.filter(isRequired)) if (f in here) e[f] = here[f] ?? undefined;
   const v = state.values;
+  // A field-by-field result's summary counts what's still wrong, and goes once
+  // nothing is. Any other message (our side failed) stays as sent.
+  const wrong = Object.values(e).filter(Boolean).length;
+  const summary = Object.keys(state.errors).length ? (wrong ? fixSummary(wrong) : "") : state.message;
   const invalid = (f: Field) => (e[f] ? true : undefined);
   const describe = (f: Field) => (e[f] ? `${f}-error` : undefined);
   const check = (f: Required, value: string) =>
@@ -231,9 +235,9 @@ export function SignupForm() {
         checkRequired();
       }}
     >
-      {state.message && (
+      {summary && (
         <p ref={alert} role="alert" tabIndex={-1} className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[0.9375rem] text-foreground outline-none">
-          {state.message}
+          {summary}
         </p>
       )}
 

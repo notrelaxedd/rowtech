@@ -122,6 +122,25 @@ test("the form's summary says how many things need fixing", async ({ page }) => 
   }
 });
 
+// ...and keeps counting as fields are fixed, then goes (CNT-009).
+test("the form's summary recounts as fields are fixed", async ({ page }) => {
+  await page.goto("/beta");
+  await page.getByLabel("Email").fill("not-an-email");
+  await page.getByLabel("Club, school or program").fill("Riverside RC");
+  await page.getByRole("button", { name: /apply for the beta/i }).click();
+  const summary = page.getByRole("alert").filter({ hasText: "fixing before we can send this" });
+  await expect(summary).toHaveText("A couple of things need fixing before we can send this.");
+
+  await page.getByLabel("Name").fill("Sam");
+  await page.getByLabel("Name").blur();
+  await expect(summary).toHaveText("One thing needs fixing before we can send this.");
+
+  await page.getByLabel("Email").fill("sam@example.com");
+  await page.getByLabel("Email").blur();
+  await expect(page.getByLabel("Email")).not.toHaveAttribute("aria-invalid", "true");
+  await expect(summary).toHaveCount(0);
+});
+
 test("a rejected application keeps the same form, with every answer in it", async ({ page }) => {
   await page.goto("/beta");
   await page.getByLabel("Name").fill("Sam Rower");

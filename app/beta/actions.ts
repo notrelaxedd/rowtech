@@ -1,7 +1,7 @@
 "use server";
 
 import { supabaseAnon } from "@/lib/supabase/anon";
-import { BOATS, cleanFrom, LIMITS, requiredError, ROLES, type ApplyState, type Values } from "./fields";
+import { BOATS, cleanFrom, fixSummary, LIMITS, requiredError, ROLES, type ApplyState, type Values } from "./fields";
 
 type Application = {
   name: string;
@@ -95,9 +95,7 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
   if (values.message && values.message.length > LIMITS.message) errors.message = `Keep it under ${LIMITS.message} characters.`;
 
   if (Object.keys(errors).length) {
-    const n = Object.keys(errors).length;
-    const things = n === 1 ? "One thing needs" : n === 2 ? "A couple of things need" : "A few things need";
-    return { status: "error", errors, message: `${things} fixing before we can send this.`, values };
+    return { status: "error", errors, message: fixSummary(Object.keys(errors).length), values };
   }
 
   const application: Application = {
