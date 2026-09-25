@@ -438,12 +438,43 @@ test("on a phone, small links and buttons take taps over 44x44 px", async ({ pag
   }).toPass({ timeout: 10000 });
   const markers = chart.locator("[aria-pressed][aria-label]");
   await expect(markers).toHaveCount(7);
-  for (const marker of await markers.all()) {
-    const name = (await marker.getAttribute("aria-label"))!;
-    const a = await tapArea(marker);
-    expect(a.width, name).toBeGreaterThanOrEqual(44);
-    expect(a.height, name).toBeGreaterThanOrEqual(44);
-    expect(a.misses.filter((m) => !m.includes("BUTTON ")), name).toEqual([]);
+  await markers.first().evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+  const all = await markers.all();
+  const names = await Promise.all(all.map(async (m) => (await m.getAttribute("aria-label"))!));
+  const boxes = await Promise.all(all.map(async (m) => (await m.boundingBox())!));
+  const centres = boxes.map((b) => [b.x + b.width / 2, b.y + b.height / 2]);
+  const pressed = async () => names[(await Promise.all(all.map((m) => m.getAttribute("aria-pressed")))).indexOf("true")];
+  for (const [i, marker] of all.entries()) {
+    const wrong = await marker.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const others = [...el.parentElement!.querySelectorAll("button")].filter((b) => b !== el).map((b) => b.getBoundingClientRect());
+      const out: string[] = [];
+      for (let dx = 1; dx < r.width; dx += 2)
+        for (let dy = 1; dy < r.height; dy += 2) {
+          const [px, py] = [r.left + dx, r.top + dy];
+          // Not the rounded corners' outside, nor where another is drawn on top
+          // (to within a pixel: two of them touch).
+          if ((dx < 6 || dx > r.width - 6) && (dy < 6 || dy > r.height - 6)) continue;
+          if (others.some((o) => px >= o.left - 1 && px <= o.right + 1 && py >= o.top - 1 && py <= o.bottom + 1)) continue;
+          const hit = document.elementFromPoint(px, py);
+          if (!hit || !el.contains(hit)) out.push(`${dx},${dy}: ${hit?.closest("button")?.getAttribute("aria-label") ?? hit?.tagName}`);
+        }
+      return out;
+    });
+    expect(wrong, names[i]).toEqual([]);
+    for (const dx of [-21, 0, 21])
+      for (const dy of [-21, 0, 21]) {
+        const [px, py] = [centres[i][0] + dx, centres[i][1] + dy];
+        // The markers whose 44px box this point is in (half a pixel's grace).
+        const near = names.filter((_, j) => Math.abs(centres[j][0] - px) <= 22.5 && Math.abs(centres[j][1] - py) <= 22.5);
+        // Start from a marker the tap mustn't pick, so a missed tap shows.
+        const other = centres[names.findIndex((n) => !near.includes(n))];
+        await page.mouse.click(other[0], other[1]);
+        await page.mouse.click(px, py);
+        const got = await pressed();
+        if (near.length === 1) expect(got, `${names[i]} ${dx},${dy}`).toBe(names[i]);
+        else expect(near, `${names[i]} ${dx},${dy}`).toContain(got);
+      }
   }
 
   await page.goto("/app/login");
