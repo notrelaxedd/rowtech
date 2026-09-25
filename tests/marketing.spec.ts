@@ -99,8 +99,17 @@ test("from the keyboard, the 3D model says it takes the arrow keys, and does", a
   await expect(model).toHaveAccessibleDescription("Drag the model, or use the arrow keys, to turn it.");
   // The name and the keys are the stage's; the canvas is hidden from screen readers.
   await expect(model.locator('[aria-hidden="true"] canvas')).toHaveCount(1);
+  // Taking focus may scroll the model into view (smoothly): let that finish,
+  // then an arrow key turns the model instead of scrolling the page.
+  const settled = async () => {
+    const a = await page.evaluate(() => scrollY);
+    await page.waitForTimeout(250);
+    return a === (await page.evaluate(() => scrollY));
+  };
+  await expect.poll(settled).toBe(true);
   const y = await page.evaluate(() => scrollY);
   await page.keyboard.press("ArrowDown");
+  await page.waitForTimeout(250);
   expect(await page.evaluate(() => scrollY)).toBe(y);
 });
 
