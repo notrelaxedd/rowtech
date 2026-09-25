@@ -30,6 +30,23 @@ test("a stale magic link says so instead of failing quietly", async ({ page }) =
   await expect(page.getByRole("alert").first()).toContainText("Enter your email for a new one.");
 });
 
+// Google's own button, built to its guidelines (LEG-003), still starts the same
+// sign-in: the server action sends the browser to Supabase's Google authorize
+// URL, which comes back to /auth/callback. The request is stopped there: the
+// local stack has no Google provider.
+test("Continue with Google still sends the browser to Google sign-in", async ({ page, baseURL }) => {
+  test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
+  await page.route("**/auth/v1/authorize?**", (route) => route.fulfill({ status: 200, contentType: "text/plain", body: "stopped" }));
+  await page.goto("/app/login");
+  const button = page.getByRole("button", { name: "Continue with Google" });
+  await expect(button).toHaveCSS("height", "40px");
+  const authorize = page.waitForRequest((r) => new URL(r.url()).pathname === "/auth/v1/authorize");
+  await button.click();
+  const url = new URL((await authorize).url());
+  expect(url.searchParams.get("provider")).toBe("google");
+  expect(url.searchParams.get("redirect_to")).toBe(`${baseURL}/auth/callback?next=%2Fapp`);
+});
+
 test("/api/health answers 200 when Supabase does, and is never cached", async ({ request }) => {
   test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
   const res = await request.get("/api/health");
