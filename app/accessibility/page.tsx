@@ -35,8 +35,8 @@ export default function AccessibilityPage() {
             <LegalSection title="What the site does">
               <ul>
                 <li>
-                  The site’s and the dashboard’s pages start with a Skip to content link. The first Tab on a
-                  page shows it, and it takes you past the header to the page’s content.
+                  Pages with a header, on the site and in the dashboard, start with a Skip to content link. The
+                  first Tab on a page shows it, and it takes you past the header to the page’s content.
                 </li>
                 <li>
                   On a phone, the site’s Menu opens and closes with a keyboard as well as by touch, and works

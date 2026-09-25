@@ -47,6 +47,9 @@ export default async function DashLayout({ children }: { children: React.ReactNo
           <Link href="/terms" className={footerLink}>
             Terms
           </Link>
+          <Link href="/accessibility" className={footerLink}>
+            Accessibility
+          </Link>
         </nav>
       </footer>
     </div>

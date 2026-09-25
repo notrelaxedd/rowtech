@@ -143,13 +143,15 @@ test.describe("signed in, but not on the beta list", () => {
 test.describe("signed in to the dashboard", () => {
   test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
 
-  test("every dashboard page links to Privacy and Terms", async ({ page, context, baseURL }) => {
+  test("every dashboard page links to Privacy, Terms and the accessibility statement", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);
     for (const path of ["/app/force", "/app/cox"]) {
       await page.goto(path);
       await expect(page.getByRole("navigation", { name: "Dashboard" })).toBeVisible();
-      await expectPolicyLinks(page.getByRole("navigation", { name: "Footer" }));
+      const footer = page.getByRole("navigation", { name: "Footer" });
+      await expectPolicyLinks(footer);
+      await expect(footer.getByRole("link", { name: "Accessibility", exact: true })).toHaveAttribute("href", "/accessibility");
     }
   });
 });
