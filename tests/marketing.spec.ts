@@ -78,6 +78,9 @@ test("the home page's kilograms are labelled as example data, with where calibra
   await expect(hero.locator("figcaption").filter({ has: page.getByRole("link", { name: "See Force" }) })).toContainText(/example data/i);
   await expect(hero.locator("figcaption").filter({ hasText: "Example stroke" })).toContainText("calibrated a node yet");
   await expect(page.locator("#stroke")).toContainText("Until a node is calibrated, force reads in raw sensor units.");
+  // Step 2 and the Force product card draw the same screen (LEG-010).
+  await expect(page.locator("#how figure figcaption")).toContainText(/example data/i);
+  await expect(page.locator("#products li").filter({ hasText: "Force, the seat node" })).toContainText(/example data/i);
   // The Force page's model shows the same screen (LEG-010).
   await page.goto("/force");
   await expect(page.locator("#parts figcaption")).toContainText(/example data/i);

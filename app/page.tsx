@@ -50,6 +50,7 @@ const PRODUCTS = [
     status: null,
     line: "One on each seat’s rigger. It records the force curve of every stroke and shows the rower their own.",
     cta: "See Force and its specifications",
+    note: "Concept design. Its screen shows example data, and the Vieve link as designed.",
     drawing: (
       <ForceDeviceIsland
         idPrefix="card-force"
@@ -174,9 +175,14 @@ export default function Home() {
                         <ForceMount className="m-0 h-full w-full" />
                       </div>
                     ) : s.art === "device" ? (
-                      <div className="instrument w-full rounded-md p-2">
-                        <ForceScreen idPrefix="step" />
-                      </div>
+                      <figure className="m-0 w-full">
+                        <div className="instrument w-full rounded-md p-2">
+                          <ForceScreen idPrefix="step" />
+                        </div>
+                        <figcaption className="mt-3 text-center text-sm text-muted-foreground">
+                          The screen shows example data, and the Vieve link as designed.
+                        </figcaption>
+                      </figure>
                     ) : (
                       <SessionFiles />
                     )}
@@ -221,6 +227,7 @@ export default function Home() {
                   <div className="instrument flex aspect-[4/3] items-center justify-center rounded-lg p-6 sm:p-10">
                     {p.drawing}
                   </div>
+                  {"note" in p && <p className="mt-3 text-sm text-muted-foreground">{p.note}</p>}
                   <div className="mt-6">{p.status && <Status>{p.status}</Status>}</div>
                   <h3 className="type-h3 mt-2">{p.name}</h3>
                   <p className="type-body mt-2 max-w-[48ch] text-muted-foreground">{p.line}</p>
