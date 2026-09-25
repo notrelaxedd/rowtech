@@ -91,6 +91,10 @@ test.describe("signed in", () => {
   const seatFiles = (n: number) =>
     ["meta.json", "strokes.csv", "curves.bin", "events.csv"].map((f) => `public/demo/seat-${n}/${f}`);
 
+  /** Files of the given names and sizes, for the picker. */
+  const sized = (files: Array<[name: string, bytes: number]>) =>
+    files.map(([name, bytes]) => ({ name, mimeType: "application/octet-stream", buffer: Buffer.alloc(bytes, 1) }));
+
   async function crewZip(...seats: number[]) {
     const entries: Record<string, Uint8Array> = {};
     for (const n of seats) {
@@ -538,6 +542,74 @@ test.describe("signed in", () => {
     const sent = await sendWhileHeld(page, form, page.getByRole("button", { name: "Upload" }), "Reading the session…");
     await expect(page).toHaveURL(/\/app\/force\/[0-9a-f-]{36}$/, { timeout: 30_000 });
     expect(sent.posts()).toBe(1);
+  });
+
+  test("the picked files are listed with their sizes, and the time says it defaults to now", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    await page.goto("/app/force");
+    await expect(page.getByLabel("When was it rowed?")).toHaveAccessibleDescription("Defaults to now; change it if the outing was earlier.");
+
+    const files = sized([["meta.json", 900], ["strokes.csv", 30 * 1024], ["curves.bin", 3 * 1024 * 1024 / 2]]);
+    await page.getByLabel("Files").setInputFiles(files);
+    const picked = page.getByLabel("Files");
+    await expect(picked).toHaveAccessibleDescription(/^3 files, 1\.5 MB/);
+    const listed = page.locator("form li").filter({ has: page.locator(".readout") });
+    await expect(listed).toHaveText(["meta.json, 900 B", "strokes.csv, 30 KB", "curves.bin, 1.5 MB"]);
+
+    // Past six, the rest are counted.
+    await page.getByLabel("Files").setInputFiles(sized(Array.from({ length: 8 }, (_, i) => [`f${i}.csv`, 2048] as [string, number])));
+    await expect(picked).toHaveAccessibleDescription(/^8 files, 16 KB/);
+    await expect(listed).toHaveCount(6);
+    await expect(page.getByText("and 2 more")).toBeVisible();
+  });
+
+  test("while an upload is sent, a bar and a line say it's under way", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    await page.goto("/app/force");
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
+    await page.route(
+      (url) => url.pathname === "/app/force",
+      async (route) => {
+        if (route.request().method() === "POST") await held;
+        await route.fallback();
+      }
+    );
+    await expect(page.getByRole("progressbar")).toHaveCount(0);
+    await page.getByLabel("Files").setInputFiles(seatFiles(1));
+    await page.getByRole("button", { name: "Upload" }).click();
+    await expect(page.getByRole("progressbar", { name: "Upload" })).toBeVisible();
+    // No value: how far along it is isn't known.
+    await expect(page.getByRole("progressbar")).not.toHaveAttribute("aria-valuenow");
+    await expect(page.getByText("This can take a minute for large sessions.")).toBeVisible();
+    release();
+    await expect(page).toHaveURL(/\/app\/force\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  });
+
+  test("when several seats can't be read, each one's reason is listed", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    await page.goto("/app/force");
+    const entries: Record<string, Uint8Array> = {};
+    for (const n of [1, 2]) {
+      entries[`outing/seat-${n}/meta.json`] = new Uint8Array(await readFile(`public/demo/seat-${n}/meta.json`));
+      entries[`outing/seat-${n}/strokes.csv`] = strToU8(`not,the,header\n1,2,3\n`);
+    }
+    await page.getByLabel("Files").setInputFiles({ name: "outing.zip", mimeType: "application/zip", buffer: Buffer.from(zipSync(entries)) });
+    await page.getByRole("button", { name: "Upload" }).click();
+    const alert = page.getByRole("alert").filter({ hasText: "2 seats couldn't be read." });
+    await expect(alert).toBeVisible({ timeout: 30_000 });
+    const reasons = alert.getByRole("listitem");
+    await expect(reasons).toHaveCount(2);
+    await expect(reasons.nth(0)).toContainText("outing/seat-1: strokes.csv doesn't have the header this firmware writes.");
+    await expect(reasons.nth(1)).toContainText("outing/seat-2: strokes.csv doesn't have the header this firmware writes.");
+    // The header lines have no spaces, and still don't push the page sideways.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect((await user.db.from("sessions").select("id")).data).toEqual([]);
+    // The form is emptied after the attempt, and so is the list of what was picked.
+    await expect(page.getByLabel("Files")).not.toHaveAccessibleDescription(/file/);
   });
 
   // React resets the form after every submit, error or not, which blanks the

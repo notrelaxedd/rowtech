@@ -9,7 +9,8 @@ import { looksLikeVieve, VieveNotSupportedError } from "@/lib/session/vieve";
 import { isUuid } from "@/lib/uuid";
 import type { Json } from "@/lib/supabase/database.types";
 
-export type UploadState = { status: "idle" | "error" | "ok"; message: string; sessionId?: string };
+/** An error's message, and when several seats fail, each seat's reason in `errors`. */
+export type UploadState = { status: "idle" | "error" | "ok"; message: string; errors?: string[]; sessionId?: string };
 
 const decode = (b: Uint8Array) => new TextDecoder().decode(b);
 
@@ -97,6 +98,8 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
   }
 
   const parsed: Array<{ key: string; session: ParsedSession; raw: SessionFolder & { meta: Uint8Array } }> = [];
+  // Every seat is read before any is refused, so the coach hears about all of them at once.
+  const unread: string[] = [];
   for (const [key, folder] of folders) {
     const { meta, strokes } = folder;
     if (!meta || !strokes) continue;
@@ -113,10 +116,11 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
       });
     } catch (e) {
       const where = folders.size > 1 ? `${key}: ` : "";
-      if (e instanceof SessionFormatError) return { status: "error", message: `${where}${e.message}` };
-      return { status: "error", message: `${where}that session couldn't be read.` };
+      unread.push(`${where}${e instanceof SessionFormatError ? e.message : "that session couldn't be read."}`);
     }
   }
+  if (unread.length === 1) return { status: "error", message: unread[0] };
+  if (unread.length > 1) return { status: "error", message: `${unread.length} seats couldn't be read.`, errors: unread };
 
   const long = parsed.find(({ session }) => session.strokes.length > UPLOAD_LIMITS.strokes);
   if (long) {

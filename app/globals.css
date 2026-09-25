@@ -292,6 +292,12 @@
   from { color: var(--trace); }
 }
 .rt-tick { animation: rt-tick 1.1s cubic-bezier(0.25, 1, 0.5, 1); }
+/* A progress bar with no end in sight: a segment runs across the track. */
+@keyframes rt-indeterminate {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(300%); }
+}
+.rt-indeterminate { animation: rt-indeterminate 1.4s ease-in-out infinite; }
 /* Chart labels that can land on the trace: a halo in the panel colour. */
 .rt-halo {
   paint-order: stroke;
@@ -306,4 +312,6 @@
   .rt-stroke-reveal { transform: translateX(calc(var(--sweep-end, 91%) - 100%)); }
   .rt-stroke-hold { transform: translateX(calc(100% - var(--sweep-end, 91%))); }
   .rt-ping-once, .rt-stroke-cursor { display: none; }
+  /* Still, it fills the track, so it can't be read as a third done. */
+  .rt-indeterminate { animation: none; width: 100%; opacity: 0.5; }
 }
