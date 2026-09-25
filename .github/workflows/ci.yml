@@ -52,6 +52,9 @@ jobs:
 
       - run: npm run lint
 
+      # lib/licenses.json and public/licenses.txt match package-lock.json.
+      - run: npm run licenses -- --check
+
       # typegen writes next-env.d.ts and the route types that tsc reads.
       - run: npx next typegen && npx tsc --noEmit
 

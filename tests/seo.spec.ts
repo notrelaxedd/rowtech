@@ -11,6 +11,8 @@ const PAGES = [
   { path: "/vieve", title: "Vieve, the cox box · RowTech" },
   { path: "/privacy", title: "Privacy · RowTech" },
   { path: "/terms", title: "Terms · RowTech" },
+  { path: "/accessibility", title: "Accessibility · RowTech" },
+  { path: "/licenses", title: "Open-source licenses · RowTech" },
 ];
 
 for (const { path, title } of PAGES) {
@@ -89,7 +91,7 @@ test("the sitemap lists the public pages and nothing else", async ({ request, ba
   const res = await request.get("/sitemap.xml");
   expect(res.status()).toBe(200);
   const locs = [...(await res.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
-  expect(locs.sort()).toEqual(["/", "/beta", "/force", "/privacy", "/terms", "/vieve"]);
+  expect(locs.sort()).toEqual(["/", "/accessibility", "/beta", "/force", "/licenses", "/privacy", "/terms", "/vieve"]);
   expect(await res.text()).toContain(`<loc>${baseURL}/force</loc>`);
 });
 

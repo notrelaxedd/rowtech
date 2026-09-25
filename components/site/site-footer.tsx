@@ -28,6 +28,8 @@ export function SiteFooter() {
           <Link href="/#beta" className={link}>Applying for the beta</Link>
           <Link href="/privacy" className={link}>Privacy</Link>
           <Link href="/terms" className={link}>Terms</Link>
+          <Link href="/accessibility" className={link}>Accessibility</Link>
+          <Link href="/licenses" className={link}>Open-source licenses</Link>
         </nav>
       </div>
       <div className="mx-auto max-w-7xl px-5 pb-10 text-xs text-muted-foreground sm:px-8">

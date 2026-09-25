@@ -5,6 +5,8 @@ import { contactEmail, contactIsEmail } from "../lib/owner";
 const LEGAL = [
   { path: "/privacy", title: "Privacy · RowTech", h1: "Privacy." },
   { path: "/terms", title: "Terms · RowTech", h1: "Terms." },
+  { path: "/accessibility", title: "Accessibility · RowTech", h1: "Accessibility." },
+  { path: "/licenses", title: "Open-source licenses · RowTech", h1: "Open-source licenses." },
 ];
 
 for (const { path, title, h1 } of LEGAL) {
@@ -47,6 +49,43 @@ test("the footer links to Privacy and Terms", async ({ page }) => {
   await expectPolicyLinks(page.getByRole("navigation", { name: "Footer" }));
 });
 
+test("the footer links to the accessibility statement and the open-source licenses", async ({ page }) => {
+  await page.goto("/");
+  const footer = page.getByRole("navigation", { name: "Footer" });
+  await expect(footer.getByRole("link", { name: "Accessibility", exact: true })).toHaveAttribute("href", "/accessibility");
+  await expect(footer.getByRole("link", { name: "Open-source licenses", exact: true })).toHaveAttribute("href", "/licenses");
+});
+
+test("the accessibility statement says where to report a problem", async ({ page }) => {
+  await page.goto("/accessibility");
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { level: 2, name: "Reporting a problem" })).toBeVisible();
+  await expect(main).toContainText(`doesn’t work for you, write to ${contactEmail}.`);
+  if (contactIsEmail) await expect(main.getByRole("link", { name: contactEmail })).toHaveAttribute("href", `mailto:${contactEmail}`);
+});
+
+// LEG-014: the bundles drop the packages' notices, so the site carries them.
+test("/licenses lists the shipped packages with their licenses, and links to their full texts", async ({ page, request }) => {
+  await page.goto("/licenses");
+  const main = page.getByRole("main");
+  for (const name of ["next", "react", "react-dom", "three"]) {
+    const row = main.locator("dl > div").filter({ has: page.locator("dt", { hasText: new RegExp(`^${name} \\d`) }) });
+    await expect(row.first().locator("dd"), name).toHaveText("MIT");
+  }
+  // devDependencies aren't shipped.
+  await expect(main.locator("dt", { hasText: /^(typescript|eslint|@playwright\/test) / })).toHaveCount(0);
+
+  const link = main.getByRole("link", { name: "one plain-text file" });
+  await expect(link).toHaveAttribute("href", "/licenses.txt");
+  const txt = await request.get("/licenses.txt");
+  expect(txt.status()).toBe(200);
+  expect(txt.headers()["content-type"]).toContain("text/plain");
+  const body = await txt.text();
+  expect(body).toMatch(/^three 0\.\d+\.\d+\nLicense: MIT$/m);
+  expect(body).toContain("Copyright © 2010-2026 three.js authors");
+  expect(body).toMatch(/^next \d+\.\d+\.\d+\nLicense: MIT$/m);
+});
+
 /** Says where to write: lib/owner.ts's contact, a mailto link once it's an address. */
 async function expectContact(scope: ReturnType<Page["locator"]>) {
   await expect(scope).toContainText(`Write to ${contactEmail}`);
@@ -54,7 +93,7 @@ async function expectContact(scope: ReturnType<Page["locator"]>) {
 }
 
 test("every site page's footer says where to write", async ({ page }) => {
-  for (const path of ["/", "/force", "/vieve", "/beta", "/privacy", "/terms"]) {
+  for (const path of ["/", "/force", "/vieve", "/beta", "/privacy", "/terms", "/accessibility", "/licenses"]) {
     await page.goto(path);
     await expectContact(page.locator("footer"));
   }
@@ -118,7 +157,7 @@ test.describe("signed in to the dashboard", () => {
 // owners search the code for placeholders still to fill in.
 const PLACEHOLDER = "[" + "OWNER:";
 test("no page's head, structured data or labels carry an owner placeholder", async ({ page, request }) => {
-  for (const path of ["/", "/force", "/vieve", "/beta", "/privacy", "/terms", "/app/login", "/no-such-page"]) {
+  for (const path of ["/", "/force", "/vieve", "/beta", "/privacy", "/terms", "/accessibility", "/licenses", "/app/login", "/no-such-page"]) {
     const html = await (await request.get(path)).text();
     expect(html.slice(0, html.indexOf("</head>")), path).not.toContain(PLACEHOLDER);
     await page.goto(path);

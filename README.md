@@ -38,6 +38,25 @@ GitHub Actions (`.github/workflows/ci.yml`) runs lint, the type check and the
 whole Playwright suite against a local stack on every pull request and every
 push to `main`.
 
+### Open-source licenses
+
+`/licenses` lists the open-source packages the site ships with, and
+`/licenses.txt` carries their license and notice files (the minified bundles
+drop them). Both come from `lib/licenses.json` and `public/licenses.txt`,
+which `scripts/licenses.mjs` writes from `package-lock.json` and
+`node_modules`. After adding, removing or updating a dependency, run
+`npm install`, then:
+
+```bash
+npm run licenses              # rewrites both files; commit them
+npm run licenses -- --check   # what CI runs: fails if they're out of date
+```
+
+The list is `dependencies` and everything they pull in, not
+`devDependencies`. Platform-specific builds (Next's compiler, sharp's image
+library) are left out: they run only on the build and server machines, and
+which ones npm installs depends on the machine.
+
 ## Environment
 
 Copy `.env.example` to `.env.local`.
