@@ -128,7 +128,7 @@ where t.created_by = (select id from auth.users where email = 'owner@example.com
 Owners can delete the team and remove members; owners and coaches can delete
 sessions and boats; anyone can leave.
 
-### Auth setup, still to do in the Supabase dashboard
+### Auth setup, still to do in the Supabase dashboard and Google Cloud Console
 
 These can't be set from migrations:
 
@@ -141,3 +141,8 @@ These can't be set from migrations:
 3. **No self sign-up** — Authentication → Sign In / Providers: turn off
    "Allow new users to sign up". The app never creates accounts; this stops
    Google sign-in and the Auth API from creating them too.
+4. **Google consent screen** — in the Google Cloud Console, on the OAuth
+   consent screen for that client: set the app home page to
+   `https://<domain>/`, the privacy policy link to `https://<domain>/privacy`
+   and the terms of service link to `https://<domain>/terms`, then submit
+   the app for verification.
