@@ -248,16 +248,25 @@
 }
 
 /* Stroke-synced sweep, like the LIVE screen: one stroke is revealed left to
-   right at a constant rate, and the next catch (at --sweep-end) wipes it. */
+   right at a constant rate, and the next catch (at --sweep-end) wipes it.
+   Transforms only, so it runs off the main thread: the window
+   (.rt-stroke-reveal) slides in from the left while the curve in it
+   (.rt-stroke-hold) slides back by the same amount, and the cursor rides the
+   window's right edge. */
 @keyframes rt-stroke-reveal {
-  from { clip-path: inset(0 100% 0 0); }
-  to   { clip-path: inset(0 calc(100% - var(--sweep-end)) 0 0); }
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(calc(var(--sweep-end) - 100%)); }
+}
+@keyframes rt-stroke-hold {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(calc(100% - var(--sweep-end))); }
 }
 @keyframes rt-stroke-cursor {
-  from { transform: translateX(0); left: 0; }
-  to   { left: var(--sweep-end); }
+  from { transform: translateX(0); }
+  to   { transform: translateX(var(--sweep-end)); }
 }
 .rt-stroke-reveal { animation: rt-stroke-reveal var(--sweep-dur, 2.1s) linear infinite; }
+.rt-stroke-hold { animation: rt-stroke-hold var(--sweep-dur, 2.1s) linear infinite; }
 .rt-stroke-cursor { animation: rt-stroke-cursor var(--sweep-dur, 2.1s) linear infinite; }
 
 /* Stroke keyframe shared by the explorer's catch ring (a response to the
@@ -293,7 +302,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .rt-stroke-reveal, .rt-swap, .rt-tick { animation: none; }
-  .rt-stroke-reveal { clip-path: inset(0 calc(100% - var(--sweep-end, 91%)) 0 0); }
+  .rt-stroke-reveal, .rt-stroke-hold, .rt-swap, .rt-tick { animation: none; }
+  .rt-stroke-reveal { transform: translateX(calc(var(--sweep-end, 91%) - 100%)); }
+  .rt-stroke-hold { transform: translateX(calc(100% - var(--sweep-end, 91%))); }
   .rt-ping-once, .rt-stroke-cursor { display: none; }
 }

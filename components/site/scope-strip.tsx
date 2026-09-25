@@ -64,17 +64,24 @@ export function ScopeStrip() {
             ))}
           </div>
         </div>
-        <svg
-          role="img"
-          aria-label={`Example force curve of one stroke: ${EXAMPLE.peakKg.toFixed(1)} kg peak at ${EXAMPLE.spm} strokes a minute, drawn left to right the way the node's live screen draws it.`}
-          viewBox={`0 0 ${W} ${H}`}
-          preserveAspectRatio="none"
-          className="rt-stroke-reveal absolute inset-0 h-full w-full"
-        >
-          <path d={`${d}L${W} ${y(0)}L0 ${y(0)}Z`} fill="var(--trace)" fillOpacity={0.1} />
-          <path d={d} fill="none" stroke="var(--trace)" strokeWidth={3} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-        </svg>
-        <div aria-hidden className="rt-stroke-cursor absolute inset-y-0 w-px bg-trace" />
+        {/* The reveal is a window sliding right while the curve inside it
+            slides back just as far, so the curve holds still: both are
+            transforms, which the browser runs without repainting. */}
+        <div className="rt-stroke-reveal absolute inset-0 overflow-hidden">
+          <svg
+            role="img"
+            aria-label={`Example force curve of one stroke: ${EXAMPLE.peakKg.toFixed(1)} kg peak at ${EXAMPLE.spm} strokes a minute, drawn left to right the way the node's live screen draws it.`}
+            viewBox={`0 0 ${W} ${H}`}
+            preserveAspectRatio="none"
+            className="rt-stroke-hold absolute inset-0 h-full w-full"
+          >
+            <path d={`${d}L${W} ${y(0)}L0 ${y(0)}Z`} fill="var(--trace)" fillOpacity={0.1} />
+            <path d={d} fill="none" stroke="var(--trace)" strokeWidth={3} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          </svg>
+        </div>
+        {/* The cursor is the left edge of a full-width box, so it can travel
+            in percentages of the strip. */}
+        <div aria-hidden className="rt-stroke-cursor pointer-events-none absolute inset-0 border-l border-trace" />
       </div>
       <figcaption className="mx-auto mt-3 flex max-w-7xl flex-wrap items-baseline justify-between gap-x-6 gap-y-1 px-5 text-sm text-muted-foreground sm:px-8">
         <span className="max-w-[62ch]">

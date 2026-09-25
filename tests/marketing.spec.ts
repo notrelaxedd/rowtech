@@ -44,11 +44,41 @@ test("reduced motion leaves the pages in their finished state", async ({ page })
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(page.locator(".rt-stroke-cursor")).toBeHidden();
+  // The hero curve is drawn up to the next catch, where the node wipes it,
+  // and holds still there.
+  const strip = await page.locator(".rt-stroke-reveal").evaluate((el) => {
+    const box = el.parentElement!.getBoundingClientRect();
+    const win = el.getBoundingClientRect();
+    const curve = el.querySelector("svg")!.getBoundingClientRect();
+    return { edge: (win.right - box.left) / box.width, curve: [curve.left - box.left, curve.width - box.width] };
+  });
+  expect(strip.edge).toBeGreaterThan(0.85);
+  expect(strip.edge).toBeLessThan(0.95);
+  for (const d of strip.curve) expect(Math.abs(d)).toBeLessThan(1);
+  await expect(page.locator(".rt-stroke-reveal")).toHaveCSS("animation-name", "none");
   await page.goto("/vieve");
   await expect(page.locator("#clock")).toContainText("8 of 8");
   // The 3D model still comes up; it goes straight to each view instead of turning.
   await page.locator("#parts").getByRole("button", { name: "Show the 3D model" }).click();
   await expect(page.getByRole("application", { name: "3D model: Parts of Vieve" }).locator("canvas")).toBeVisible({ timeout: 15000 });
+});
+
+// The hero's curve sweeps by moving layers, never by repainting them (LEAD-008).
+test("the hero curve sweeps with transforms alone", async ({ page }) => {
+  await page.goto("/");
+  const animated = await page.evaluate(() =>
+    document
+      .getAnimations()
+      .filter((a) => (a.effect as KeyframeEffect).target?.matches(".rt-stroke-reveal, .rt-stroke-hold, .rt-stroke-cursor"))
+      .map((a) => {
+        const props = (a.effect as KeyframeEffect)
+          .getKeyframes()
+          .flatMap((k) => Object.keys(k).filter((p) => !["offset", "computedOffset", "easing", "composite"].includes(p)));
+        return `${(a as CSSAnimation).animationName}: ${[...new Set(props)].join(", ")}`;
+      })
+      .sort()
+  );
+  expect(animated).toEqual(["rt-stroke-cursor: transform", "rt-stroke-hold: transform", "rt-stroke-reveal: transform"]);
 });
 
 // The hero screen replays the page's example stroke, so its stroke counter
