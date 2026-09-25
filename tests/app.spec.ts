@@ -135,6 +135,18 @@ test.describe("signed in", () => {
     return page.url().split("/").pop()!;
   }
 
+  // An empty dashboard says where a session's files come from (BIZ-019).
+  test("with no sessions yet, the list says where the files come from", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    await page.goto("/app/force");
+    const empty = page.getByRole("heading", { name: "Sessions", level: 1 }).locator("+ div");
+    await expect(empty).toContainText("Nothing here yet.");
+    await expect(empty).toContainText("microSD card");
+    for (const f of ["meta.json", "strokes.csv", "curves.bin", "events.csv"]) await expect(empty).toContainText(f);
+    await expect(empty).toContainText("Wi-Fi");
+  });
+
   test("the dashboard's first Tab is a link past its header to the content", async ({ page, context, baseURL }) => {
     const user = await makeUser();
     await signInBrowser(context, user, baseURL!);

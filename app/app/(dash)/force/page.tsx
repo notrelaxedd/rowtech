@@ -80,9 +80,21 @@ export default async function ForcePage({ searchParams }: { searchParams: Promis
         <section>
           <h1 className="type-h3 text-2xl">Sessions</h1>
           {top.length === 0 ? (
-            <p className="mt-4 rounded-lg border border-dashed border-line px-4 py-10 text-center text-sm text-muted-foreground">
-              {before ? "No older sessions." : "Nothing here yet. Upload a session from a node and it lands here."}
-            </p>
+            <div className="mt-4 rounded-lg border border-dashed border-line px-4 py-10 text-center text-sm text-muted-foreground">
+              {before ? (
+                <p>No older sessions.</p>
+              ) : (
+                <>
+                  <p>Nothing here yet. Upload a session from a node and it lands here.</p>
+                  {/* Where the files come from, in the words the home page and the specs use. */}
+                  <p className="mx-auto mt-2 max-w-md leading-relaxed">
+                    A node saves each session to its microSD card as four files (<span className="readout">meta.json</span>,{" "}
+                    <span className="readout">strokes.csv</span>, <span className="readout">curves.bin</span> and{" "}
+                    <span className="readout">events.csv</span>), and you download them over the node&rsquo;s own Wi-Fi.
+                  </p>
+                </>
+              )}
+            </div>
           ) : (
             <ul className="mt-4 divide-y divide-line rounded-lg border border-line bg-panel">
               {top.map((s) => {
