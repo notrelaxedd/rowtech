@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { readAttribution, takeCta, UTM } from "@/components/site/attribution";
 import { ctaPrimary, ctaSecondary } from "@/components/site/cta";
-import { PolicyLinks } from "@/components/site/legal";
+import { ContactEmail, PolicyLinks } from "@/components/site/legal";
 import { formField } from "@/components/ui/field";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
@@ -70,6 +70,9 @@ function Done({ name }: { name?: string }) {
       </ol>
       <p className="mt-8 text-sm text-muted-foreground">
         No email from us yet? That&rsquo;s expected: we reply personally, not automatically.
+      </p>
+      <p className="mt-3 text-sm text-muted-foreground">
+        Something to add, or a question? Write to <ContactEmail />.
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/" className={ctaSecondary}>

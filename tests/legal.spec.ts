@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { localSupabaseMissing, makeUser, signInBrowser } from "./support/local-supabase";
+import { contactEmail, contactIsEmail } from "../lib/owner";
 
 const LEGAL = [
   { path: "/privacy", title: "Privacy · RowTech", h1: "Privacy." },
@@ -37,6 +38,29 @@ test("the footer links to Privacy and Terms", async ({ page }) => {
   await expectPolicyLinks(page.getByRole("navigation", { name: "Footer" }));
 });
 
+/** Says where to write: lib/owner.ts's contact, a mailto link once it's an address. */
+async function expectContact(scope: ReturnType<Page["locator"]>) {
+  await expect(scope).toContainText(`Write to ${contactEmail}`);
+  if (contactIsEmail) await expect(scope.getByRole("link", { name: contactEmail })).toHaveAttribute("href", `mailto:${contactEmail}`);
+}
+
+test("every site page's footer says where to write", async ({ page }) => {
+  for (const path of ["/", "/force", "/vieve", "/beta", "/privacy", "/terms"]) {
+    await page.goto(path);
+    await expectContact(page.locator("footer"));
+  }
+});
+
+test("the beta confirmation says where to write", async ({ page }) => {
+  await page.goto("/beta");
+  await page.getByLabel("Name").fill("Sam Rower");
+  await page.getByLabel("Email").fill("sam.rower@example.com");
+  await page.getByLabel("Club, school or program").fill("Riverside RC");
+  await page.getByRole("button", { name: /apply for the beta/i }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("We have your application");
+  await expectContact(page.getByRole("main"));
+});
+
 test("under the beta form's button: what the details are for, and Privacy and Terms", async ({ page }) => {
   await page.goto("/beta");
   const form = page.locator("form");
@@ -54,12 +78,15 @@ test("the sign-in page links to Privacy and Terms under its forms", async ({ pag
 test.describe("signed in, but not on the beta list", () => {
   test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
 
-  test("the request-access page links to Privacy and Terms", async ({ page, context, baseURL }) => {
+  test("the request-access page links to Privacy and Terms, and says where to write", async ({ page, context, baseURL }) => {
     const user = await makeUser({ allowed: false });
     await signInBrowser(context, user, baseURL!);
     await page.goto("/app");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("The dashboard is for beta crews.");
     await expectPolicyLinks(page.getByRole("main"));
+    // No email is ever sent to applicants, so there's none to reply to (CNT-003).
+    await expect(page.getByRole("main")).not.toContainText("Reply to our email");
+    await expectContact(page.getByRole("main"));
   });
 });
 

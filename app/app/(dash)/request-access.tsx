@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/site/logo";
 import { ctaPrimary, ctaSecondary } from "@/components/site/cta";
-import { PolicyLinks } from "@/components/site/legal";
+import { ContactEmail, PolicyLinks } from "@/components/site/legal";
 import { cn } from "@/lib/utils";
 
 /** Signed in, but not on the beta list. */
@@ -28,7 +28,7 @@ export function RequestAccess({ email, signOut }: { email: string; signOut: () =
           </form>
         </div>
         <p className="mt-8 text-sm text-muted-foreground">
-          Already applied, or already rowing with us? Reply to our email and we&rsquo;ll sort it out.
+          Already applied, or already rowing with us? Write to <ContactEmail /> and we&rsquo;ll sort it out.
         </p>
         <p className="mt-3 text-sm text-muted-foreground">
           <PolicyLinks />

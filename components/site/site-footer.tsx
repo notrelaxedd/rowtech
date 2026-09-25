@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ContactEmail } from "./legal";
 import { Logo } from "./logo";
 
 const link = "hit-area relative hover:text-foreground";
@@ -11,6 +12,9 @@ export function SiteFooter() {
           <Logo />
           <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
             Seat-by-seat force measurement for rowing. In beta.
+          </p>
+          <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
+            Questions? Write to <ContactEmail />.
           </p>
         </div>
         {/* Each link takes taps over 44px, drawn (and focus-ringed) at its
