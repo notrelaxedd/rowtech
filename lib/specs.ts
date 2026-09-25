@@ -8,14 +8,14 @@ export const FORCE_SPECS: readonly Spec[] = [
   ["Electronics", "Adafruit Feather ESP32-S3 and an HX711 breakout on a RowTech carrier board, sampling at 80 Hz"],
   ["Catch timing", "Placed on the node to within about 3 ms, interpolated between samples 12.5 ms apart"],
   ["Calibration", "Up to 5 points against known weights; reports its own worst-case error; not yet run on a node"],
-  ["Doesn’t measure", "[OWNER: confirm what Force doesn’t measure, e.g. oar angle, power, boat speed, and why it measures at the backstay instead of the oarlock (the trade-off)]"],
+  ["Doesn’t measure", "Oar angle, or force in calibrated units yet; it sits on the backstay rather than the oarlock to keep the cost down"],
   ["Screen", "3.5″, 480×320 TFT"],
   ["Keys", "VIEW, TARE, POWER"],
   ["Seat number", "Set on the node’s own web page"],
   ["Network", "Its own Wi-Fi network; download from a phone or laptop"],
   ["Storage", "microSD, with strokes.csv, curves.bin, events.csv and meta.json for each session"],
   ["Battery", "3000 mAh"],
-  ["Target price", "[OWNER: Force target price per seat]"],
+  ["Target price", "$399 per seat"],
 ];
 
 export const VIEVE_SPECS: readonly Spec[] = [

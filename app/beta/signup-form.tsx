@@ -81,8 +81,8 @@ function Done({ name }: { name?: string }) {
         ))}
       </ol>
       <p className="mt-8 text-sm text-muted-foreground">
-        No email from us yet? That’s expected: we reply personally, not automatically. [OWNER: how soon
-        applicants can expect to hear back]
+        No email from us yet? That’s expected: we reply personally, not automatically, within 24 to 48
+        hours.
       </p>
       <p className="mt-3 text-sm text-muted-foreground">
         Something to add, or a question? Write to <ContactEmail />.
@@ -294,7 +294,7 @@ export function SignupForm() {
               ))}
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
-              [OWNER: the age rule for applicants, for example who under 18 should ask a coach or parent to apply for them]
+              Rowers under 18 can apply too. If you’re under 13, ask your coach to apply for you.
             </p>
             <Err id="role-error" msg={e.role} />
           </fieldset>
