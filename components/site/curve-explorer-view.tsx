@@ -79,7 +79,9 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
             </div>
 
             <div ref={chartRef} onPointerMove={on?.move} onPointerLeave={on?.leave} className="relative select-none">
-              {/* each measure, pinned to the part of the curve it's read from */}
+              {/* each measure, pinned to the part of the curve it's read from.
+                  Picked by a click or a key, not by pointing, so the words
+                  under the chart don't change as the mouse crosses it. */}
               {PINS.map((p, i) => {
                 const m = metric(p.id);
                 const lit_ = active === p.id;
@@ -90,7 +92,6 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
                     aria-pressed={lit_}
                     aria-label={`${m.label}: ${m.value}`}
                     onClick={setActive && (() => setActive(p.id))}
-                    onPointerEnter={setActive && (() => setActive(p.id))}
                     className={cn(
                       "absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-md border text-left transition-colors duration-200",
                       "flex size-7 items-center justify-center text-xs font-bold tabular-nums sm:block sm:size-auto sm:px-2.5 sm:py-1.5 sm:font-normal",
