@@ -10,8 +10,8 @@ export const siteUrl =
 /** The home page's title, and the site's name for itself when shared. */
 export const siteTitle = "RowTech: the force curve from every seat in the boat";
 
-/** Every tab title: the page's, then the brand. */
-export const titleTemplate = "%s | RowTech";
+/** Every tab title, site and dashboard alike: the page's, then the brand. */
+export const titleTemplate = "%s · RowTech";
 
 // What every page shares when it's shared. Next replaces a parent's openGraph
 // and twitter wholesale when a page sets its own, so pages spread these in.

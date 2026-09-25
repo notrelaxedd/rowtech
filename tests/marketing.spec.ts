@@ -201,7 +201,7 @@ test("an address the site doesn't have gets the site's own 404", async ({ page }
   expect(res?.status()).toBe(404);
   // One title, and it says what happened.
   await expect(page.locator("title")).toHaveCount(1);
-  await expect(page).toHaveTitle("Page not found | RowTech");
+  await expect(page).toHaveTitle("Page not found · RowTech");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   // The site's header, a main landmark and ways back in.
   await expect(page.getByRole("banner").getByRole("link", { name: "RowTech home" })).toBeVisible();

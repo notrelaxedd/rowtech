@@ -6,9 +6,9 @@ const pathOf = (href: string | null) => (href ? new URL(href).pathname : null);
 // Each public page is its own page to a search engine and in a shared link.
 const PAGES = [
   { path: "/", title: "RowTech: the force curve from every seat in the boat" },
-  { path: "/beta", title: "Apply for the beta | RowTech" },
-  { path: "/force", title: "Force, the seat node | RowTech" },
-  { path: "/vieve", title: "Vieve, the RowTech cox box | RowTech" },
+  { path: "/beta", title: "Apply for the beta · RowTech" },
+  { path: "/force", title: "Force, the seat node · RowTech" },
+  { path: "/vieve", title: "Vieve, the cox box · RowTech" },
 ];
 
 for (const { path, title } of PAGES) {
@@ -41,6 +41,11 @@ test("pages that set no canonical don't inherit the home page's", async ({ page 
     await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
     await expect(meta(page, "og:url")).toHaveCount(0);
   }
+});
+
+test("the dashboard's tab titles use the site's separator", async ({ page }) => {
+  await page.goto("/app/login");
+  await expect(page).toHaveTitle("Sign in · RowTech");
 });
 
 test("robots.txt keeps crawlers out of the dashboard and points to the sitemap", async ({ request, baseURL }) => {

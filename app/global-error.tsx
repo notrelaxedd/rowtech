@@ -9,7 +9,7 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
   return (
     <html lang="en" className="dark h-full antialiased">
       <body className="flex min-h-full flex-col">
-        <title>Something went wrong | RowTech</title>
+        <title>Something went wrong · RowTech</title>
         <main id="main" className="flex min-h-dvh flex-col items-center justify-center px-5 py-16">
           <div className="w-full max-w-md">
             <h1 className="type-h2 text-[2rem]">Something went wrong.</h1>

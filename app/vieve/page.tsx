@@ -11,7 +11,8 @@ import { VIEVE_SPECS } from "@/lib/specs";
 import { pageMetadata } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Vieve, the RowTech cox box",
+  // The template adds the brand once.
+  title: "Vieve, the cox box",
   description:
     "Vieve, the RowTech cox box, is in development: the cox's voice to the boat's speakers, and the hub every seat node reports to. Specifications and parts.",
   path: "/vieve",
