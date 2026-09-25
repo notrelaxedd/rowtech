@@ -86,6 +86,7 @@ export function ScopeStrip() {
       <figcaption className="mx-auto mt-3 flex max-w-7xl flex-wrap items-baseline justify-between gap-x-6 gap-y-1 px-5 text-sm text-muted-foreground sm:px-8">
         <span className="max-w-[62ch]">
           Example stroke, drawn the way the node&rsquo;s live screen draws it, in kilograms as a calibrated node will read.
+          We haven&rsquo;t calibrated a node yet.
         </span>
         <span className="tabular-nums">
           <span className="font-semibold text-foreground">{EXAMPLE.peakKg.toFixed(1)} kg</span> peak,{" "}

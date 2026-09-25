@@ -32,7 +32,7 @@ export function Hero() {
               <ForceDevice idPrefix="hero" className="block h-auto w-full" />
             </div>
             <figcaption className="mt-4 text-center text-sm text-muted-foreground">
-              Force node, concept design.{" "}
+              Force node, concept design. Its screen shows example data, and the Vieve link as designed.{" "}
               <Link href="/force" className="hit-area relative text-foreground underline underline-offset-4 hover:text-trace">
                 See Force
               </Link>

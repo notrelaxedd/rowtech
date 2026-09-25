@@ -40,6 +40,16 @@ test("specifications live on the product pages, not the home page", async ({ pag
   await expect(page.locator("#specs")).toContainText("$499");
 });
 
+// No node has been calibrated: the kilograms on the home page say they're an
+// example, next to where they're shown (BIZ-005).
+test("the home page's kilograms are labelled as example data, with where calibration stands", async ({ page }) => {
+  await page.goto("/");
+  const hero = page.locator('[data-section="hero"]');
+  await expect(hero.locator("figcaption").filter({ has: page.getByRole("link", { name: "See Force" }) })).toContainText(/example data/i);
+  await expect(hero.locator("figcaption").filter({ hasText: "Example stroke" })).toContainText("calibrated a node yet");
+  await expect(page.locator("#stroke")).toContainText("Until a node is calibrated, force reads in raw sensor units.");
+});
+
 test("reduced motion leaves the pages in their finished state", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
