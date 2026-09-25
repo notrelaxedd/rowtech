@@ -10,7 +10,7 @@ test("the marketing page renders, with the beta offered in four places", async (
   await expect(page.getByRole("img", { name: /Force seat node/i }).first()).toBeVisible();
   await expect(page.locator("#hero-peak")).toHaveCount(1);
 
-  for (const id of ["crew", "how", "stroke", "products", "beta-scope", "faq", "beta"]) {
+  for (const id of ["crew", "how", "stroke", "products", "faq", "beta"]) {
     await expect(page.locator(`#${id}`)).toHaveCount(1);
   }
 
@@ -25,9 +25,14 @@ test("the marketing page renders, with the beta offered in four places", async (
     .getByRole("link", { name: /apply for the beta/i })
     .evaluateAll((els) => els.map((e) => e.getAttribute("data-cta")));
   expect(froms.sort()).toEqual(["closing", "hero", "nav", "stroke"]);
+});
 
-  // Built and planned are kept apart.
-  await expect(page.locator("#beta-scope")).toContainText("In the node’s firmware now");
+test("the header links to the product pages only, not to sections of the home page", async ({ page }) => {
+  await page.goto("/");
+  // A CSS locator, so the links behind the phone menu's closed disclosure are counted too.
+  const hrefs = await page.locator("header a[href]").evaluateAll((els) => els.map((e) => e.getAttribute("href")));
+  expect(hrefs.filter((h) => h?.startsWith("/#"))).toEqual([]);
+  expect(hrefs).toEqual(expect.arrayContaining(["/force", "/vieve"]));
 });
 
 // The home page's copy says the same as the form and the dashboard (CNT-003).
@@ -35,10 +40,6 @@ test("the home page agrees with the beta form and the dashboard", async ({ page 
   await page.goto("/");
   // The dashboard's words for the two sides of the boat.
   await expect(page.locator("#crew")).toContainText("port and starboard");
-  // The form's optional questions, the role among them.
-  await expect(page.locator("#beta")).toContainText("Your role, which boats you row, where you are and a note are optional.");
-  // A node writes four files: the three drawn in step 3, and a meta file.
-  await expect(page.locator("#beta-scope")).toContainText("three data files and a meta file");
   await page.goto("/beta");
   await expect(page.locator("form summary")).toContainText("Tell us about your boats");
 });
@@ -119,17 +120,16 @@ test("Force's specifications say what it fits, what it doesn't measure and its t
   await expect(page.locator("#faq")).toContainText("For now it fits Vespoli riggers");
 });
 
-// The build status and how the beta works sit under their headings, and what
-// happens when a unit fails is one of what beta crews get, with the site's one
-// contact to write to (BIZ-014, BIZ-017, BIZ-020).
+// The closing section says where the build stands and what happens after you
+// apply, and what beta crews get says what happens when a unit fails, with the
+// site's one contact to write to (BIZ-014, BIZ-017, BIZ-020).
 test("the home page has a line for the build status, how the beta works, and failed units", async ({ page }) => {
   await page.goto("/");
-  for (const id of ["beta-scope", "beta"]) {
-    await expect(page.locator(`#${id} h2 + p`)).not.toBeEmpty();
-  }
-  const get = page.locator("#beta h3", { hasText: "What beta crews get" }).locator("+ ul > li");
-  await expect(get).toHaveCount(4);
-  await expect(get.last()).toContainText(`Write to ${contactEmail}.`);
+  const beta = page.locator("#beta");
+  await expect(beta.locator("h2 + p")).toContainText("new parts have been ordered for Force v1.4");
+  await expect(beta.locator("h2 + p")).toContainText("we’ll get in touch to discuss next steps");
+  await expect(beta).toContainText("testing units at the cost of their materials");
+  await expect(beta).toContainText(`If a unit fails, send it back and we’ll replace it. Write to ${contactEmail}.`);
 });
 
 // Another company sells rowing sensors as RowTech Solutions; the FAQ says this
@@ -634,12 +634,12 @@ test("only the headline font is preloaded", async ({ request }) => {
 });
 
 // A link to a section on the home page reads as that section's heading does,
-// so landing there confirms the jump (UX-011).
-test("header and footer links to home page sections use their headings' words", async ({ page }) => {
+// so landing there confirms the jump (UX-011). The header links to pages only.
+test("footer links to home page sections use their headings' words", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/");
-  const links = page.locator('header nav a[href^="/#"], footer nav a[href^="/#"]');
-  expect(await links.count()).toBeGreaterThanOrEqual(5);
+  const links = page.locator('footer nav a[href^="/#"]');
+  expect(await links.count()).toBeGreaterThanOrEqual(2);
   for (const link of await links.all()) {
     const label = (await link.textContent())!.trim();
     const id = (await link.getAttribute("href"))!.slice(2);
@@ -650,39 +650,36 @@ test("header and footer links to home page sections use their headings' words", 
 
 // The home page's sections must have their real height from the start, or a
 // link to one of them lands where the section would have been (UX-001).
-test("links to the FAQ land on the FAQ", async ({ page, isMobile }) => {
-  const faq = page.locator("#faq");
+test("links to a home page section land on it", async ({ page }) => {
   // Distance between the section's top and the header's offset, once the
   // scroll has stopped moving (smooth scrolling passes through on its way).
-  const offTarget = () =>
-    faq.evaluate(async (el) => {
+  const offTarget = (id: string) => () =>
+    page.locator(`#${id}`).evaluate(async (el) => {
       const pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop);
       const a = el.getBoundingClientRect().top;
       await new Promise((r) => setTimeout(r, 300));
       const b = el.getBoundingClientRect().top;
       return a === b ? Math.abs(b - pad) : Infinity;
     });
-  const landsOnFaq = async () => {
-    await expect.poll(offTarget, { timeout: 10000 }).toBeLessThanOrEqual(2);
-    await expect(faq.getByRole("heading", { level: 2 })).toBeInViewport();
+  const landsOn = async (id: string) => {
+    await expect.poll(offTarget(id), { timeout: 10000 }).toBeLessThanOrEqual(2);
+    await expect(page.locator(`#${id}`).getByRole("heading", { level: 2 })).toBeInViewport();
   };
-  const clickFaq = async () => {
-    const header = page.locator("header");
-    if (isMobile) await header.getByText("Menu", { exact: true }).click();
-    await header.getByRole("link", { name: "Questions", exact: true }).filter({ visible: true }).click();
-    await expect(page).toHaveURL(/\/#faq$/);
+  const clickHow = async () => {
+    await page.getByRole("navigation", { name: "Footer" }).getByRole("link", { name: "Rigger to phone" }).click();
+    await expect(page).toHaveURL(/\/#how$/);
   };
 
   await page.goto("/#faq");
-  await landsOnFaq();
+  await landsOn("faq");
 
   await page.goto("/");
-  await clickFaq();
-  await landsOnFaq();
+  await clickHow();
+  await landsOn("how");
 
   await page.goto("/force");
-  await clickFaq();
-  await landsOnFaq();
+  await clickHow();
+  await landsOn("how");
 });
 
 // Keyboard users get past the header's links in one step (A11Y-001).
@@ -751,8 +748,8 @@ test("the phone menu closes on Escape, a tap outside, a scroll or a Tab out, and
   await menu.focus();
   await page.keyboard.press("Enter");
   await isOpen();
-  for (let i = 0; i < 5; i++) await page.keyboard.press("Tab");
-  await expect(panel.getByRole("link", { name: "Questions" })).toBeFocused();
+  for (let i = 0; i < 2; i++) await page.keyboard.press("Tab");
+  await expect(panel.getByRole("link", { name: "Vieve" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.locator('header a[data-cta="nav"]')).toBeFocused();
   await isClosed();
@@ -796,7 +793,7 @@ test.describe("without JavaScript", () => {
     await page.goto("/");
     await page.locator("header summary").click();
     const panel = page.locator("header details nav");
-    await expect(panel.getByRole("link", { name: "Questions" })).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Vieve" })).toBeVisible();
     const box = (await panel.boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(375);

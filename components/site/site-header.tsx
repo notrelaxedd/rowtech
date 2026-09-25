@@ -5,11 +5,8 @@ import { MobileMenu } from "./mobile-menu";
 import { SkipLink } from "./skip-link";
 
 const links = [
-  { href: "/#how", label: "Rigger to phone" },
-  { href: "/#stroke", label: "One stroke" },
   { href: "/force", label: "Force" },
   { href: "/vieve", label: "Vieve" },
-  { href: "/#faq", label: "Questions" },
 ];
 
 /** `cta={false}` on pages that are already the destination (/beta). */

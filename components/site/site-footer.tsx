@@ -25,7 +25,7 @@ export function SiteFooter() {
           <Link href="/force#specs" className={link}>Force specifications</Link>
           <Link href="/vieve" className={link}>Vieve</Link>
           <Link href="/vieve#specs" className={link}>Vieve specifications</Link>
-          <Link href="/#beta" className={link}>Applying for the beta</Link>
+          <Link href="/#beta" className={link}>Tell us about your crew</Link>
           <Link href="/privacy" className={link}>Privacy</Link>
           <Link href="/terms" className={link}>Terms</Link>
           <Link href="/accessibility" className={link}>Accessibility</Link>
