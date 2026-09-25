@@ -227,12 +227,13 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
                 </g>
               ))}
               {/* The threshold's label, drawn over the leader lines with a halo.
-                  On phones it sits under the line, clear of marker 7. */}
+                  Below lg it sits under the line, clear of marker 7 on phones
+                  and of the Rhythm callout, which the chart shrinks under. */}
               <text
                 x={PX1}
                 y={y(M.threshold) - 6}
                 textAnchor="end"
-                className={cn("rt-halo fill-warn tabular-nums text-[10px] max-sm:translate-y-[25px] max-sm:text-[17px]", fade)}
+                className={cn("rt-halo fill-warn tabular-nums text-[10px] max-sm:translate-y-[25px] max-sm:text-[17px] sm:max-lg:translate-y-[19px]", fade)}
                 style={{ opacity: lit("catch") }}
               >
                 catch threshold
