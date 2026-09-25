@@ -9,8 +9,13 @@ export const legalEntity = "[OWNER: legal name of the company or person that run
 /** Where that entity is registered, or based. */
 export const legalCountry = "[OWNER: country (and state) where it is registered]";
 
-/** Where people write about their data, the beta or these terms. */
-export const contactEmail = "[OWNER: contact email address for privacy requests and questions]";
+/**
+ * The one address the site gives for writing to RowTech: the footer on every
+ * page, beta applicants, dashboard access, failed units, accessibility,
+ * privacy and the terms.
+ */
+export const contactEmail =
+  "[OWNER: the one contact email for the whole site: general questions, the beta, dashboard access, failed units, accessibility and privacy]";
 
 /** Whether the contact above has been filled in with something mailable. */
 export const contactIsEmail = /^[^@\s[\]]+@[^@\s[\]]+\.[^@\s[\]]+$/.test(contactEmail);
