@@ -288,6 +288,9 @@ export function SignupForm() {
                 </label>
               ))}
             </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              [OWNER: the age rule for applicants, for example who under 18 should ask a coach or parent to apply for them]
+            </p>
             <Err id="role-error" msg={e.role} />
           </fieldset>
 
