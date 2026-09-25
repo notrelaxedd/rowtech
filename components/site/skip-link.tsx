@@ -1,6 +1,8 @@
 /**
- * The first Tab stop on a page: past the header, straight to its <main id="main">
- * (which takes focus with tabIndex={-1}). Hidden until it has focus. A plain
+ * The first Tab stop on a page: past the header, straight to its <main id="main">.
+ * <main> isn't focusable (a click on its text would otherwise take focus and send
+ * the next Tab back to the top); browsers start the next Tab from the #main
+ * target instead. Hidden until it has focus. A plain
  * link, so it works without JavaScript. Sits inside a positioned parent (the
  * sticky header) or at the top of the page.
  */

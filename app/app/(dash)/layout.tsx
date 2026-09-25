@@ -33,7 +33,7 @@ export default async function DashLayout({ children }: { children: React.ReactNo
           </div>
         </div>
       </header>
-      <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
+      <main id="main" className="flex-1">
         {children}
       </main>
     </div>

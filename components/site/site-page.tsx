@@ -10,7 +10,7 @@ export function SitePage({ children, jsonLd }: { children: React.ReactNode; json
     <div className="site flex min-h-full flex-col">
       {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
       <SiteHeader />
-      <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
+      <main id="main" className="flex-1">
         {children}
       </main>
       <SiteFooter />

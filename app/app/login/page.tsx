@@ -18,7 +18,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <SkipLink />
-      <main id="main" tabIndex={-1} className="flex min-h-dvh flex-col items-center justify-center px-5 py-16 focus:outline-none">
+      <main id="main" className="flex min-h-dvh flex-col items-center justify-center px-5 py-16">
         <div className="w-full max-w-sm">
           <Link href="/" aria-label="RowTech home" className="hit-area relative inline-block rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-trace">
             <Logo />

@@ -2,8 +2,8 @@ import { expect, type Page } from "@playwright/test";
 
 /**
  * The page's first Tab stop is a "Skip to content" link, hidden until it has
- * focus; Enter on it moves focus to <main>, and the next Tab stays in there
- * (WCAG 2.4.1, A11Y-001). Call it on a freshly loaded page.
+ * focus; Enter on it jumps to <main>, and the next Tab lands in there
+ * (WCAG 2.4.1, A11Y-001). <main> itself doesn't take focus. Call it on a freshly loaded page.
  */
 export async function expectSkipLink(page: Page) {
   const skip = page.getByRole("link", { name: "Skip to content" });
@@ -18,7 +18,8 @@ export async function expectSkipLink(page: Page) {
   expect(await width()).toBeGreaterThan(1);
 
   await page.keyboard.press("Enter");
-  await expect(page.locator("main#main")).toBeFocused();
+  await expect(skip).not.toBeFocused();
+  await expect(page.locator("main#main")).not.toHaveAttribute("tabindex");
   expect(await width()).toBeLessThanOrEqual(1);
 
   await page.keyboard.press("Tab");

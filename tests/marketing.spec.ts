@@ -534,6 +534,23 @@ test("the first Tab on every page is a link past the header to the content", asy
   }
 });
 
+// A click on text in the page and then Tab goes on from there, not back to the
+// top of <main> (A11Y-001).
+test("Tab after a click on text in the page goes on from where the click was", async ({ page }) => {
+  for (const [path, heading] of [["/force", "#specs h2"], ["/", "#faq h2"]] as const) {
+    await page.goto(path);
+    await test.step(path, async () => {
+      const h2 = page.locator(heading);
+      await h2.click();
+      expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe("MAIN");
+      await page.keyboard.press("Tab");
+      expect(
+        await h2.evaluate((el) => !!(el.compareDocumentPosition(document.activeElement!) & Node.DOCUMENT_POSITION_FOLLOWING)),
+      ).toBe(true);
+    });
+  }
+});
+
 // The phone menu behaves like one: it says whether it's open, and a change of
 // mind closes it, whichever way it comes (UX-004, A11Y-004). Its panel stays
 // on a 375px screen (FMT-001).
