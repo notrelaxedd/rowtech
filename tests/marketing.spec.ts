@@ -279,6 +279,31 @@ test("the stroke chart offers each measure once, named as it reads", async ({ pa
   }
 });
 
+// At 375px the threshold's label clears every marker (FMT-002), and the
+// seventh chip takes a row of its own rather than half of one (FMT-003).
+test("on a phone, the stroke chart's label and chips sit clear", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/");
+  const chart = page.locator("#stroke");
+  await chart.scrollIntoViewIfNeeded();
+  // Measure the live copy, not the server's, which it replaces.
+  const catchChip = chart.getByRole("button", { name: /Catch/ });
+  await expect(async () => {
+    await chart.getByRole("button", { name: /Rise rate/ }).click();
+    await catchChip.click();
+    await expect(catchChip).toHaveAttribute("aria-pressed", "true", { timeout: 500 });
+  }).toPass({ timeout: 10000 });
+  const label = (await chart.locator("text", { hasText: "catch threshold" }).boundingBox())!;
+  for (const marker of await chart.locator('button[aria-hidden="true"]').all()) {
+    const m = (await marker.boundingBox())!;
+    const apart = m.x + m.width <= label.x || label.x + label.width <= m.x || m.y + m.height <= label.y || label.y + label.height <= m.y;
+    expect(apart, `marker ${await marker.textContent()}`).toBe(true);
+  }
+  const list = chart.getByRole("list", { name: "Stroke metrics" });
+  const last = (await list.getByRole("listitem").last().boundingBox())!;
+  expect(last.width).toBeCloseTo((await list.boundingBox())!.width, 0);
+});
+
 test("the Vieve page shows it as a 3D model too", async ({ page, isMobile }) => {
   await page.goto("/vieve");
   const figure = page.locator("#parts figure");

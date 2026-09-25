@@ -283,11 +283,12 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
             </div>
           </div>
 
+          {/* Seven in two columns: the last one takes the whole row. */}
           <ol aria-label="Stroke metrics" className="mt-4 grid grid-cols-2 gap-2 sm:hidden">
             {PINS.map((p, i) => {
               const m = metric(p.id);
               return (
-                <li key={p.id}>
+                <li key={p.id} className="last:col-span-2">
                   <button
                     type="button"
                     aria-pressed={active === p.id}
