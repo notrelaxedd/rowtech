@@ -323,7 +323,7 @@ test("the first Tab on every page is a link past the header to the content", asy
 test("the phone menu closes on Escape, a tap outside, a scroll or a Tab out, and fits the screen", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
-  const menu = page.locator("header summary");
+  const menu = page.getByRole("banner").getByRole("button", { name: "Menu", exact: true });
   const panel = page.locator("header details nav");
   const isOpen = async () => {
     await expect(menu).toHaveAttribute("aria-expanded", "true");
@@ -369,6 +369,31 @@ test("the phone menu closes on Escape, a tap outside, a scroll or a Tab out, and
   await isOpen();
   await page.evaluate(() => window.scrollBy(0, 300));
   await isClosed();
+});
+
+// Opened before the page's scripts have run, the menu still says so once they
+// have, and closes on Escape like any other time.
+test("the phone menu opened before hydration still says it's open, and closes", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  await page.route(/\/_next\/static\/.*\.js/, async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const summary = page.locator("header summary");
+  const panel = page.locator("header details nav");
+  await summary.click();
+  await expect(panel).toBeVisible();
+  await expect(summary).not.toHaveAttribute("aria-controls");
+  release();
+  // aria-controls appears once the component has hydrated.
+  await expect(summary).toHaveAttribute("aria-controls", /.+/, { timeout: 15000 });
+  await expect(summary).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expect(summary).toHaveAttribute("aria-expanded", "false");
 });
 
 test.describe("without JavaScript", () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useId, useRef, useSyncExternalStore } from "react";
 
 const noSubscribe = () => () => {};
 
@@ -15,7 +15,14 @@ export function MobileMenu({ links }: { links: ReadonlyArray<{ href: string; lab
   const ref = useRef<HTMLDetailsElement>(null);
   const trigger = useRef<HTMLElement>(null);
   const navId = useId();
-  const [open, setOpen] = useState(false);
+  // Read from the element, not kept alongside it: a menu opened before
+  // hydration fired its toggle event before anything here was listening.
+  const onToggle = useCallback((change: () => void) => {
+    const d = ref.current;
+    d?.addEventListener("toggle", change);
+    return () => d?.removeEventListener("toggle", change);
+  }, []);
+  const open = useSyncExternalStore(onToggle, () => ref.current?.open ?? false, () => false);
   // Before hydration the <summary> reports its own state; after, it's ours.
   const js = useSyncExternalStore(noSubscribe, () => true, () => false);
 
@@ -57,9 +64,10 @@ export function MobileMenu({ links }: { links: ReadonlyArray<{ href: string; lab
 
   return (
     // Not positioned itself: the panel hangs from the header, inside the screen.
-    <details ref={ref} className="lg:hidden" onToggle={(e) => setOpen(e.currentTarget.open)}>
+    <details ref={ref} className="lg:hidden">
       <summary
         ref={trigger}
+        role={js ? "button" : undefined}
         aria-expanded={js ? open : undefined}
         aria-controls={js ? navId : undefined}
         className="flex h-11 cursor-pointer list-none items-center rounded-md px-2.5 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden"
