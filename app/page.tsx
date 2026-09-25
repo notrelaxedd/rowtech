@@ -102,7 +102,7 @@ const FAQ = [
   },
   {
     q: "Which boats and riggers does it fit?",
-    a: "The load cell mounts on the rigger backstay. The Force page’s specifications list what it fits. Tell us which boats you row when you apply.",
+    a: "The load cell mounts on the rigger backstay. For now it fits Vespoli riggers, and more are coming soon. Tell us which boats you row when you apply.",
   },
   {
     q: "Where does the data go?",

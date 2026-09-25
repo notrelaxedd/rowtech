@@ -14,8 +14,7 @@ export const legalCountry = "Ohio, United States";
  * page, beta applicants, dashboard access, failed units, accessibility,
  * privacy and the terms.
  */
-export const contactEmail =
-  "[OWNER: the one contact email for the whole site: general questions, the beta, dashboard access, failed units, accessibility and privacy]";
+export const contactEmail = "polkcade27@sehs.net";
 
 /** When /privacy and /terms last changed. Update it with every change to either. */
 export const policiesUpdated = "September 25, 2026";

@@ -113,9 +113,10 @@ test("Force's specifications say what it fits, what it doesn't measure and its t
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.goto("/vieve");
   await expect(page.locator("#specs dt", { hasText: "Target price" })).toHaveCount(1);
-  // The home page's fit question points to the Fits row.
+  // The Fits row and the home page's fit question give the same answer.
+  await expect(page.locator("#specs dt", { hasText: "Fits" }).locator("+ dd")).toContainText("Vespoli riggers");
   await page.goto("/");
-  await expect(page.locator("#faq")).toContainText("The Force page’s specifications list what it fits.");
+  await expect(page.locator("#faq")).toContainText("For now it fits Vespoli riggers");
 });
 
 // The build status and how the beta works sit under their headings, and what

@@ -4,7 +4,7 @@ export type Spec = readonly [label: string, value: string];
 
 export const FORCE_SPECS: readonly Spec[] = [
   ["Load cell", "50 kg, in series on the rigger backstay"],
-  ["Fits", "[OWNER: which riggers and boats it fits, and which riggers it doesn’t fit: rigger types, stay diameter range, sweep/scull, tested boats]"],
+  ["Fits", "Vespoli riggers for now; more are coming soon"],
   ["Electronics", "Adafruit Feather ESP32-S3 and an HX711 breakout on a RowTech carrier board, sampling at 80 Hz"],
   ["Catch timing", "Placed on the node to within about 3 ms, interpolated between samples 12.5 ms apart"],
   ["Calibration", "Up to 5 points against known weights; reports its own worst-case error; not yet run on a node"],
