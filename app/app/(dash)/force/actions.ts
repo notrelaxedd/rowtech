@@ -28,7 +28,36 @@ const UPLOAD_LIMITS = {
   strokes: 20_000,
   /** New seat sessions a team can add in 24 hours. */
   newSessionsPerDay: 200,
+  /**
+   * What a team can keep in Storage: 200 MB, about 2,000 seat sessions at
+   * ~100 KB each. The free plan holds 1 GB for every team together.
+   */
+  teamStorageBytes: 200 * 1024 * 1024,
 };
+
+/**
+ * Bytes a team's session files take in Storage, from their rows. Paged,
+ * because PostgREST hands back at most 1,000 rows a request. Null if a read
+ * fails.
+ */
+async function teamStorageBytes(sb: Awaited<ReturnType<typeof supabaseServer>>, team: string): Promise<number | null> {
+  const PAGE = 1000;
+  let total = 0;
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await sb
+      .from("session_files")
+      .select("id, bytes, sessions!inner(team_id)")
+      .eq("sessions.team_id", team)
+      .order("id")
+      .range(from, from + PAGE - 1);
+    if (error) {
+      console.error("upload: storage check failed", { code: error.code, message: error.message });
+      return null;
+    }
+    for (const row of data) total += row.bytes ?? 0;
+    if (data.length < PAGE) return total;
+  }
+}
 
 /**
  * A new team's name. Nothing from the user's email (LEG-018): the team's
@@ -218,6 +247,19 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
       return [{ seat, name, path, bytes }];
     });
   });
+  // New sessions add to what the team keeps; a re-upload replaces its files.
+  const adding = uploads.filter((u) => u.seat.isNew).reduce((sum, u) => sum + u.bytes.byteLength, 0);
+  if (adding) {
+    const used = await teamStorageBytes(sb, team);
+    if (used === null) return { status: "error", message: "The upload couldn’t be saved. Try again in a minute." };
+    if (used + adding > UPLOAD_LIMITS.teamStorageBytes) {
+      return {
+        status: "error",
+        message: "Your team has used its 200 MB of storage. Delete sessions you no longer need to make room.",
+      };
+    }
+  }
+
   // Each resolves to why it failed, or null; a throw counts as a failure too,
   // so every upload has finished before anything is cleaned up.
   const results = await Promise.all(
