@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import type { StrokeRow } from "@/lib/session/format";
 import { fmt } from "@/lib/session/analyse";
 import { cn } from "@/lib/utils";
+import { seatLabel } from "@/lib/session/labels";
 
 export type CrewSeat = {
   id: string;
@@ -198,7 +199,15 @@ export function CrewPanel({
                   const far = Math.abs(o.ms) > 7;
                   return (
                     <li key={o.id} className="grid grid-cols-[3rem_1fr_4.5rem] items-center gap-3">
-                      <span className="readout text-sm">{o.seat ?? "—"}</span>
+                      <span className="readout text-sm">
+                        {o.seat ?? (
+                          // The column is narrow for "no seat": the dash shows, the label is read.
+                          <>
+                            <span aria-hidden>—</span>
+                            <span className="sr-only">{seatLabel(null)}</span>
+                          </>
+                        )}
+                      </span>
                       <span className="relative h-2 rounded-sm bg-white/[0.06]">
                         <span
                           className={cn("absolute top-0 h-full w-1.5 rounded-sm", far ? "bg-warn" : "bg-trace")}

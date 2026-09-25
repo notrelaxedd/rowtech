@@ -890,6 +890,12 @@ test.describe("signed in", () => {
     const share = page.locator("section").filter({ has: page.getByRole("heading", { name: "Who’s carrying the boat" }) });
     await expect(share.getByRole("listitem")).toHaveCount(2);
     await expect(share.getByRole("listitem").filter({ hasText: "no seat" })).toHaveCount(1);
+    // On one clock, the catch spread names that seat too, not just a dash.
+    expect((await user.db.from("sessions").update({ clock_source: "gps" }).eq("id", crew)).error).toBeNull();
+    await page.reload();
+    const spread = page.locator("section").filter({ has: page.getByRole("heading", { name: "Catch spread and sequencing" }) });
+    await expect(spread.getByRole("listitem")).toHaveCount(2);
+    await expect(spread.getByRole("listitem").filter({ hasText: "no seat" })).toHaveCount(1);
     for (const path of ["/app/force", `/app/force/${crew}`, `/app/cox/${crew}`]) {
       await page.goto(path);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
