@@ -79,3 +79,28 @@ test("structured data: the home page's Organization, and no Product without an o
     expect(JSON.stringify(await blocks())).not.toContain('"Product"');
   }
 });
+
+test("the icons are there for browsers, bookmarks and home screens", async ({ page, request }) => {
+  await page.goto("/");
+  const hrefs: Record<string, string | null> = {};
+  for (const sel of ['link[rel="icon"][href^="/favicon.ico"]', 'link[rel="icon"][type="image/svg+xml"]', 'link[rel="apple-touch-icon"]']) {
+    await expect(page.locator(sel)).toHaveCount(1);
+    hrefs[sel] = await page.locator(sel).getAttribute("href");
+  }
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute("sizes", "180x180");
+  for (const href of Object.values(hrefs)) {
+    const res = await request.get(href!);
+    expect(res.status(), href!).toBe(200);
+  }
+  // Asked for directly, without a link tag.
+  const ico = await request.get("/favicon.ico");
+  expect(ico.status()).toBe(200);
+  expect(ico.headers()["content-type"]).toContain("image/x-icon");
+});
+
+test("the browser's bar takes the colour of the page behind it", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#0a1c23");
+  await page.goto("/app/login");
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#07090b");
+});

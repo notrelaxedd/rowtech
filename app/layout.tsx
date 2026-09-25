@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Archivo, Chivo_Mono } from "next/font/google";
 import "./globals.css";
 import { AttributionCapture } from "@/components/site/attribution";
@@ -35,6 +35,9 @@ export const metadata: Metadata = {
   openGraph: openGraphBase,
   twitter: twitterBase,
 };
+
+// The browser's own bar matches the site header: deep river (globals.css).
+export const viewport: Viewport = { themeColor: "#0a1c23" };
 
 export default function RootLayout({
   children,
