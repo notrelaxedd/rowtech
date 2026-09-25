@@ -51,7 +51,7 @@ export type VieveScreenRefs = { map?: Ref<SVGGElement> };
 
 /** What the screen says, for the device that contains it. */
 export function vieveScreenLabel(split: string, rate: number) {
-  return `Split ${split} per 500 metres, rate ${rate}, the river heading-up with the race line on it, and the peak force of all eight seats.`;
+  return `Split ${split} per 500 meters, rate ${rate}, the river heading-up with the race line on it, and the peak force of all eight seats.`;
 }
 
 export function VieveScreen({

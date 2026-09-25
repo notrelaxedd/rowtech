@@ -149,6 +149,20 @@ test("Wi-Fi is spelled Wi-Fi on the pages", async ({ page }) => {
   await expect(page.locator("#parts")).toContainText("its own Wi-Fi network");
 });
 
+// The copy is written for US coaches in US spelling, and so is what a screen
+// reader reads out of the drawings (CNT-017).
+test("the pages use US spelling, in their text and their labels", async ({ page }) => {
+  const british = /\b(coloured|colours?|metres?|kilometres?|centred|centre|programmes?|analysed?)\b/i;
+  for (const path of ["/", "/force", "/vieve", "/beta"]) {
+    await page.goto(path);
+    const text = (await page.locator("body").textContent()) ?? "";
+    const labels = await page.locator("[aria-label]").evaluateAll((els) => els.map((el) => el.getAttribute("aria-label") ?? ""));
+    for (const said of [text, ...labels]) expect(said.match(british)?.[0] ?? null, path).toBeNull();
+  }
+  await page.goto("/vieve");
+  await expect(page.locator('[aria-label*="per 500 meters"]').first()).toBeAttached();
+});
+
 // No node has been calibrated: the kilograms on the home page say they're an
 // example, next to where they're shown (BIZ-005).
 test("the home page's kilograms are labelled as example data, with where calibration stands", async ({ page }) => {

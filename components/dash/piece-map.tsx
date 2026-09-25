@@ -134,7 +134,7 @@ export function PieceMap({
     <div className="overflow-hidden rounded-lg border border-line bg-panel">
       <div className="flex items-center justify-between gap-4 border-b border-line px-4 py-2.5">
         <p className="readout text-xs text-muted-foreground">
-          <span className="text-trace">OUTING</span> · coloured by split
+          <span className="text-trace">OUTING</span> · colored by split
         </p>
         <button
           type="button"

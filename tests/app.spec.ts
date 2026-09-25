@@ -419,6 +419,8 @@ test.describe("signed in", () => {
       expect(sent, path).toBeGreaterThan(1000);
       expect(sent, path).toBeLessThanOrEqual(2000);
       expect(html, path).toMatch(/tMs\\?":299900\b/);
+      // US spelling, as on the rest of the site (CNT-017).
+      expect(html, path).toContain("colored by split");
     }
   });
 
