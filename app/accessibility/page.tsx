@@ -48,8 +48,8 @@ export default function AccessibilityPage() {
                   by dragging.
                 </li>
                 <li>
-                  If your device is set to reduce motion, the site’s animations stop: the force curves and the
-                  Force screen are drawn still, and the 3D models turn without easing.
+                  If your device is set to reduce motion, the force curves and the Force screen are drawn still,
+                  and the 3D models turn without easing.
                 </li>
               </ul>
             </LegalSection>
