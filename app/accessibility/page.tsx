@@ -43,8 +43,9 @@ export default function AccessibilityPage() {
                   without JavaScript. Escape closes it and puts focus back on Menu.
                 </li>
                 <li>
-                  The 3D models of Force and Vieve load only when you choose Show the 3D model. Once one is shown, it
-                  turns with the arrow keys as well as by dragging.
+                  The 3D models of Force and Vieve load when you reach for one: point at it or its notes, tab to a
+                  note, tap it, or choose Show the 3D model. Once one is shown, it turns with the arrow keys as well as
+                  by dragging.
                 </li>
                 <li>
                   If your device is set to reduce motion, the site&rsquo;s animations stop: the force curves and the
