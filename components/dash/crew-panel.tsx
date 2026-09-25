@@ -4,10 +4,12 @@ import { useMemo, useState, useTransition } from "react";
 import type { StrokeRow } from "@/lib/session/format";
 import { fmt } from "@/lib/session/analyse";
 import { cn } from "@/lib/utils";
+import { seatLabel } from "@/lib/session/labels";
 
 export type CrewSeat = {
   id: string;
-  seat: number;
+  /** null when the node's seat was never set. */
+  seat: number | null;
   label: string;
   side: "port" | "starboard" | "scull" | "cox" | null;
   strokes: StrokeRow[];
@@ -36,7 +38,7 @@ export function CrewPanel({
   const [sideError, setSideError] = useState<string | null>(null);
   const [, startSaving] = useTransition();
 
-  // Load share: each seat's impulse as a share of the crew's, over the piece.
+  // Load share: each seat's impulse as a share of the crew's, over the outing.
   // Valid without a shared clock: it compares totals, not moments.
   const share = useMemo(() => {
     const totals = seats.map((s) => ({
@@ -63,14 +65,15 @@ export function CrewPanel({
 
   // Catch spread, only when the whole crew is on one clock.
   const spread = useMemo(() => {
-    if (!synced) return null;
+    // No seats at all would make n Infinity, and the loop below endless.
+    if (!synced || !seats.length) return null;
     const n = Math.min(...seats.map((s) => s.strokes.length));
     if (!n) return null;
     const rows = [];
     for (let i = 0; i < n; i++) {
       const times = seats.map((s) => s.strokes[i].catchMs);
       const mean = times.reduce((a, b) => a + b, 0) / times.length;
-      rows.push({ i, offsets: seats.map((s, k) => ({ seat: s.seat, ms: times[k] - mean })) });
+      rows.push({ i, offsets: seats.map((s, k) => ({ id: s.id, seat: s.seat, ms: times[k] - mean })) });
     }
     const last = rows[rows.length - 1];
     const worst = Math.max(...rows.map((r) => Math.max(...r.offsets.map((o) => o.ms)) - Math.min(...r.offsets.map((o) => o.ms))));
@@ -82,9 +85,9 @@ export function CrewPanel({
   return (
     <div className="space-y-6">
       <section className="rounded-lg border border-line bg-panel p-4">
-        <h3 className="type-h3 text-base">Who&rsquo;s carrying the boat</h3>
+        <h3 className="type-h3 text-base">Who’s carrying the boat</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Each seat&rsquo;s impulse as a share of the crew&rsquo;s, across the whole piece. Amber is more than 5% off an even share.
+          Each seat’s impulse as a share of the crew’s, across the whole outing. Amber is more than 5% off an even share.
         </p>
         <ul className="mt-4 space-y-2">
           {share.map((s) => {
@@ -112,11 +115,11 @@ export function CrewPanel({
         <h3 className="type-h3 text-base">Port and starboard</h3>
         {balance.known < 2 ? (
           <p className="mt-1 text-sm text-muted-foreground">
-            Set which side each seat rows and the balance appears. The node doesn&rsquo;t know which rigger it&rsquo;s on.
+            Set which side each seat rows and the balance appears. The node doesn’t know which rigger it’s on.
           </p>
         ) : (
           <p className="mt-1 text-sm text-muted-foreground">
-            Impulse by side over the piece, from the {balance.known} seats you&rsquo;ve set.
+            Impulse by side over the outing, from the {balance.known} seats you’ve set.
           </p>
         )}
         {balance.total > 0 && balance.known >= 2 && (
@@ -186,7 +189,7 @@ export function CrewPanel({
         {synced && spread ? (
           <>
             <p className="mt-1 text-sm text-muted-foreground">
-              The last stroke of the piece, each seat against the crew average. Widest spread in the piece: {fmt(spread.worst, 0)} ms.
+              The last stroke of the outing, each seat against the crew average. Widest spread in the outing: {fmt(spread.worst, 0)} ms.
             </p>
             <ul className="mt-4 space-y-1.5">
               {spread.last.offsets
@@ -195,8 +198,16 @@ export function CrewPanel({
                 .map((o) => {
                   const far = Math.abs(o.ms) > 7;
                   return (
-                    <li key={o.seat} className="grid grid-cols-[3rem_1fr_4.5rem] items-center gap-3">
-                      <span className="readout text-sm">{o.seat}</span>
+                    <li key={o.id} className="grid grid-cols-[3rem_1fr_4.5rem] items-center gap-3">
+                      <span className="readout text-sm">
+                        {o.seat ?? (
+                          // The column is narrow for "no seat": the dash shows, the label is read.
+                          <>
+                            <span aria-hidden>—</span>
+                            <span className="sr-only">{seatLabel(null)}</span>
+                          </>
+                        )}
+                      </span>
                       <span className="relative h-2 rounded-sm bg-white/[0.06]">
                         <span
                           className={cn("absolute top-0 h-full w-1.5 rounded-sm", far ? "bg-warn" : "bg-trace")}
@@ -215,7 +226,7 @@ export function CrewPanel({
         ) : (
           <p className="mt-1 max-w-[62ch] text-sm leading-relaxed text-muted-foreground">
             Every seat node keeps its own clock, counting from the moment it booted, so catch times from two nodes
-            can&rsquo;t be compared: the difference between them is mostly when each one was switched on. Vieve puts the
+            can’t be compared: the difference between them is mostly when each one was switched on. Vieve puts the
             whole crew on one clock, to within 5 ms across an eight, and this panel fills in from the first outing with
             it in the boat.
           </p>

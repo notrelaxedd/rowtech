@@ -6,7 +6,7 @@ import { isUuid } from "@/lib/uuid";
 
 export type SideResult = { ok: true } | { ok: false; message: string };
 
-const FAILED: SideResult = { ok: false, message: "That side wasn't saved. Try again in a minute." };
+const FAILED: SideResult = { ok: false, message: "That side wasn’t saved. Try again in a minute." };
 
 /** Which side a seat rows. The node can't know, so the coach says once. */
 export async function setSeatSide(sessionId: string, side: "port" | "starboard"): Promise<SideResult> {

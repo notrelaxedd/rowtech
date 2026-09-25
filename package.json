@@ -2,23 +2,26 @@
   "name": "rowtech",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test": "playwright test",
-    "demo:build": "node scripts/make-demo-session.mjs"
+    "demo:build": "node scripts/make-demo-session.mjs",
+    "db:types": "node scripts/db-types.mjs",
+    "licenses": "node scripts/licenses.mjs"
   },
   "dependencies": {
-    "@base-ui/react": "^1.4.0",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.8.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.116.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
-    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "fflate": "^0.8.3",
     "lucide-react": "^1.8.0",
@@ -35,7 +38,7 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.186.0",

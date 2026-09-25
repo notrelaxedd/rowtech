@@ -53,7 +53,7 @@ const PEAK_AT = (() => {
 export function forceScreenLabel(seat: number, peakKg: number, avgKg: number) {
   return `Seat ${seat}: peak force ${peakKg.toFixed(1)} kilograms against a ten-stroke average of ${avgKg.toFixed(
     1
-  )}, with this stroke's force curve drawn over the last one.`;
+  )}, with this stroke’s force curve drawn over the last one.`;
 }
 
 export const FORCE_SCREEN_DEFAULTS = { peakKg: M.peakKg, avgKg: AVG };
@@ -183,7 +183,7 @@ export function ForceScreen({
               {label}
             </text>
             <text x={x} y={H - 16} fill={SCREEN.value} fontFamily={sans} fontSize={30} fontWeight={700} style={{ fontStretch: "108%" }}>
-              <tspan id={label === "STROKE" ? `${idPrefix}-stroke` : undefined}>{value}</tspan>
+              {value}
               {unit && (
                 <tspan fill={SCREEN.label} fontFamily={mono} fontSize={13} fontWeight={400}>
                   {" "}

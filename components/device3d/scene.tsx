@@ -186,20 +186,20 @@ export default function DeviceScene({
   active,
   notes,
   onFrame,
-  fallback,
 }: {
   kind: Kind;
   rig: MutableRefObject<Rig>;
   active: string | null;
   notes: readonly Note3D[];
   onFrame: (points: Array<[number, number]>) => void;
-  fallback: React.ReactNode;
 }) {
+  // The stage around it carries the name and the keys; the canvas itself is
+  // a picture, and the notes beside it say what it shows.
   return (
     <Canvas
+      aria-hidden
       camera={{ fov: 30, position: [0, 0, kind === "force" ? 200 : 250], near: 10, far: 1000 }}
       dpr={[1, 2]}
-      fallback={fallback}
       gl={{ antialias: true, alpha: true }}
     >
       <ambientLight intensity={0.9} />

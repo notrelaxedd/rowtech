@@ -99,10 +99,85 @@ test("a file row can only point into its own team's folder", async () => {
   expect(own).toBeNull();
 });
 
+test("a user in two teams reads both, only those, and nothing once off the beta list", async () => {
+  // The policies compare each row's team with the caller's teams, looked up once a query (PERF-012).
+  const a = await crewWithData();
+  const b = await crewWithData();
+  const other = await crewWithData();
+  await addToTeam(b.team, a.user, "member");
+  for (const crew of [a, b]) {
+    const { data: boat, error } = await crew.user.db.from("boats").insert({ team_id: crew.team, name: "Eight" }).select("id").single();
+    if (error) throw error;
+    const { error: seatError } = await crew.user.db.from("seats").insert({ boat_id: boat.id, seat_number: 1 });
+    if (seatError) throw seatError;
+    const { error: gpsError } = await crew.user.db.from("gps_points").insert({ session_id: crew.session, t_ms: 0, lat: 51.5, lon: -0.1 });
+    if (gpsError) throw gpsError;
+    const { error: strokeError } = await crew.user.db.from("strokes").insert({
+      session_id: crew.session, rec: 0, seq: 1, catch_ms: 1000, drive_ms: 700, recovery_ms: 1300, peak: 50, peak_pos_pct: 40,
+      impulse: 25, rise_rate: 200, third1: 8, third2: 12, third3: 5, curve_valid: true,
+    });
+    if (strokeError) throw strokeError;
+    const { error: fileError } = await crew.user.db.from("session_files").insert({ session_id: crew.session, kind: "meta", path: crew.path });
+    if (fileError) throw fileError;
+  }
+
+  // A failed query must fail the test, not read as "no rows".
+  const seen = async (table: string, column: string) => {
+    const { data, error } = await a.user.db.from(table).select(column);
+    if (error) throw new Error(`${table}: ${error.message}`);
+    return (data ?? []).map((r) => (r as unknown as Record<string, string>)[column]).sort();
+  };
+  const both = (x: string, y: string) => [x, y].sort();
+  expect(await seen("teams", "id")).toEqual(both(a.team, b.team));
+  expect(await seen("team_members", "team_id")).toEqual([a.team, b.team, b.team].sort());
+  expect(await seen("boats", "team_id")).toEqual(both(a.team, b.team));
+  expect((await seen("seats", "seat_number")).length).toBe(2);
+  expect(await seen("sessions", "id")).toEqual(both(a.session, b.session));
+  expect(await seen("session_stats", "session_id")).toEqual(both(a.session, b.session));
+  expect(await seen("gps_points", "session_id")).toEqual(both(a.session, b.session));
+  expect(await seen("strokes", "session_id")).toEqual(both(a.session, b.session));
+  expect(await seen("session_files", "path")).toEqual(both(a.path, b.path));
+  expect(await seen("sessions", "id")).not.toContain(other.session);
+
+  await revoke(a.user.email);
+  for (const [table, column] of [["teams", "id"], ["team_members", "team_id"], ["boats", "id"], ["seats", "id"], ["sessions", "id"],
+    ["session_stats", "session_id"], ["strokes", "session_id"], ["gps_points", "session_id"], ["session_files", "path"]]) {
+    expect(await seen(table, column), table).toEqual([]);
+  }
+  // B's owner still reads B.
+  expect(await sessionsSeenBy(b.user)).toEqual([{ id: b.session }]);
+  // The helper, like is_team_member, isn't something the API exposes.
+  expect((await a.user.db.rpc("my_team_ids")).error?.code).toBe("PGRST202");
+});
+
 test("the membership check can't be called through the API", async () => {
   const { user, team } = await crewWithData();
   const { error } = await user.db.rpc("is_team_member", { team });
   expect(error?.code).toBe("PGRST202"); // no such function exposed
+});
+
+test("reading strokes and tracks through the functions still keeps to your own team", async () => {
+  const { user, session } = await crewWithData();
+  const { error: strokeError } = await user.db.from("strokes").insert({
+    session_id: session, rec: 0, seq: 1, catch_ms: 1000, drive_ms: 700, recovery_ms: 1300, peak: 50, peak_pos_pct: 40,
+    impulse: 25, rise_rate: 200, third1: 8, third2: 12, third3: 5, curve_valid: true,
+  });
+  expect(strokeError).toBeNull();
+  const { error: gpsError } = await user.db.from("gps_points").insert({ session_id: session, t_ms: 0, lat: 51.5, lon: -0.1 });
+  expect(gpsError).toBeNull();
+
+  expect((await user.db.rpc("session_strokes", { p_sessions: [session] })).data).toEqual({ [session]: [[0, 1, 1000, 700, 1300, 50, 40, 25, 200, 8, 12, 5, true]] });
+  expect((await user.db.rpc("session_track", { p_session: session })).data).toEqual([[0, 51.5, -0.1, null, null]]);
+
+  const intruder = await makeUser();
+  expect((await intruder.db.rpc("session_strokes", { p_sessions: [session] })).data).toEqual({});
+  expect((await intruder.db.rpc("session_track", { p_session: session })).data).toEqual([]);
+
+  const anon = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  expect((await anon.rpc("session_strokes", { p_sessions: [session] })).error?.code).toBe("42501");
+  expect((await anon.rpc("session_track", { p_session: session })).error?.code).toBe("42501");
 });
 
 test("the publishable key on its own can't touch a dashboard table", async () => {

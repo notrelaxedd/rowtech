@@ -4,21 +4,24 @@ export type Spec = readonly [label: string, value: string];
 
 export const FORCE_SPECS: readonly Spec[] = [
   ["Load cell", "50 kg, in series on the rigger backstay"],
-  ["Electronics", "Adafruit Feather ESP32-S3 and an HX711 breakout on a RowTech carrier board, 80 samples a second"],
+  ["Fits", "Vespoli riggers for now; more are coming soon"],
+  ["Electronics", "Adafruit Feather ESP32-S3 and an HX711 breakout on a RowTech carrier board, sampling at 80 Hz"],
   ["Catch timing", "Placed on the node to within about 3 ms, interpolated between samples 12.5 ms apart"],
-  ["Calibration", "Up to 5 points against known weights; reports its own worst-case error. Not yet run on a node"],
-  ["Screen", "3.5″ 480×320 TFT"],
+  ["Calibration", "Up to 5 points against known weights; reports its own worst-case error; not yet run on a node"],
+  ["Doesn’t measure", "Oar angle, or force in calibrated units yet; it sits on the backstay rather than the oarlock to keep the cost down"],
+  ["Screen", "3.5″, 480×320 TFT"],
   ["Keys", "VIEW, TARE, POWER"],
   ["Seat number", "Set on the node’s own web page"],
-  ["Network", "Its own WiFi network; download from any phone or laptop"],
-  ["Storage", "microSD. Per session: strokes.csv, curves.bin, events.csv, meta.json"],
+  ["Network", "Its own Wi-Fi network; download from a phone or laptop"],
+  ["Storage", "microSD, with strokes.csv, curves.bin, events.csv and meta.json for each session"],
   ["Battery", "3000 mAh"],
+  ["Target price", "$399 per seat"],
 ];
 
 export const VIEVE_SPECS: readonly Spec[] = [
-  ["Screen", "5″, 1000 nits"],
-  ["GPS", "u-blox MAX-M10S, 10 Hz"],
+  ["Screen", "Planned: 5″, 1000 nits"],
+  ["GPS", "Planned: u-blox MAX-M10S, 10 Hz"],
   ["Crew link", "Radio to every seat node; target of every seat within 5 ms"],
-  ["Battery", "5000 mAh"],
+  ["Battery", "Planned: 5000 mAh"],
   ["Target price", "$499"],
 ];

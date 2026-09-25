@@ -1,26 +1,89 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useCallback, useEffect, useId, useRef, useSyncExternalStore } from "react";
 
-/** Phones: the header links behind a native disclosure that closes on a pick. */
+const noSubscribe = () => () => {};
+
+/**
+ * Phones: the header links behind a native disclosure, which opens and closes
+ * without JavaScript. With it, the menu also closes on a pick, on Escape (focus
+ * back on "Menu"), on a tap outside it, when the page scrolls, and when focus
+ * moves out of it, and "Menu" says whether it's open.
+ */
 export function MobileMenu({ links }: { links: ReadonlyArray<{ href: string; label: string }> }) {
   const ref = useRef<HTMLDetailsElement>(null);
-  const close = () => ref.current?.removeAttribute("open");
+  const trigger = useRef<HTMLElement>(null);
+  const navId = useId();
+  // Read from the element, not kept alongside it: a menu opened before
+  // hydration fired its toggle event before anything here was listening.
+  const onToggle = useCallback((change: () => void) => {
+    const d = ref.current;
+    d?.addEventListener("toggle", change);
+    return () => d?.removeEventListener("toggle", change);
+  }, []);
+  const open = useSyncExternalStore(onToggle, () => ref.current?.open ?? false, () => false);
+  // Before hydration the <summary> reports its own state; after, it's ours.
+  const js = useSyncExternalStore(noSubscribe, () => true, () => false);
+
+  useEffect(() => {
+    const d = ref.current;
+    if (!open || !d) return;
+    // Focus left inside a closed menu is on nothing visible: bring it back.
+    const close = (refocus: boolean) => {
+      const focused = d.contains(document.activeElement) && document.activeElement !== trigger.current;
+      d.open = false;
+      if (refocus || focused) trigger.current?.focus({ preventScroll: true });
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close(true);
+    };
+    const onPointer = (e: PointerEvent) => {
+      if (!d.contains(e.target as Node)) close(false);
+    };
+    // A scroll event already on its way when the menu opened isn't one.
+    const y = window.scrollY;
+    const onScroll = () => {
+      if (window.scrollY !== y) close(false);
+    };
+    const onFocusOut = (e: FocusEvent) => {
+      // null: the window lost focus, or a tap on nothing (handled above).
+      if (e.relatedTarget && !d.contains(e.relatedTarget as Node)) d.open = false;
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    d.addEventListener("focusout", onFocusOut);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+      window.removeEventListener("scroll", onScroll);
+      d.removeEventListener("focusout", onFocusOut);
+    };
+  }, [open]);
+
   return (
-    <details ref={ref} className="relative lg:hidden">
-      <summary className="flex h-10 cursor-pointer list-none items-center rounded-md px-2.5 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+    // Not positioned itself: the panel hangs from the header, inside the screen.
+    <details ref={ref} className="lg:hidden">
+      <summary
+        ref={trigger}
+        role={js ? "button" : undefined}
+        aria-expanded={js ? open : undefined}
+        aria-controls={js ? navId : undefined}
+        className="flex h-11 cursor-pointer list-none items-center rounded-md px-2.5 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden"
+      >
         Menu
       </summary>
       <nav
+        id={navId}
         aria-label="Primary"
-        className="absolute right-0 top-12 z-50 w-56 rounded-md border border-line bg-popover p-1.5 shadow-[0_12px_32px_rgb(0_0_0/0.45)]"
+        className="absolute top-15 right-4 z-50 w-56 max-w-[calc(100vw-2rem)] rounded-md border border-line bg-popover p-1.5 shadow-[0_12px_32px_rgb(0_0_0/0.45)] sm:right-8"
       >
         {links.map((l) => (
           <Link
             key={l.href}
             href={l.href}
-            onClick={close}
+            onClick={() => ref.current?.removeAttribute("open")}
             className="flex min-h-11 items-center rounded px-3 text-[0.9375rem] text-foreground hover:bg-foreground/[0.05]"
           >
             {l.label}

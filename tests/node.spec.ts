@@ -6,8 +6,10 @@ import { parseSession, parseStrokes, parseMeta, curveAt } from "../lib/session/p
 import { SessionFormatError, CURVE_BYTES, CURVE_POINTS } from "../lib/session/format";
 import { collectSessions, ZIP_LIMITS, ZipTooLargeError } from "../lib/session/collect";
 import { summarise, toCsv } from "../lib/session/analyse";
+import { fmtSplit, nearestFix, splitFromSpeed, thinTrack } from "../lib/session/track";
+import { count, seatLabel, seatTitle } from "../lib/session/labels";
 
-const seatDir = (n: number) => path.join(process.cwd(), "public", "demo", `seat-${n}`);
+const seatDir = (n: number) => path.join(process.cwd(), "tests", "fixtures", "demo", `seat-${n}`);
 const read = (n: number, f: string) => readFile(path.join(seatDir(n), f));
 
 async function bundle(n: number) {
@@ -47,6 +49,12 @@ test("a node session parses into the numbers the firmware wrote", async () => {
   expect(summary.avgRate).toBeGreaterThan(20);
   expect(summary.avgRate).toBeLessThan(40);
   expect(summary.consistencyPct).not.toBeNull();
+});
+
+test("a node whose seat was never set has no seat, not the cox's", async () => {
+  const meta = JSON.parse((await read(1, "meta.json")).toString());
+  expect(parseMeta(JSON.stringify({ ...meta, seat: 0 })).seat).toBeNull();
+  expect(parseMeta(JSON.stringify({ ...meta, seat: 8 })).seat).toBe(8);
 });
 
 test("export gives back the same rows", async () => {
@@ -130,4 +138,61 @@ test("a zip that would expand past what an upload needs is refused before it is 
   // Anything that isn't a session file doesn't count, and isn't expanded.
   const junk = zipSync({ "photos/big.jpg": new Uint8Array(ZIP_LIMITS.totalBytes + 1), "s/notes.txt": new Uint8Array(10) });
   expect(collectSessions([{ name: "junk.zip", bytes: junk }]).size).toBe(0);
+});
+
+test("a long GPS track is thinned for the map, from its first fix to its last", () => {
+  const fix = (i: number) => ({ tMs: i * 100, lat: 51.5 + i * 1e-5, lon: -0.1, speedMps: 4, headingDeg: 0 });
+  const short = Array.from({ length: 2000 }, (_, i) => fix(i));
+  expect(thinTrack(short)).toBe(short);
+
+  for (const n of [2001, 3000, 24_000, 72_001]) {
+    const track = Array.from({ length: n }, (_, i) => fix(i));
+    const thin = thinTrack(track);
+    expect(thin.length, `${n}`).toBeLessThanOrEqual(2000);
+    expect(thin.length, `${n}`).toBeGreaterThan(1000);
+    expect(thin[0]).toBe(track[0]);
+    expect(thin[thin.length - 1]).toBe(track[n - 1]);
+    // In time order, never the same fix twice.
+    expect(thin.every((p, i) => i === 0 || p.tMs > thin[i - 1].tMs)).toBe(true);
+  }
+});
+
+test("pointing at the map picks the fix nearest on the water, not in raw degrees", () => {
+  const fix = (lat: number, lon: number) => ({ tMs: 0, lat, lon, speedMps: 4, headingDeg: 0 });
+  // At 60 degrees north a degree of longitude is half a degree of latitude:
+  // 0.0015 degrees east is about 83 m, 0.001 degrees north about 111 m.
+  const east = fix(60, 0.0015);
+  const north = fix(60.001, 0);
+  expect(nearestFix([north, east], 0, 60)).toBe(east);
+  expect(nearestFix([east, north], 0, 60)).toBe(east);
+  // On the equator the same two gaps go the other way.
+  expect(nearestFix([fix(0, 0.0015), fix(0.001, 0)], 0, 0)).toEqual(fix(0.001, 0));
+  expect(nearestFix([], 0, 60)).toBeNull();
+});
+
+test("a split is read off the boat's speed, as m:ss.s per 500 m", () => {
+  expect(fmtSplit(splitFromSpeed(5))).toBe("1:40.0");
+  expect(fmtSplit(splitFromSpeed(4.1))).toBe("2:02.0");
+  expect(fmtSplit(splitFromSpeed(4.7))).toBe("1:46.4");
+  // Seconds that round up to 60 carry into the minute.
+  expect(fmtSplit(119.96)).toBe("2:00.0");
+  expect(fmtSplit(splitFromSpeed(4.1667))).toBe("2:00.0");
+  expect(fmtSplit(59.97)).toBe("1:00.0");
+  // Stopped, or no speed from the fix: no split.
+  expect(splitFromSpeed(0.2)).toBeNull();
+  expect(splitFromSpeed(null)).toBeNull();
+  expect(fmtSplit(null)).toBe("—");
+});
+
+// The dashboard's counts and seat names (CNT-014).
+test("counts are singular for one, and a seat never set says so", () => {
+  expect(count(0, "seat")).toBe("0 seats");
+  expect(count(1, "seat")).toBe("1 seat");
+  expect(count(2, "seat")).toBe("2 seats");
+  expect(count(1, "stroke")).toBe("1 stroke");
+  expect(count(147, "stroke")).toBe("147 strokes");
+  expect(seatTitle(3)).toBe("Seat 3");
+  expect(seatTitle(null)).toBe("Seat not set");
+  expect(seatLabel(3)).toBe("seat 3");
+  expect(seatLabel(null)).toBe("no seat");
 });

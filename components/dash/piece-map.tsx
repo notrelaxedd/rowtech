@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { cn } from "@/lib/utils";
+import { chip } from "@/components/dash/chip";
+import { fmtSplit, nearestFix, splitFromSpeed } from "@/lib/session/track";
+import { seatLabel } from "@/lib/session/labels";
 
 export type TrackPoint = {
   tMs: number;
@@ -13,10 +16,7 @@ export type TrackPoint = {
 };
 
 /** Seat forces at a moment, for the hover readout. */
-export type SeatForceAt = (tMs: number) => Array<{ seat: number; peak: number | null }>;
-
-const splitFromSpeed = (mps: number | null) => (mps && mps > 0.2 ? 500 / mps : null);
-const fmtSplit = (s: number | null) => (s === null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, "0")}`);
+export type SeatForceAt = (tMs: number) => Array<{ seat: number | null; peak: number | null }>;
 
 /** Slow is dark, quick is bright: colour a segment by its split. */
 function splitColour(split: number | null, best: number, worst: number): string {
@@ -97,28 +97,15 @@ export function PieceMap({
         });
         const lons = track.map((p) => p.lon);
         const lats = track.map((p) => p.lat);
-        m.fitBounds(
-          [
-            [Math.min(...lons), Math.min(...lats)],
-            [Math.max(...lons), Math.max(...lats)],
-          ],
-          { padding: 40, duration: 0 }
-        );
+        const [west, south, east, north] = [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)];
+        // A boat that never moved has no box to fit: centre on it instead.
+        if (west === east && south === north) m.jumpTo({ center: [west, south], zoom: 15 });
+        else m.fitBounds([[west, south], [east, north]], { padding: 40, duration: 0 });
       });
 
-      // Hover the track: the nearest fix wins.
-      m.on("mousemove", (e) => {
-        let nearest: TrackPoint | null = null;
-        let best = Infinity;
-        for (const p of track) {
-          const d = (p.lon - e.lngLat.lng) ** 2 + (p.lat - e.lngLat.lat) ** 2;
-          if (d < best) {
-            best = d;
-            nearest = p;
-          }
-        }
-        setHover(nearest);
-      });
+      // Hover the track: the nearest fix wins. The track is thinned to at
+      // most 2,000 fixes (thinTrack), so a walk over it is quick enough.
+      m.on("mousemove", (e) => setHover(nearestFix(track, e.lngLat.lng, e.lngLat.lat)));
       m.on("mouseout", () => setHover(null));
     })().catch(() => {
       // No map: the readouts below still tell the story.
@@ -147,14 +134,14 @@ export function PieceMap({
     <div className="overflow-hidden rounded-lg border border-line bg-panel">
       <div className="flex items-center justify-between gap-4 border-b border-line px-4 py-2.5">
         <p className="readout text-xs text-muted-foreground">
-          <span className="text-trace">PIECE</span> · coloured by split
+          <span className="text-trace">OUTING</span> · colored by split
         </p>
         <button
           type="button"
           aria-pressed={headingUp}
           onClick={() => setHeadingUp((v) => !v)}
           className={cn(
-            "min-h-9 rounded-md border border-line px-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-trace",
+            chip,
             headingUp ? "border-trace/60 bg-trace/10 text-trace" : "text-muted-foreground hover:text-foreground"
           )}
         >
@@ -175,7 +162,7 @@ export function PieceMap({
             )}
             {forces.length > 0 && (
               <span className="readout text-muted-foreground">
-                {forces.map((f) => `${f.seat}: ${f.peak === null ? "—" : f.peak.toFixed(0)}`).join("  ")}
+                {forces.map((f) => `${f.seat === null ? seatLabel(null) : f.seat}: ${f.peak === null ? "—" : f.peak.toFixed(0)}`).join("  ")}
               </span>
             )}
           </>

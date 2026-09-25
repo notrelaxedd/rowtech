@@ -1,6 +1,9 @@
 import { SiteHeader } from "./site-header";
 import { SiteFooter } from "./site-footer";
 
+/** The marketing pages' content column. */
+export const wrap = "mx-auto w-full max-w-7xl px-5 sm:px-8";
+
 /** The marketing pages' frame: the dark site theme, header and footer. */
 export function SitePage({ children, jsonLd }: { children: React.ReactNode; jsonLd?: object }) {
   return (

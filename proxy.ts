@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { authCookieOptions, withSessionLifetime } from "@/lib/supabase/cookies";
+import type { Database } from "@/lib/supabase/types";
 
 // Keeps the Supabase session fresh for the dashboard. Only /app and /auth run
 // through here; the marketing site and /beta never touch it. Authorisation is
@@ -11,7 +12,7 @@ export async function proxy(request: NextRequest) {
   const key = process.env.SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) return response;
 
-  const sb = createServerClient(url, key, {
+  const sb = createServerClient<Database>(url, key, {
     cookieOptions: authCookieOptions,
     cookies: {
       getAll: () => request.cookies.getAll(),

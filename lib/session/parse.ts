@@ -66,7 +66,7 @@ export function parseMeta(text: string): SessionMeta {
   try {
     raw = JSON.parse(text) as Json;
   } catch {
-    throw new SessionFormatError("meta.json isn't valid JSON.");
+    throw new SessionFormatError("meta.json isn’t valid JSON.");
   }
   if (!isObject(raw)) throw new SessionFormatError("meta.json should be a JSON object.");
 
@@ -96,7 +96,7 @@ export function parseMeta(text: string): SessionMeta {
     format,
     uuid: short(str(raw.uuid, "meta.json uuid"), 64, "meta.json uuid"),
     deviceId: short(str(raw.device_id, "meta.json device_id"), 64, "meta.json device_id"),
-    seat,
+    seat: seat === 0 ? null : seat,
     firmware: str(raw.fw, "meta.json fw"),
     git: typeof raw.git === "string" ? raw.git : "",
     session: num(raw.session, "meta.json session"),
@@ -127,7 +127,7 @@ function lines(text: string): string[] {
 function field(parts: string[], i: number, line: number, name: string): number {
   const v = Number(parts[i]);
   if (parts[i] === undefined || parts[i] === "" || !Number.isFinite(v)) {
-    throw new SessionFormatError(`strokes.csv line ${line}: ${name} isn't a number.`);
+    throw new SessionFormatError(`strokes.csv line ${line}: ${name} isn’t a number.`);
   }
   if (Math.abs(v) > FLOAT4) throw new SessionFormatError(`strokes.csv line ${line}: ${name} is out of range.`);
   return v;
@@ -147,7 +147,7 @@ export function parseStrokes(text: string): StrokeRow[] {
   if (!rows.length) throw new SessionFormatError("strokes.csv is empty.");
   if (rows[0].trim() !== STROKE_HEADER) {
     throw new SessionFormatError(
-      `strokes.csv doesn't have the header this firmware writes.\nexpected: ${STROKE_HEADER}\nfound:    ${rows[0].trim()}`
+      `strokes.csv doesn’t have the header this firmware writes.\nexpected: ${STROKE_HEADER}\nfound:    ${rows[0].trim()}`
     );
   }
 
@@ -177,11 +177,11 @@ export function parseStrokes(text: string): StrokeRow[] {
   return strokes;
 }
 
-export function parseEvents(text: string): SessionEvent[] {
+function parseEvents(text: string): SessionEvent[] {
   const rows = lines(text);
   if (!rows.length) return [];
   if (rows[0].trim() !== EVENT_HEADER) {
-    throw new SessionFormatError(`events.csv doesn't have the header this firmware writes (${EVENT_HEADER}).`);
+    throw new SessionFormatError(`events.csv doesn’t have the header this firmware writes (${EVENT_HEADER}).`);
   }
   const events: SessionEvent[] = [];
   for (let i = 1; i < rows.length; i++) {
@@ -192,17 +192,17 @@ export function parseEvents(text: string): SessionEvent[] {
     const b = line.indexOf(",", a + 1);
     if (a < 0 || b < 0) throw new SessionFormatError(`events.csv line ${i + 1}: expected three columns.`);
     const tMs = Number(line.slice(0, a));
-    if (!Number.isFinite(tMs)) throw new SessionFormatError(`events.csv line ${i + 1}: t_ms isn't a number.`);
+    if (!Number.isFinite(tMs)) throw new SessionFormatError(`events.csv line ${i + 1}: t_ms isn’t a number.`);
     events.push({ tMs, type: line.slice(a + 1, b), detail: line.slice(b + 1).trim() });
   }
   return events;
 }
 
 /** curves.bin must be a whole number of 128-byte records, one per stroke. */
-export function checkCurves(bytes: Uint8Array, strokeCount: number): void {
+function checkCurves(bytes: Uint8Array, strokeCount: number): void {
   if (bytes.byteLength % CURVE_BYTES !== 0) {
     throw new SessionFormatError(
-      `curves.bin is ${bytes.byteLength} bytes, which isn't a whole number of ${CURVE_BYTES}-byte records.`
+      `curves.bin is ${bytes.byteLength} bytes, which isn’t a whole number of ${CURVE_BYTES}-byte records.`
     );
   }
   const records = bytes.byteLength / CURVE_BYTES;

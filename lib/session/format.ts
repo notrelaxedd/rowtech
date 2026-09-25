@@ -22,9 +22,6 @@ export const CURVE_BYTES = CURVE_POINTS * 2;
 /** Every curve sample is this fraction of the stroke's own peak. */
 export const CURVE_SCALE = 10000;
 
-export const FILE_NAMES = ["meta.json", "strokes.csv", "curves.bin", "events.csv"] as const;
-export type FileName = (typeof FILE_NAMES)[number];
-
 export type Calibration = {
   valid: boolean;
   points: number;
@@ -39,8 +36,11 @@ export type SessionMeta = {
   format: number;
   uuid: string;
   deviceId: string;
-  /** Seat the node was on. 0 when it was never set. */
-  seat: number;
+  /**
+   * Seat the node was on, 1 to 8; null when it was never set. The node writes
+   * 0 for that, and 0 is the cox's seat, where a node never sits.
+   */
+  seat: number | null;
   firmware: string;
   git: string;
   /** The node's own session counter. */

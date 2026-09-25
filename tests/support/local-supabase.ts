@@ -29,14 +29,43 @@ export const localSupabaseMissing: string | null =
       ? "SUPABASE_URL isn't a local Supabase; the signed-in tests only write to one"
       : null;
 
+/**
+ * A second server on the same build, in front of a half-down Supabase
+ * (supabase-outage.mjs), for tests/outage.spec.ts. Local Supabase only: the
+ * app's session cookie is named after Supabase's host, so the stand-in has to
+ * share it.
+ */
+export const outage =
+  localSupabaseMissing || !isLocal(url) ? null : { app: "http://localhost:3211", supabase: `http://${new URL(url).hostname}:3212` };
+
+/** The local stack's Mailpit (supabase/config.toml, [local_smtp]), where Auth's emails land. */
+const mailpit = localSupabaseMissing || !isLocal(url) ? null : `http://${new URL(url).hostname}:54324`;
+export const mailpitMissing = mailpit ? null : "needs a local Supabase and its Mailpit (tests/support/local-supabase.ts)";
+
+/** The link in the newest email Auth sent to this address. */
+export async function emailedLink(email: string) {
+  for (let i = 0; i < 50; i++) {
+    const res = await fetch(`${mailpit}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`);
+    const { messages } = (await res.json()) as { messages?: Array<{ ID: string }> };
+    if (messages?.length) {
+      const msg = (await (await fetch(`${mailpit}/api/v1/message/${messages[0].ID}`)).json()) as { HTML: string };
+      const href = /href="([^"]+)"/.exec(msg.HTML)?.[1];
+      if (!href) throw new Error("the email has no link");
+      return href.replaceAll("&amp;", "&");
+    }
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  throw new Error(`no email to ${email}`);
+}
+
 const noSession = { auth: { persistSession: false, autoRefreshToken: false } };
 const admin = () => createClient(url, secret, noSession);
 
 export type TestUser = { id: string; email: string; password: string; db: SupabaseClient };
 
 /** A fresh user with a password, signed in, and on the beta list unless told otherwise. */
-export async function makeUser({ allowed = true }: { allowed?: boolean } = {}): Promise<TestUser> {
-  const email = `test-${randomUUID()}@example.com`;
+export async function makeUser({ allowed = true, prefix = "test" }: { allowed?: boolean; prefix?: string } = {}): Promise<TestUser> {
+  const email = `${prefix}-${randomUUID()}@example.com`;
   const password = randomUUID();
   const { data, error } = await admin().auth.admin.createUser({ email, password, email_confirm: true });
   if (error || !data.user) throw error ?? new Error("no user created");
