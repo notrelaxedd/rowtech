@@ -176,9 +176,6 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
               {/* catch: threshold, raw samples, interpolated crossing */}
               <g className={fade} style={{ opacity: lit("catch") }}>
                 <line x1={PX0} x2={PX1} y1={y(M.threshold)} y2={y(M.threshold)} stroke="var(--warn)" strokeOpacity={0.7} strokeDasharray="4 4" />
-                <text x={PX1} y={y(M.threshold) - 6} textAnchor="end" className="fill-warn tabular-nums text-[10px] max-sm:text-[17px]">
-                  catch threshold
-                </text>
                 {NEAR_CATCH.map(([t, kg]) => (
                   <circle key={t} cx={x(t)} cy={y(kg)} r={3} fill="var(--background)" stroke="white" strokeWidth={1.25} />
                 ))}
@@ -218,6 +215,17 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
                   <circle cx={p.at[0]} cy={p.at[1]} r={3.5} fill="var(--panel)" stroke={active === p.id ? "var(--trace)" : "var(--foreground)"} strokeWidth={1.5} />
                 </g>
               ))}
+              {/* The threshold's label, drawn over the leader lines with a halo.
+                  On phones it sits under the line, clear of marker 7. */}
+              <text
+                x={PX1}
+                y={y(M.threshold) - 6}
+                textAnchor="end"
+                className={cn("rt-halo fill-warn tabular-nums text-[10px] max-sm:translate-y-[25px] max-sm:text-[17px]", fade)}
+                style={{ opacity: lit("catch") }}
+              >
+                catch threshold
+              </text>
               {cursor}
             </svg>
             </div>
