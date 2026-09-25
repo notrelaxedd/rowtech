@@ -13,6 +13,7 @@ import { DevicePlaceholder } from "@/components/device/device-placeholder";
 import { CurveExplorerView } from "@/components/site/curve-explorer-view";
 import { SessionFiles } from "@/components/site/session-files";
 import { ForceMount } from "@/components/device/force-mount";
+import { inlineLink } from "@/components/site/legal";
 import { openGraphBase, siteTitle, siteUrl, twitterBase } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -317,8 +318,15 @@ export default function Home() {
                 <ul className="type-body mt-4 space-y-2 text-muted-foreground">
                   <li>Testing units, for now</li>
                   <li>A direct line to the people building it</li>
-                  <li>Discounted prices on all RowTech products</li>
+                  <li>[OWNER: what beta crews get on price, if anything]</li>
                 </ul>
+                <p className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
+                  The beta&rsquo;s terms are on the{" "}
+                  <Link href="/terms" className={inlineLink}>
+                    Terms
+                  </Link>{" "}
+                  page.
+                </p>
               </div>
             </div>
           </div>

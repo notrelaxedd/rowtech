@@ -28,6 +28,15 @@ test("the privacy and terms pages link to each other", async ({ page }) => {
   await expect(page.getByRole("main").getByRole("link", { name: "Privacy", exact: true })).toHaveAttribute("href", "/privacy");
 });
 
+// Nothing specific is promised to beta crews until the owners say what is
+// (LEG-009), and the beta's terms are a link away.
+test("the home page's beta section links to the terms and promises no discount", async ({ page }) => {
+  await page.goto("/");
+  const beta = page.locator("#beta");
+  await expect(beta.getByRole("link", { name: "Terms", exact: true })).toHaveAttribute("href", "/terms");
+  await expect(page.locator("main")).not.toContainText(/discount/i);
+});
+
 async function expectPolicyLinks(scope: ReturnType<Page["locator"]>) {
   await expect(scope.getByRole("link", { name: "Privacy", exact: true })).toHaveAttribute("href", "/privacy");
   await expect(scope.getByRole("link", { name: "Terms", exact: true })).toHaveAttribute("href", "/terms");
