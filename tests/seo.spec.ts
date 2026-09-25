@@ -51,6 +51,8 @@ for (const { path, title } of PAGES) {
       expect(alt, key).toBeTruthy();
       expect(alt!.toLowerCase(), key).not.toContain("the force curve from every seat in the boat");
       expect(alt, key).not.toBe(title);
+      // The node's screen in the image shows example data, and says so (LEG-010).
+      expect(alt, key).toContain("example data");
     }
   });
 }

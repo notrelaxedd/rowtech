@@ -20,10 +20,10 @@ export const titleTemplate = "%s · RowTech";
  * image by its URL, so a new one needs a new URL to show.
  */
 const shareImage = {
-  url: "/og.png?v=2",
+  url: "/og.png?v=3",
   width: 1200,
   height: 630,
-  alt: "Concept render of a Force node, its screen showing a force curve, next to the home page’s headline and an Apply for the beta button.",
+  alt: "Concept render of a Force node, its screen showing example data and a force curve, captioned as a concept design, next to the home page’s headline and an Apply for the beta button.",
 };
 
 // What every page shares when it's shared. Next replaces a parent's openGraph
