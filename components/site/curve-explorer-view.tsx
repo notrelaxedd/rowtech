@@ -87,25 +87,36 @@ export function CurveExplorerView({ active, chartRef, phase = null, cursor, on }
                 const lit_ = active === p.id;
                 const pick = setActive && (() => setActive(p.id));
                 const place = { left: `${(p.chip[0] / W) * 100}%`, top: `${(p.chip[1] / H) * 100}%` };
+                const look = cn(
+                  "absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-md border transition-colors duration-200",
+                  lit_ ? "border-trace bg-[#0b3a44] text-foreground" : "border-line bg-panel/95 text-muted-foreground hover:border-trace/60 hover:text-foreground"
+                );
                 return (
                   <Fragment key={p.id}>
+                    {/* Phones: a numbered marker for pointing at. The chips
+                        under the chart are the same choices for the keyboard
+                        and screen readers, so it's out of both. */}
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      aria-hidden
+                      onClick={pick}
+                      className={cn(look, "flex size-7 items-center justify-center text-xs font-bold tabular-nums sm:hidden")}
+                      style={place}
+                    >
+                      {i + 1}
+                    </button>
+                    {/* Wider screens: the measure's name and value, which are
+                        also its accessible name. */}
                     <button
                       type="button"
                       aria-pressed={lit_}
-                      aria-label={`${m.label}: ${m.value}`}
                       onClick={pick}
-                      className={cn(
-                        "absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-md border text-left transition-colors duration-200",
-                        "flex size-7 items-center justify-center text-xs font-bold tabular-nums sm:block sm:size-auto sm:px-2.5 sm:py-1.5 sm:font-normal",
-                        lit_ ? "border-trace bg-[#0b3a44] text-foreground" : "border-line bg-panel/95 text-muted-foreground hover:border-trace/60 hover:text-foreground"
-                      )}
+                      className={cn(look, "hidden px-2.5 py-1.5 text-left text-xs whitespace-nowrap tabular-nums sm:block")}
                       style={place}
                     >
-                      <span className="sm:hidden">{i + 1}</span>
-                      <span className="hidden whitespace-nowrap sm:block">
-                        <span className="block text-xs font-semibold text-foreground">{m.label}</span>
-                        <span className="block text-xs tabular-nums text-trace">{m.value}</span>
-                      </span>
+                      <span className="block font-semibold text-foreground">{m.label}</span>{" "}
+                      <span className="block text-trace">{m.value}</span>
                     </button>
                     {/* Phones: an invisible 44px tap box around the marker, in a
                         layer under all of them, so where two are close a tap on

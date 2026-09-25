@@ -230,19 +230,53 @@ test("picking a measure on the stroke chart shows what it is", async ({ page }) 
   await page.goto("/");
   const chart = page.locator("#stroke");
   await chart.scrollIntoViewIfNeeded();
-  const rise = chart.getByRole("button", { name: /^Rise rate:/ });
+  // Wide screens: the callouts on the chart. Phones: the chips under it.
+  const rise = chart.getByRole("button", { name: /Rise rate/ });
   // The server's copy is static; the live one swaps in as it comes into view.
   await expect(async () => {
     await rise.click();
     await expect(rise).toHaveAttribute("aria-pressed", "true", { timeout: 500 });
   }).toPass({ timeout: 10000 });
-  await expect(chart.getByRole("button", { name: /^Catch:/ })).toHaveAttribute("aria-pressed", "false");
+  await expect(chart.getByRole("button", { name: /Catch/ })).toHaveAttribute("aria-pressed", "false");
   await expect(chart.locator('[aria-live="polite"]')).toContainText("How quickly the blade loads");
   // Passing the mouse over another measure doesn't pick it (LEAD-010).
-  await chart.getByRole("button", { name: /^Catch:/ }).hover();
+  await chart.getByRole("button", { name: /Catch/ }).hover();
   await page.waitForTimeout(300);
   await expect(rise).toHaveAttribute("aria-pressed", "true");
   await expect(chart.locator('[aria-live="polite"]')).toContainText("How quickly the blade loads");
+});
+
+// Each measure is one control, and one Tab stop, at any width: on a phone the
+// chips, with the numbered markers left to pointing (A11Y-006). A control's
+// accessible name is the words it shows (SEO-013).
+test("the stroke chart offers each measure once, named as it reads", async ({ page }) => {
+  for (const width of [375, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    const chart = page.locator("#stroke");
+    await chart.scrollIntoViewIfNeeded();
+    const buttons = chart.getByRole("button");
+    await expect(buttons, `${width}px`).toHaveCount(7);
+    // Tab through the live copy, not the server's, which it replaces.
+    await expect(async () => {
+      await buttons.last().click();
+      await expect(buttons.last()).toHaveAttribute("aria-pressed", "true", { timeout: 500 });
+    }).toPass({ timeout: 10000 });
+    for (const b of await buttons.all()) {
+      const shown = (await b.innerText()).replace(/\s+/g, " ").trim();
+      await expect(b, `${width}px`).toHaveAccessibleName(shown);
+    }
+    await chart.getByRole("heading", { level: 2 }).evaluate((h) => {
+      h.tabIndex = -1;
+      h.focus();
+    });
+    for (let i = 0; i < 7; i++) {
+      await page.keyboard.press("Tab");
+      await expect(buttons.nth(i), `${width}px, Tab ${i + 1}`).toBeFocused();
+    }
+    await page.keyboard.press("Tab");
+    await expect(page.locator(":focus"), `${width}px, past the measures`).not.toHaveRole("button");
+  }
 });
 
 test("the Vieve page shows it as a 3D model too", async ({ page, isMobile }) => {
@@ -459,20 +493,23 @@ test("on a phone, small links and buttons take taps over 44x44 px", async ({ pag
   // closer than 44px, one of the two; none are lost to the chart under them.
   const chart = page.locator("#stroke");
   await chart.scrollIntoViewIfNeeded();
-  // The server's copy is static; wait for the live one to swap in.
-  const rhythm = chart.getByRole("button", { name: /^Rhythm:/ });
+  // The server's copy is static; wait for the live one to swap in. The chips
+  // under the chart say which measure is picked (the markers are hidden from
+  // assistive tech on a phone, A11Y-006).
+  const chips = await chart.getByRole("list", { name: "Stroke metrics" }).getByRole("button").all();
+  const rhythm = chart.getByRole("button", { name: /Rhythm/ });
   await expect(async () => {
     await rhythm.click();
     await expect(rhythm).toHaveAttribute("aria-pressed", "true", { timeout: 500 });
   }).toPass({ timeout: 10000 });
-  const markers = chart.locator("[aria-pressed][aria-label]");
+  const markers = chart.locator('button[aria-hidden="true"]');
   await expect(markers).toHaveCount(7);
   await markers.first().evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
   const all = await markers.all();
-  const names = await Promise.all(all.map(async (m) => (await m.getAttribute("aria-label"))!));
+  const names = await Promise.all(chips.map(async (c) => (await c.textContent())!));
   const boxes = await Promise.all(all.map(async (m) => (await m.boundingBox())!));
   const centres = boxes.map((b) => [b.x + b.width / 2, b.y + b.height / 2]);
-  const pressed = async () => names[(await Promise.all(all.map((m) => m.getAttribute("aria-pressed")))).indexOf("true")];
+  const pressed = async () => names[(await Promise.all(chips.map((c) => c.getAttribute("aria-pressed")))).indexOf("true")];
   for (const [i, marker] of all.entries()) {
     const wrong = await marker.evaluate((el) => {
       const r = el.getBoundingClientRect();
@@ -486,7 +523,7 @@ test("on a phone, small links and buttons take taps over 44x44 px", async ({ pag
           if ((dx < 6 || dx > r.width - 6) && (dy < 6 || dy > r.height - 6)) continue;
           if (others.some((o) => px >= o.left - 1 && px <= o.right + 1 && py >= o.top - 1 && py <= o.bottom + 1)) continue;
           const hit = document.elementFromPoint(px, py);
-          if (!hit || !el.contains(hit)) out.push(`${dx},${dy}: ${hit?.closest("button")?.getAttribute("aria-label") ?? hit?.tagName}`);
+          if (!hit || !el.contains(hit)) out.push(`${dx},${dy}: ${hit?.closest("button")?.textContent ?? hit?.tagName}`);
         }
       return out;
     });
