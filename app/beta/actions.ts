@@ -95,7 +95,9 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
   if (values.message && values.message.length > LIMITS.message) errors.message = `Keep it under ${LIMITS.message} characters.`;
 
   if (Object.keys(errors).length) {
-    return { status: "error", errors, message: "A couple of things need fixing before we can send this.", values };
+    const n = Object.keys(errors).length;
+    const things = n === 1 ? "One thing needs" : n === 2 ? "A couple of things need" : "A few things need";
+    return { status: "error", errors, message: `${things} fixing before we can send this.`, values };
   }
 
   const application: Application = {
@@ -134,7 +136,7 @@ export async function submitApplication(_prev: ApplyState, fd: FormData): Promis
     return {
       status: "error",
       errors: {},
-      message: "Something went wrong on our side and your application wasn't saved. Please try again in a minute.",
+      message: "Something went wrong on our side and your application wasn't saved. Try again in a minute.",
       values,
     };
   }

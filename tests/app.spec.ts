@@ -55,6 +55,14 @@ test("/api/health answers 200 when Supabase does, and is never cached", async ({
   expect(await res.json()).toEqual({ ok: true });
 });
 
+// The same words the beta form uses for the same mistake (CNT-009).
+test("the sign-in form says an address that isn't one might have a typo", async ({ page }) => {
+  await page.goto("/app/login");
+  await page.getByLabel("Email").fill("not-an-email");
+  await page.getByRole("button", { name: /email me a link/i }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "look like an email" })).toHaveText("That doesn't look like an email address. Check for a typo.");
+});
+
 test.describe("signing in", () => {
   test.skip(!!localSupabaseMissing, localSupabaseMissing ?? "");
 
@@ -547,6 +555,22 @@ test.describe("signed in", () => {
     const row = page.locator(`a[href="/app/force/${crew}"]`);
     await expect(row).toContainText("· 2 seats");
     await expect(row).toContainText(`${strokes} strokes`);
+  });
+
+  // On its own, a seat's reason starts the sentence (CNT-009).
+  test("one seat with more strokes than an upload takes is refused in a sentence", async ({ page, context, baseURL }) => {
+    const user = await makeUser();
+    await signInBrowser(context, user, baseURL!);
+    const { "meta.json": meta, "strokes.csv": strokes } = await longSeat(2, 20_001);
+    await page.goto("/app/force");
+    await page.getByLabel("Files").setInputFiles([
+      { name: "meta.json", mimeType: "application/json", buffer: Buffer.from(meta) },
+      { name: "strokes.csv", mimeType: "text/csv", buffer: Buffer.from(strokes) },
+    ]);
+    await page.getByRole("button", { name: "Upload" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "20,000 strokes" })).toHaveText("That session has more than 20,000 strokes, more than one upload takes.", {
+      timeout: 30_000,
+    });
   });
 
   test("an upload bigger than any outing is refused, and says why", async ({ page, context, baseURL }) => {

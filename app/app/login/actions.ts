@@ -25,7 +25,7 @@ function callbackUrl(next: string) {
  */
 export async function sendMagicLink(_prev: LoginState, fd: FormData): Promise<LoginState> {
   const email = (fd.get("email") as string | null)?.trim().toLowerCase() ?? "";
-  if (!email || !EMAIL.test(email)) return { status: "error", message: "That doesn't look like an email address.", email };
+  if (!email || !EMAIL.test(email)) return { status: "error", message: "That doesn't look like an email address. Check for a typo.", email };
 
   const sb = await supabaseServer();
   const { error } = await sb.auth.signInWithOtp({

@@ -121,8 +121,11 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
         }),
       });
     } catch (e) {
+      // Named after its folder when there are several; on its own, the
+      // reason starts the sentence (a format error starts with a file name).
       const where = folders.size > 1 ? `${key}: ` : "";
-      unread.push(`${where}${e instanceof SessionFormatError ? e.message : "that session couldn't be read."}`);
+      const why = e instanceof SessionFormatError ? e.message : `${where ? "that" : "That"} session couldn't be read.`;
+      unread.push(`${where}${why}`);
     }
   }
   if (unread.length === 1) return { status: "error", message: unread[0] };
@@ -130,8 +133,8 @@ export async function uploadSession(_prev: UploadState, fd: FormData): Promise<U
 
   const long = parsed.find(({ session }) => session.strokes.length > UPLOAD_LIMITS.strokes);
   if (long) {
-    const where = folders.size > 1 ? `${long.key}: ` : "";
-    return { status: "error", message: `${where}that session has more than 20,000 strokes, more than one upload takes.` };
+    const where = folders.size > 1 ? `${long.key}: that` : "That";
+    return { status: "error", message: `${where} session has more than 20,000 strokes, more than one upload takes.` };
   }
 
   if (!parsed.length) {

@@ -110,6 +110,8 @@ test("in production a stray BETA_DRY_RUN doesn't skip saving an application", as
   await page.getByLabel("Club, school or program").fill("Riverside RC");
   await page.getByRole("button", { name: /apply for the beta/i }).click();
 
-  await expect(page.getByRole("alert").filter({ hasText: "your application wasn't saved" })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "your application wasn't saved" })).toHaveText(
+    "Something went wrong on our side and your application wasn't saved. Try again in a minute."
+  );
   await expect(page.getByRole("heading", { level: 1 })).not.toContainText("We have your application");
 });

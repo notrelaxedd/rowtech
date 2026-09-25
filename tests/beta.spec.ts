@@ -106,6 +106,22 @@ test("the form says what is wrong rather than failing silently", async ({ page }
   await expect(page.getByLabel("Name")).toHaveValue("Sam");
 });
 
+// The line over the form counts what's wrong (CNT-009).
+test("the form's summary says how many things need fixing", async ({ page }) => {
+  for (const [fields, said] of [
+    [["Sam", "not-an-email", "Riverside RC"], "One thing needs fixing before we can send this."],
+    [["", "not-an-email", "Riverside RC"], "A couple of things need fixing before we can send this."],
+    [["", "not-an-email", ""], "A few things need fixing before we can send this."],
+  ] as const) {
+    await page.goto("/beta");
+    await page.getByLabel("Name").fill(fields[0]);
+    await page.getByLabel("Email").fill(fields[1]);
+    await page.getByLabel("Club, school or program").fill(fields[2]);
+    await page.getByRole("button", { name: /apply for the beta/i }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "fixing before we can send this" })).toHaveText(said);
+  }
+});
+
 test("a rejected application keeps the same form, with every answer in it", async ({ page }) => {
   await page.goto("/beta");
   await page.getByLabel("Name").fill("Sam Rower");
