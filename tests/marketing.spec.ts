@@ -86,6 +86,17 @@ test("Force's specifications say what it fits, what it doesn't measure and its t
   await expect(page.locator("#specs dt", { hasText: "Target price" })).toHaveCount(1);
 });
 
+// The build status and how the beta works sit under their headings, and what
+// happens when a unit fails is one of what beta crews get (BIZ-014, BIZ-017, BIZ-020).
+test("the home page has a line for the build status, how the beta works, and failed units", async ({ page }) => {
+  await page.goto("/");
+  for (const id of ["beta-scope", "beta"]) {
+    await expect(page.locator(`#${id} h2 + p`)).not.toBeEmpty();
+  }
+  const get = page.locator("#beta h3", { hasText: "What beta crews get" }).locator("+ ul > li");
+  await expect(get).toHaveCount(4);
+});
+
 // "Wi-Fi", the standard spelling, wherever a page says it (LEG-016, CNT-008).
 test("Wi-Fi is spelled Wi-Fi on the pages", async ({ page }) => {
   for (const path of ["/", "/force", "/vieve"]) {

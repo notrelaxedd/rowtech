@@ -246,6 +246,7 @@ export default function Home() {
         <section id="beta-scope" data-section="beta-scope" className="border-t border-line py-24 sm:py-28">
           <div className={wrap}>
             <h2 className="type-h2 max-w-3xl">Where the build stands.</h2>
+            <p className="type-lead mt-5 max-w-2xl text-muted-foreground">[OWNER: dated build status]</p>
             <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-line">
               <div className="lg:pr-12">
                 <h3 className="type-h3">In the node&rsquo;s firmware now</h3>
@@ -310,6 +311,9 @@ export default function Home() {
         <section id="beta" data-section="beta" className="border-t border-line py-24 sm:py-28">
           <div className={wrap}>
             <h2 className="type-h2 max-w-3xl">Applying for the beta.</h2>
+            <p className="type-lead mt-5 max-w-2xl text-muted-foreground">
+              [OWNER: how the beta works: when it starts, how many crews, what it costs, what you ask of crews, where you can ship]
+            </p>
             <div className="mt-12 grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-10">
               <div className="border-t border-line pt-6">
                 <h3 className="type-h3">Who it&rsquo;s for</h3>
@@ -327,6 +331,7 @@ export default function Home() {
                   <li>Testing units, for now</li>
                   <li>A direct line to the people building it</li>
                   <li>[OWNER: what beta crews get on price, if anything]</li>
+                  <li>[OWNER: what happens if a unit fails during the beta, and who to contact]</li>
                 </ul>
                 <p className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
                   The beta&rsquo;s terms are on the{" "}
