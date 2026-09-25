@@ -14,9 +14,13 @@ const archivo = Archivo({
 });
 
 // Device output only: the numbers and file names the node shows or writes.
+// Not preloaded: most pages show little of it, and it swaps in over a
+// size-matched fallback, so it can wait its turn behind Archivo, which sets
+// the headline. (A font called here is preloaded on every route or on none.)
 const chivoMono = Chivo_Mono({
   variable: "--font-chivo-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 

@@ -412,6 +412,16 @@ test("no page can be framed, and responses carry the basic security headers", as
   }
 });
 
+// Archivo sets the headline and is preloaded; Chivo Mono is for device output
+// only and loads when a page uses it (PERF-006).
+test("only the headline font is preloaded", async ({ request }) => {
+  for (const path of ["/", "/beta", "/force"]) {
+    const html = await (await request.get(path)).text();
+    const fonts = html.match(/<link[^>]*rel="preload"[^>]*as="font"[^>]*>/g) ?? [];
+    expect(fonts, path).toHaveLength(1);
+  }
+});
+
 // A link to a section on the home page reads as that section's heading does,
 // so landing there confirms the jump (UX-011).
 test("header and footer links to home page sections use their headings' words", async ({ page }) => {
