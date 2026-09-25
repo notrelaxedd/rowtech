@@ -119,6 +119,10 @@ export function SignupForm() {
   // means checked here and fine, which clears the action's error for it.
   const typed = useRef(new Set<string>());
   const [checked, setChecked] = useState<{ for: ApplyState; errors: Partial<Record<Required, string | null>> }>({ for: state, errors: {} });
+  // By the time a left field's error shows, focus is on the next one, so it's
+  // also said in the live region, with the field's label. Cleared on sending:
+  // the action's errors have the alert and focus.
+  const [said, setSaid] = useState("");
 
   // A result with an error in an optional field opens the details, even ones
   // the user closed after an earlier result (the form isn't remounted).
@@ -163,7 +167,7 @@ export function SignupForm() {
     </p>
     {/* Outside the form: a busy region's announcements can wait until it isn't. */}
     <p aria-live="polite" className="sr-only">
-      {pending ? "Sending your application…" : ""}
+      {pending ? "Sending your application…" : said}
     </p>
     {/* React resets the form once the action returns. By then each field's
         default is what was sent (state.values), so the reset keeps what
@@ -178,6 +182,7 @@ export function SignupForm() {
       // disabled), so this is what stops a second send.
       onSubmit={(ev) => {
         if (pending) ev.preventDefault();
+        else setSaid("");
       }}
       onFocus={() => {
         if (started.current) return;
@@ -188,7 +193,11 @@ export function SignupForm() {
         const t = ev.target;
         if (!(t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement)) return;
         // Tabbing past an empty field doesn't count as getting it wrong.
-        if (isRequired(t.name) && (t.value.trim() || typed.current.has(t.name) || e[t.name])) check(t.name, t.value);
+        if (isRequired(t.name) && (t.value.trim() || typed.current.has(t.name) || e[t.name])) {
+          check(t.name, t.value);
+          const msg = requiredError(t.name, t.value);
+          setSaid(msg ? `${t.labels?.[0]?.textContent?.trim()}: ${msg}` : "");
+        }
         if (!t.name || completed.current.has(t.name)) return;
         const done = t instanceof HTMLInputElement && (t.type === "radio" || t.type === "checkbox") ? t.checked : t.value.trim() !== "";
         if (!done) return;

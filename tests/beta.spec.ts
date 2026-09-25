@@ -171,6 +171,9 @@ test("a required field says what's wrong as soon as it's left", async ({ page })
   await expect(email).toHaveAttribute("aria-invalid", "true");
   await expect(email).toHaveAttribute("aria-describedby", "email-error");
   await expect(page.locator("#email-error")).toHaveText("That doesn't look like an email address. Check for a typo.");
+  // Focus has moved on by then, so a screen reader hears it from a live region.
+  const said = page.locator('p[aria-live="polite"]');
+  await expect(said).toHaveText("Email: That doesn't look like an email address. Check for a typo.");
 
   // Put right, it clears while typing.
   await email.fill("sam.rower@example.com");
@@ -183,6 +186,7 @@ test("a required field says what's wrong as soon as it's left", async ({ page })
   await org.fill("");
   await org.blur();
   await expect(page.locator("#organization-error")).toHaveText("Which club, school or program do you row with?");
+  await expect(said).toHaveText("Club, school or program: Which club, school or program do you row with?");
   // Only the field says so; the form-wide alert is for a sent form.
   await expect(page.locator("form").getByRole("alert")).toHaveCount(0);
 });
