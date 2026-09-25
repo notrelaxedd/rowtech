@@ -36,7 +36,7 @@ export const METRICS: ReadonlyArray<{ id: MetricId; label: string; value: string
     id: "catch",
     label: "Catch",
     value: "≈3 ms",
-    body: `The node marks the catch where force crosses 15% of the rower’s recent peak (${f1(M.threshold)} kg here) and interpolates between samples. Samples arrive every 12.5 ms; interpolated, the catch has a resolution of about 3 ms. That precision is what makes crew timing possible.`,
+    body: `The node marks the catch where force crosses 15% of the rower’s recent peak (${f1(M.threshold)} kg here) and interpolates between samples. Samples arrive every 12.5 ms; interpolated, the catch has a resolution of about 3 ms. That resolution is what crew timing will need.`,
   },
   {
     id: "rise",
